@@ -1,0 +1,16 @@
+Library
+Library/**
+Logs
+Logs/**
+Packages
+Packages/**
+Temp
+Temp/**
+Binaries
+Binaries/**
+Carcraft.sln
+Assembly-CSharp.csproj
+obj/**
+.vs/**
+Assets/*.meta
+Assets/**/*.meta

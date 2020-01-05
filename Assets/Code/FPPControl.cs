@@ -15,6 +15,11 @@ public class FPPControl : ControlBase
     {
         playerRigidbody = GetComponent<Rigidbody>();
         playerCamera = GetComponentInChildren<Camera>();
+
+        GameObject.Destroy(GameObject.Find("Main Camera"));
+        GameObject parentObj = transform.parent.gameObject;
+        transform.parent = null;
+        GameObject.Destroy(parentObj);
     }
 
     // Process character movement input

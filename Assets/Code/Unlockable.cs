@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 // Base class for doors with keypads, terminals etc.
-abstract public class Unlockable : MonoBehaviour
+abstract public class Unlockable : Interactable
 {
     protected bool isUnlocked = false;
 

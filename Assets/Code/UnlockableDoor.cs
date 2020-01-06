@@ -11,6 +11,8 @@ public class UnlockableDoor : Unlockable
     private Vector3 originalPosL, originalPosR; // initial position of left and right door
     private Transform transformL, transformR;
 
+    private Transform playerTransform;
+
     private float timeToLock = 0.0f;
 
     // Start is called before the first frame update
@@ -31,6 +33,8 @@ public class UnlockableDoor : Unlockable
         }
         Debug.Log("LDoor original: " + originalPosL);
         Debug.Log("RDoor original: " + originalPosR);
+
+        playerTransform = GameObject.Find("Player").transform;
     }
 
     // Update is called once per frame
@@ -45,7 +49,7 @@ public class UnlockableDoor : Unlockable
             }
             Lock();
         }
-        if (Input.GetKeyDown(KeyCode.Space) && !isUnlocked)
+        if (Input.GetKeyDown(KeyCode.Space) && !isUnlocked && Vector3.Distance(playerTransform.position, transform.position) < interactionRadius)
         {
             Debug.Log("Unlocking!");
             timeToLock = doorOpenDuration + doorOpeningTime;

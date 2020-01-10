@@ -43,11 +43,24 @@ public class EditorDraggableNode : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        Vector3[] corners = { Vector3.zero, Vector3.zero, Vector3.zero, Vector3.zero };
+
+        // Get screen-space rectangle of the node
+        rectTransform.GetWorldCorners(corners);
+        Rect nodeRect = new Rect(corners[0], corners[2] - corners[0]);
         Vector2 pointer = Input.mousePosition;
-        if (Input.GetKey(KeyCode.Mouse0))
+
+        Debug.Log("Pointer: " + pointer);
+        Debug.Log("Node: " + nodeRect);
+
+        // Drag if LMB held down and inside the node rectangle
+        if (Input.GetKey(KeyCode.Mouse0) && nodeRect.Contains(pointer))
         {
-            Debug.Log("FUCK");
             Drag(pointer);
+        }
+        if(Input.GetKeyUp(KeyCode.Mouse0))
+        {
+            isDragged = false;
         }
         lastFramePointer = pointer;
     }

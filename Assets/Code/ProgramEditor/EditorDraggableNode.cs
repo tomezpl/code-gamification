@@ -54,7 +54,7 @@ public class EditorDraggableNode : MonoBehaviour
         Debug.Log("Node: " + nodeRect);
 
         // Drag if LMB held down and inside the node rectangle
-        if (Input.GetKey(KeyCode.Mouse0) && nodeRect.Contains(pointer))
+        if (Input.GetKeyDown(KeyCode.Mouse0) && nodeRect.Contains(pointer) || isDragged)
         {
             Drag(pointer);
         }

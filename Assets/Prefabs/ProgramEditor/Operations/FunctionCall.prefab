@@ -89,6 +89,7 @@ GameObject:
   - component: {fileID: 2970369056742888529}
   - component: {fileID: 2970369056742888530}
   - component: {fileID: 2970369056742888528}
+  - component: {fileID: 994355781891477064}
   m_Layer: 5
   m_Name: FunctionCall
   m_TagString: Untagged
@@ -165,6 +166,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3fd0eb0103fc5a74aa8d7793ecebf922, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &994355781891477064
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2970369056742888532}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d2691c8519c46354da9a4e3686d9a27d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  NextNodeObject: {fileID: 0}
+  functionName: 
+  paramCount: 0
+  functionNameText: {fileID: 2970369056163860132}
 --- !u!1 &2970369057206680702
 GameObject:
   m_ObjectHideFlags: 0

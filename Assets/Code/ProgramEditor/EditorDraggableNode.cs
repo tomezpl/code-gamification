@@ -18,10 +18,6 @@ public class EditorDraggableNode : MonoBehaviour
     void Start()
     {
         rectTransform = GetComponent<RectTransform>();
-        foreach(Component c in GetComponents<Component>())
-        {
-            Debug.Log(c);
-        }
     }
 
     public void Drag(Vector2 input)
@@ -50,8 +46,8 @@ public class EditorDraggableNode : MonoBehaviour
         Rect nodeRect = new Rect(corners[0], corners[2] - corners[0]);
         Vector2 pointer = Input.mousePosition;
 
-        Debug.Log("Pointer: " + pointer);
-        Debug.Log("Node: " + nodeRect);
+        //Debug.Log("Pointer: " + pointer);
+        //Debug.Log("Node: " + nodeRect);
 
         // Drag if LMB held down and inside the node rectangle
         if (Input.GetKeyDown(KeyCode.Mouse0) && nodeRect.Contains(pointer) || isDragged)

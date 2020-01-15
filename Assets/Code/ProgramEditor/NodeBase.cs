@@ -21,15 +21,24 @@ public abstract class NodeBase : MonoBehaviour, IProgramNode
             NodeBase nextNodeBase = NextNodeObject.GetComponent<NodeBase>();
             nextNode = (IProgramNode)nextNodeBase;
         }
+
+        InitialiseNode();
+
         // TODO: Perhaps search for ProgramEnd as nextNode fallback?
     }
 
-    public string GetProgramString()
+    public void Awake()
     {
-        string fullProgram = "";
+        Start();
+    }
 
-        // TODO
+    public void Reset()
+    {
+        InitialiseNode();
+    }
 
-        return fullProgram;
+    public virtual void InitialiseNode()
+    {
+
     }
 }

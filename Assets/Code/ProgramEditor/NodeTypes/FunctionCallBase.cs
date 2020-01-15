@@ -14,15 +14,37 @@ public class FunctionCallBase : NodeBase
     public GameObject functionNameText;
 
     // Start is called before the first frame update
-    void Start()
+    public override void InitialiseNode()
     {
+        base.InitialiseNode();
+        UpdateFunctionProperties();
+    }
+
+    public void OnValidate()
+    {
+        UpdateFunctionProperties();
+    }
+
+    public void Reset()
+    {
+        base.Reset();
+        UpdateFunctionProperties();
+    }
+
+    public virtual void UpdateFunctionProperties()
+    {
+        if (functionNameText == null)
+        {
+            functionNameText = transform.Find("FuncName").transform.Find("Text").gameObject;
+        }
         functionNameText.GetComponent<Text>().text = functionName;
-        for(ushort i = 0; i < paramCount; i++)
+        for (ushort i = 0; i < paramCount && parameters != null && i < parameters.Count; i++)
         {
             // TODO: type checking, pointing references to scene objects, etc.
             transform.Find($"Parameter{i + 1}").GetComponentInChildren<Text>().text = parameters[i].Value;
         }
     }
+
 
     // Update is called once per frame
     void Update()

@@ -410,6 +410,21 @@ PrefabInstance:
       propertyPath: parameters.Array.data[0].Value
       value: '"hello world"'
       objectReference: {fileID: 0}
+    - target: {fileID: 994355781891477064, guid: 996c08b3aad40174e903ce6315bee96e,
+        type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2970369056163860129, guid: 996c08b3aad40174e903ce6315bee96e,
+        type: 3}
+      propertyPath: m_Text
+      value: print
+      objectReference: {fileID: 0}
+    - target: {fileID: 3294643636064394411, guid: 996c08b3aad40174e903ce6315bee96e,
+        type: 3}
+      propertyPath: m_Text
+      value: '"hello world"'
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 996c08b3aad40174e903ce6315bee96e, type: 3}
 --- !u!224 &1428987231 stripped

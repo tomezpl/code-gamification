@@ -11,4 +11,5 @@ public class FunctionParameter
     public string Value;
     public string Type;
     public bool IsReference;
+    public bool IsNull { get { return Name == null && Value == null && Type == null && !IsReference; } set { IsNull = value; } }
 }

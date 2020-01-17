@@ -10,6 +10,10 @@ public abstract class NodeBase : MonoBehaviour, IProgramNode
     // GameObject that holds the nextNode
     public GameObject NextNodeObject;
 
+    // Python syntax-specific: indentation level (default: 0, increases with nested CodeBlocks)
+    public int indentLevel = 0;
+
+    protected bool isInitialised = false;
 
     public abstract string Serialize();
 
@@ -32,13 +36,27 @@ public abstract class NodeBase : MonoBehaviour, IProgramNode
         Start();
     }
 
-    public void Reset()
+    public virtual void Reset()
     {
+        isInitialised = false;
         InitialiseNode();
     }
 
     public virtual void InitialiseNode()
     {
+        isInitialised = true;
+    }
 
+    // Returns tabulation for the current line according to indentLevel.
+    public virtual string GetLineTabs()
+    {
+        string lineTabs = "";
+
+        for(int i = 0; i < indentLevel; i++)
+        {
+            lineTabs += "\t";
+        }
+
+        return lineTabs;
     }
 }

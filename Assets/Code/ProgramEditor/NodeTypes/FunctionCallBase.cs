@@ -25,7 +25,7 @@ public class FunctionCallBase : NodeBase
         UpdateFunctionProperties();
     }
 
-    public void Reset()
+    public override void Reset()
     {
         base.Reset();
         UpdateFunctionProperties();
@@ -87,6 +87,7 @@ public class FunctionCallBase : NodeBase
 
     public override string Serialize()
     {
+        Debug.Log(GetFunctionName());
         return $"{GetFunctionName()}({GetParameterListString()})";
     }
 }

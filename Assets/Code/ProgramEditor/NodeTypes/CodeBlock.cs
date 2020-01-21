@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-// Base class for blocks that wrap code (if statements, loops, function definitions)
+// Base class for blocks that wrap/nest code (if statements, loops, function definitions)
 public abstract class CodeBlock : NodeBase
 {
     // Only set to true before InitialiseNode gets called. 
@@ -20,8 +20,6 @@ public abstract class CodeBlock : NodeBase
 
         if (FirstBodyNodeObject != null)
             firstBodyNode = FirstBodyNodeObject.GetComponent<NodeBase>();
-
-        indentLevel = indentLevel + 1;
     }
 
     // Update is called once per frame
@@ -35,7 +33,18 @@ public abstract class CodeBlock : NodeBase
         return GetLineTabs() + "\t";
     }
 
-    public abstract string SerializeBlockBody();
+    public virtual string SerializeBlockBody()
+    {
+        string fullBody = "";
+        IProgramNode currentNode = firstBodyNode;
+        while(currentNode != null)
+        {
+            fullBody += $"{currentNode.Serialize()}\n";
+            // TODO: could this fail potentially?
+            currentNode = ((NodeBase)currentNode).nextNode;
+        }
+        return fullBody;
+    }
 
     public virtual string SerializeBlockHeader()
     {
@@ -46,7 +55,7 @@ public abstract class CodeBlock : NodeBase
     {
         string header = SerializeBlockHeader();
         string[] bodyLines = SerializeBlockBody().Split('\n');
-        string fullCode = $"{(header == null ? "" : GetLineTabs() + header + "\n")}";
+        string fullCode = $"{(string.IsNullOrWhiteSpace(header) ? "" : GetLineTabs() + header + "\n")}";
 
         string bodyLineTabs = GetBodyLineTabs();
 

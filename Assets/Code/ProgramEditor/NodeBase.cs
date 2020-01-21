@@ -13,19 +13,26 @@ public abstract class NodeBase : MonoBehaviour, IProgramNode
     // Python syntax-specific: indentation level (default: 0, increases with nested CodeBlocks)
     public int indentLevel = 0;
 
-    protected bool isInitialised = false;
+    public bool isInitialised = false;
 
     public abstract string Serialize();
 
+    public bool inLoop = false;
+
     public void Start()
     {
-        // Unless overriden and not null, assign nextNode as node interface of the NextNodeObject
-        if(nextNode == null)
+        // Unless overriden, not null and not in a loop, assign nextNode as node interface of the NextNodeObject
+        if(nextNode == null && !inLoop && NextNodeObject != null)
         {
             NodeBase nextNodeBase = NextNodeObject.GetComponent<NodeBase>();
             nextNode = (IProgramNode)nextNodeBase;
         }
+        if(NextNodeObject == null)
+        {
+            Debug.LogWarning($"NextNodeObject on {gameObject}::{this} is set to null! If this is intended (e.g. last node in a loop), this should be corrected on startup.");
+        }
 
+        // TODO: only initialise if !isInitialised?
         InitialiseNode();
 
         // TODO: Perhaps search for ProgramEnd as nextNode fallback?
@@ -56,6 +63,8 @@ public abstract class NodeBase : MonoBehaviour, IProgramNode
         {
             lineTabs += "\t";
         }
+
+        Debug.Log($"{this} returned {indentLevel} lineTabs.");
 
         return lineTabs;
     }

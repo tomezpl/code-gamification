@@ -8,7 +8,9 @@ public class ProgramStart : NodeBase
     void Update()
     {
         if (Input.GetKeyUp(KeyCode.Space))
+        {
             Debug.Log(Serialize());
+        }
     }
 
     public override string Serialize()

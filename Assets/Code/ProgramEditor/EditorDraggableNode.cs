@@ -31,7 +31,6 @@ public class EditorDraggableNode : MonoBehaviour
         else
         {
             Vector2 delta = -1 * (lastFramePointer - input);
-            Debug.Log(delta);
             rectTransform.Translate(delta);
         }
     }

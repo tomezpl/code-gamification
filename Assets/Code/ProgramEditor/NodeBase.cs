@@ -19,7 +19,7 @@ public abstract class NodeBase : MonoBehaviour, IProgramNode
 
     public bool inLoop = false;
 
-    public void Start()
+    public virtual void Start()
     {
         // Unless overriden, not null and not in a loop, assign nextNode as node interface of the NextNodeObject
         if(nextNode == null && !inLoop && NextNodeObject != null)
@@ -32,10 +32,10 @@ public abstract class NodeBase : MonoBehaviour, IProgramNode
             Debug.LogWarning($"NextNodeObject on {gameObject}::{this} is set to null! If this is intended (e.g. last node in a loop), this should be corrected on startup.");
         }
 
+        // TODO: Perhaps search for ProgramEnd as nextNode fallback?
+
         // TODO: only initialise if !isInitialised?
         InitialiseNode();
-
-        // TODO: Perhaps search for ProgramEnd as nextNode fallback?
     }
 
     public void Awake()

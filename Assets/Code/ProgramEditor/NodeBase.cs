@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public abstract class NodeBase : MonoBehaviour, IProgramNode
 {
@@ -19,6 +20,11 @@ public abstract class NodeBase : MonoBehaviour, IProgramNode
 
     public bool inLoop = false;
 
+    protected static GameObject nodeLinkerPrefab;
+    protected static Material lineMaterial;
+
+    protected GameObject nodeLinker;
+
     public virtual void Start()
     {
         // Unless overriden, not null and not in a loop, assign nextNode as node interface of the NextNodeObject
@@ -36,6 +42,51 @@ public abstract class NodeBase : MonoBehaviour, IProgramNode
 
         // TODO: only initialise if !isInitialised?
         InitialiseNode();
+
+        // Add the NodeLinker arrowhead (or render node link, if already pre-connected: TODO)
+        /*if(transform.Find("NodeLinker") == null && nodeLinker == null)
+        {
+            // Load necessary resources and "cache" them using static fields
+            if(nodeLinkerPrefab == null)
+            {
+                nodeLinkerPrefab = Resources.Load("Prefabs/ProgramEditor/NodeLinker", typeof(GameObject)) as GameObject;
+            }
+            if(lineMaterial == null)
+            {
+                lineMaterial = Resources.Load("Materials/LineMaterial") as Material;
+            }
+
+            nodeLinker = Instantiate(nodeLinkerPrefab) as GameObject;
+            nodeLinker.name = "NodeLinker"; // prevent (Clone) from appearing in the name
+
+            //RenderNodeLinker();
+        }*/
+    }
+
+    public virtual void RenderNodeLinker()
+    {
+        nodeLinker.transform.SetParent(null, false);
+
+        Rect thisRect = GetComponent<RectTransform>().rect;
+        Rect nodeLinkerRect = nodeLinker.GetComponent<RectTransform>().rect;
+        Vector2 linkerOrigin = new Vector2(thisRect.xMax + nodeLinkerRect.width / 2, thisRect.yMin + thisRect.height / 2);
+        float rightSideAngle = 270.0f; // -90 degrees points to the right side of the node; we use this as a reference.
+
+        float angleToNextNode = 0.0f;
+        if (NextNodeObject != null)
+        {
+            Rect nextNodeRect = NextNodeObject.GetComponent<RectTransform>().rect;
+            angleToNextNode = Vector3.SignedAngle(new Vector3(thisRect.xMax, thisRect.y), new Vector3(nextNodeRect.xMin, nextNodeRect.y), Vector3.forward);
+        }
+        nodeLinker.GetComponent<RectTransform>().SetPositionAndRotation(linkerOrigin, Quaternion.Euler(0.0f, 0.0f, rightSideAngle + angleToNextNode));
+
+        if (transform.Find("NodeLinker") == null)
+            nodeLinker.transform.SetParent(transform, false); // add as child (affects transforms!)
+    }
+
+    public virtual void Update()
+    {
+        //RenderNodeLinker();
     }
 
     public void Awake()

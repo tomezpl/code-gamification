@@ -47,9 +47,9 @@ public class FunctionCallBase : NodeBase
 
 
     // Update is called once per frame
-    void Update()
+    public override void Update()
     {
-        
+        base.Update();
     }
 
     public virtual string GetFunctionName()

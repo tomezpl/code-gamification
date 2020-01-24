@@ -11,10 +11,4 @@ public class ArithmeticModulo : ArithmeticOperationBase
 
         base.InitialiseNode();
     }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
 }

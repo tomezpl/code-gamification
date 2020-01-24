@@ -22,12 +22,6 @@ public abstract class CodeBlock : NodeBase
             firstBodyNode = FirstBodyNodeObject.GetComponent<NodeBase>();
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
-
     public virtual string GetBodyLineTabs()
     {
         return GetLineTabs() + "\t";

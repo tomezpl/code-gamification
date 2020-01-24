@@ -12,10 +12,4 @@ public class Print : FunctionCallBase
         functionName = "print";
         base.InitialiseNode();
     }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
 }

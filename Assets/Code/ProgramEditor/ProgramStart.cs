@@ -5,8 +5,10 @@ using UnityEngine;
 public class ProgramStart : NodeBase
 {
     // Update is called once per frame
-    void Update()
+    public override void Update()
     {
+        base.Update();
+
         if (Input.GetKeyUp(KeyCode.Space))
         {
             Debug.Log(Serialize());

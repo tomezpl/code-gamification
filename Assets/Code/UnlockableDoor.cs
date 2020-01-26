@@ -82,9 +82,9 @@ public class UnlockableDoor : Unlockable
     public override void Lock()
     {
         float t = doorOpeningTime - timeToLock;
-        Debug.Log("t=" + t);
+        //Debug.Log("t=" + t);
         t /= doorOpeningTime;
-        Debug.Log("Step is " + t.ToString());
+        //Debug.Log("Step is " + t.ToString());
         isUnlocked = false;
         transformL.localPosition = Vector3.Lerp(transformL.localPosition, originalPosL, t);
         transformR.localPosition = Vector3.Lerp(transformR.localPosition, originalPosR, t);

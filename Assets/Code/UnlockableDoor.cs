@@ -38,7 +38,7 @@ public class UnlockableDoor : Unlockable
     }
 
     // Update is called once per frame
-    void Update()
+    protected override void Update()
     {
         if (timeToLock <= 0.0f)
         {
@@ -49,7 +49,7 @@ public class UnlockableDoor : Unlockable
             }
             Lock();
         }
-        if (Input.GetKeyDown(KeyCode.Space) && !isUnlocked && Vector3.Distance(playerTransform.position, transform.position) < interactionRadius)
+        if (Input.GetKeyDown(KeyCode.Space) && !isUnlocked && DistanceCheck())
         {
             Debug.Log("Unlocking!");
             timeToLock = doorOpenDuration + doorOpeningTime;

@@ -8,7 +8,7 @@ public class Programmable : MonoBehaviour
     public GameObject Computer;
 
     // Element (if the ProgramController addresses an array of objects)
-    public int index = 0;
+    public int index = -1;
 
     // Start is called before the first frame update
     void Start()
@@ -19,6 +19,6 @@ public class Programmable : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        Computer.GetComponent<ProgramController>().ExecuteFrame(index, gameObject);
+        //Computer.GetComponent<ProgramController>().ExecuteFrame(index, gameObject);
     }
 }

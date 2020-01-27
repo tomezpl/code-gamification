@@ -7,15 +7,8 @@ public class Interactable : MonoBehaviour
     public bool interactionRadiusLock = true;
     public float interactionRadius = 2.5f;
 
-    // Start is called before the first frame update
-    void Start()
+    public bool DistanceCheck()
     {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
+        return Vector3.Distance(GameObject.Find("Player").transform.position, transform.position) <= interactionRadius;
     }
 }

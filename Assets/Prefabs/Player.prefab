@@ -169,6 +169,7 @@ GameObject:
   - component: {fileID: 5084923417718283068}
   - component: {fileID: 2039207948285972524}
   - component: {fileID: 7518676381722374744}
+  - component: {fileID: 6028133225751052356}
   m_Layer: 0
   m_Name: Camera
   m_TagString: Untagged
@@ -241,3 +242,26 @@ AudioListener:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 9103091374497579540}
   m_Enabled: 1
+--- !u!114 &6028133225751052356
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9103091374497579540}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b200ceda39a40af43bbb16a879f0791f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _noiseFilterTolerance: 0
+  _blurTolerance: -4.6
+  _upsampleTolerance: -12
+  _rejectionFalloff: 10
+  _strength: 0.25
+  _debug: 0
+  _downsample1Compute: {fileID: 7200000, guid: 659dc93a3764e164e8dafb2061ff317b, type: 3}
+  _downsample2Compute: {fileID: 7200000, guid: dc4dd2f3a1157884e95a081b25b5731d, type: 3}
+  _renderCompute: {fileID: 7200000, guid: e49d5d8e57b0515469bb1ef4bf07b8dd, type: 3}
+  _upsampleCompute: {fileID: 7200000, guid: 2c3e5f47f9b262047ae010f239705186, type: 3}
+  _blitShader: {fileID: 4800000, guid: 532f9473ecfa16148a1ecdb3b72a44e8, type: 3}

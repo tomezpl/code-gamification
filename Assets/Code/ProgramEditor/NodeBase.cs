@@ -119,4 +119,31 @@ public abstract class NodeBase : MonoBehaviour, IProgramNode
 
         return lineTabs;
     }
+
+    // Finds the "Elements" object which is a root container for all nodes in the program diagram.
+    public Transform FindElementContainer()
+    {
+        Transform elements = transform.parent;
+        while(elements.name != "Elements" && elements.parent != null)
+        {
+            elements = elements.parent;
+        }
+
+        return elements;
+    }
+
+    public void DeleteNode()
+    {
+        NodeBase[] nodes = FindElementContainer().GetComponentsInChildren<NodeBase>();
+        foreach(NodeBase node in nodes)
+        {
+            if(node.NextNodeObject == gameObject)
+            {
+                node.NextNodeObject = NextNodeObject;
+                node.nextNode = nextNode;
+                Destroy(gameObject);
+                break;
+            }
+        }
+    }
 }

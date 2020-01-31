@@ -57,6 +57,13 @@ public class EditorDraggableNode : MonoBehaviour
         {
             isDragged = false;
         }
+
+        // Other events:
+        if(Input.GetKeyDown(KeyCode.Delete) && nodeRect.Contains(pointer))
+        {
+            GetComponent<NodeBase>().DeleteNode();
+        }
+
         lastFramePointer = pointer;
     }
 }

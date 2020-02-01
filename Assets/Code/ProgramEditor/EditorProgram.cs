@@ -128,6 +128,9 @@ public class EditorProgram : MonoBehaviour
             }
         }*/
 
+        // Names of valid link GameObjects
+        List<string> validLinks = new List<string>();
+
         // First, render the next-node links
         foreach (GameObject element in elements)
         {
@@ -160,6 +163,7 @@ public class EditorProgram : MonoBehaviour
                     thisPos,
                     nextPos
                 });
+                validLinks.Add(currentLink.name);
             }
         }
 
@@ -191,6 +195,7 @@ public class EditorProgram : MonoBehaviour
                 });
                 // This is to prevent culling from other 3D elements in the scene
                 currentRenderer.gameObject.layer = LayerMask.NameToLayer("CodeEditor");
+                validLinks.Add(currentLink.name);
 
                 /*GameObject currentObject = potentialCodeBlock.FirstBodyNodeObject;
                 {
@@ -205,5 +210,16 @@ public class EditorProgram : MonoBehaviour
                 }*/
             }
         }
+
+        // Lastly, remove any lines that are not needed (e.g after deleting a node)
+        Transform[] allLines = lineCanvas.GetComponentsInChildren<Transform>();
+        foreach (Transform line in allLines)
+        {
+            if(!validLinks.Contains(line.name) && line.name != "LineCanvas")
+            {
+                Destroy(line.gameObject);
+            }
+        }
+
     }
 }

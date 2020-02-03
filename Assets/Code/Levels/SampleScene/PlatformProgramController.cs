@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class PlatformProgram : ProgramController
+public class PlatformProgramController : ProgramController
 {
     public GameObject PlatformContainer;
 

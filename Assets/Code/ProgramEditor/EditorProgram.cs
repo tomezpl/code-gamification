@@ -144,6 +144,9 @@ public class EditorProgram : MonoBehaviour
                 {
                     currentLink = cachedLinkTransform.gameObject;
                     currentRenderer = currentLink.GetComponent<LineRenderer>();
+
+                    currentLink.GetComponent<LinkDescriptor>().prev = potentialNode.gameObject;
+                    currentLink.GetComponent<LinkDescriptor>().next = potentialNode.NextNodeObject;
                 }
                 else
                 {
@@ -152,6 +155,10 @@ public class EditorProgram : MonoBehaviour
                     currentRenderer = currentLink.AddComponent<LineRenderer>();
                     currentRenderer.material = lineMaterial;
                     currentRenderer.useWorldSpace = false;
+
+                    currentLink.AddComponent<LinkDescriptor>();
+                    currentLink.GetComponent<LinkDescriptor>().prev = potentialNode.gameObject;
+                    currentLink.GetComponent<LinkDescriptor>().next = potentialNode.NextNodeObject;
                 }
                 // This is to prevent culling from other 3D elements in the scene
                 currentRenderer.gameObject.layer = LayerMask.NameToLayer("CodeEditor");
@@ -159,6 +166,7 @@ public class EditorProgram : MonoBehaviour
                         nextRect = potentialNode.NextNodeObject.GetComponent<RectTransform>().rect;
                 Vector2 thisPos = new Vector2(potentialNode.GetComponent<RectTransform>().localPosition.x + thisRect.width / 2, potentialNode.GetComponent<RectTransform>().localPosition.y);
                 Vector2 nextPos = new Vector2(potentialNode.NextNodeObject.GetComponent<RectTransform>().localPosition.x - nextRect.width / 2, potentialNode.NextNodeObject.GetComponent<RectTransform>().localPosition.y);
+                currentRenderer.positionCount = 2;
                 currentRenderer.SetPositions(new Vector3[] {
                     thisPos,
                     nextPos
@@ -180,6 +188,9 @@ public class EditorProgram : MonoBehaviour
                 {
                     currentLink = cachedLinkTransform.gameObject;
                     currentRenderer = currentLink.GetComponent<LineRenderer>();
+
+                    currentLink.GetComponent<LinkDescriptor>().prev = potentialCodeBlock.gameObject;
+                    currentLink.GetComponent<LinkDescriptor>().next = potentialCodeBlock.FirstBodyNodeObject;
                 }
                 else
                 {
@@ -188,7 +199,13 @@ public class EditorProgram : MonoBehaviour
                     currentRenderer = currentLink.AddComponent<LineRenderer>();
                     currentRenderer.material = lineMaterial;
                     currentRenderer.useWorldSpace = false;
+
+                    currentLink.AddComponent<LinkDescriptor>();
+                    currentLink.GetComponent<LinkDescriptor>().prev = potentialCodeBlock.gameObject;
+                    currentLink.GetComponent<LinkDescriptor>().next = potentialCodeBlock.FirstBodyNodeObject;
                 }
+
+                currentRenderer.positionCount = 2;
                 currentRenderer.SetPositions(new Vector3[] {
                     potentialCodeBlock.GetComponent<RectTransform>().localPosition + new Vector3(.0f, potentialCodeBlock.GetComponent<RectTransform>().rect.height / -2.0f),
                     potentialCodeBlock.FirstBodyNodeObject.GetComponent<RectTransform>().localPosition + new Vector3(potentialCodeBlock.FirstBodyNodeObject.GetComponent<RectTransform>().rect.width / -2.0f, 0.0f)
@@ -221,5 +238,46 @@ public class EditorProgram : MonoBehaviour
             }
         }
 
+        FixLines();
+    }
+
+    // Introduce 90-degree angle vertices to the lines if they're not fully straight
+    void FixLines()
+    {
+        // Straight line tolerance expressed as maximum vertical offset between two vertices of the line
+        const float verticalTolerance = 10.0f;
+
+        const float connectorPadding = 20.0f;
+
+        LineRenderer[] lines = lineCanvas.GetComponentsInChildren<LineRenderer>();
+        foreach(LineRenderer line in lines)
+        {
+            LinkDescriptor linkDesc = line.GetComponent<LinkDescriptor>();
+            Vector2 finalPoint = line.GetPosition(1);
+
+            if (Mathf.Abs(line.GetPosition(0).y - finalPoint.y) > verticalTolerance)
+            {
+                RectTransform prevTransform = linkDesc.prev.GetComponent<RectTransform>(), nextTransform = linkDesc.next.GetComponent<RectTransform>();
+                Rect prevRect = prevTransform.rect, nextRect = nextTransform.rect;
+                if(prevTransform.localPosition.x + prevRect.width + connectorPadding < nextTransform.localPosition.x)
+                {
+                    Debug.Log(Mathf.Abs(line.GetPosition(0).y - finalPoint.y));
+                    line.positionCount = 4;
+                    line.SetPosition(1, new Vector2((nextTransform.localPosition.x - nextRect.width/2.0f) - connectorPadding, line.GetPosition(0).y));
+                    line.SetPosition(2, new Vector2((nextTransform.localPosition.x - nextRect.width/2.0f) - connectorPadding, finalPoint.y));
+                    line.SetPosition(3, new Vector2((nextTransform.localPosition.x - nextRect.width / 2.0f), finalPoint.y));
+                }
+                else
+                {
+                    Debug.Log("case 2");
+                    line.positionCount = 6;
+                    line.SetPosition(1, new Vector2((prevTransform.localPosition.x + prevRect.width / 2.0f) + connectorPadding, line.GetPosition(0).y));
+                    line.SetPosition(2, new Vector2((prevTransform.localPosition.x + prevRect.width / 2.0f) + connectorPadding, (prevTransform.localPosition.y + nextTransform.localPosition.y) / 2.0f));
+                    line.SetPosition(3, new Vector2((nextTransform.localPosition.x - nextRect.width / 2.0f) - connectorPadding, (prevTransform.localPosition.y + nextTransform.localPosition.y) / 2.0f));
+                    line.SetPosition(4, new Vector2((nextTransform.localPosition.x - nextRect.width / 2.0f) - connectorPadding, finalPoint.y));
+                    line.SetPosition(5, new Vector2((nextTransform.localPosition.x - nextRect.width / 2.0f), finalPoint.y));
+                }
+            }
+        }
     }
 }

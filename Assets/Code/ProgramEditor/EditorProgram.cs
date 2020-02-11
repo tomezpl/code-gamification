@@ -261,7 +261,6 @@ public class EditorProgram : MonoBehaviour
                 Rect prevRect = prevTransform.rect, nextRect = nextTransform.rect;
                 if(prevTransform.localPosition.x + prevRect.width + connectorPadding < nextTransform.localPosition.x)
                 {
-                    Debug.Log(Mathf.Abs(line.GetPosition(0).y - finalPoint.y));
                     line.positionCount = 4;
                     line.SetPosition(1, new Vector2((nextTransform.localPosition.x - nextRect.width/2.0f) - connectorPadding, line.GetPosition(0).y));
                     line.SetPosition(2, new Vector2((nextTransform.localPosition.x - nextRect.width/2.0f) - connectorPadding, finalPoint.y));
@@ -269,7 +268,6 @@ public class EditorProgram : MonoBehaviour
                 }
                 else
                 {
-                    Debug.Log("case 2");
                     line.positionCount = 6;
                     line.SetPosition(1, new Vector2((prevTransform.localPosition.x + prevRect.width / 2.0f) + connectorPadding, line.GetPosition(0).y));
                     line.SetPosition(2, new Vector2((prevTransform.localPosition.x + prevRect.width / 2.0f) + connectorPadding, (prevTransform.localPosition.y + nextTransform.localPosition.y) / 2.0f));

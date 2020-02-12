@@ -31,6 +31,13 @@ public abstract class ProgramController : Interactable
     // Variables, constants etc. that are present in this program
     public Dictionary<string, FunctionParameter> symbolTable;
 
+    protected Dictionary<string, System.Delegate> functions;
+
+    public ProgramController() : base()
+    {
+        functions = new Dictionary<string, System.Delegate>();
+    }
+
     // Start is called before the first frame update
     protected virtual void Start()
     {
@@ -47,6 +54,11 @@ public abstract class ProgramController : Interactable
     void Update()
     {
         timeSinceTick += Time.deltaTime;
+        if(currentNode == program.programStart && currentNode.NextNodeObject != null)
+        {
+            currentNode = (NodeBase)currentNode.nextNode;
+            timeSinceTick = tickTime; // Skip the ProgramStart tick
+        }
         if (programRunning)
         {
             processingDoneLastFrame = processingDone;
@@ -93,6 +105,12 @@ public abstract class ProgramController : Interactable
                     return false;
                 }
             }
+            else // There was an error. Go back to ProgramStart and stop the program execution.
+            {
+                programRunning = false;
+                currentNode = program.programStart;
+                return false;
+            }
         }
         return true; // good to continue with any child implementations of this method
     }
@@ -115,5 +133,7 @@ public abstract class ProgramController : Interactable
     }
 
     // Performs actions defined by the Node
+    // TODO: add some core functionality e.g. assigning, arithmetic etc? Then return bool to indicate if anything was invoked from the base method.
+    // If not, only then continue to the derived implementations of this.
     public abstract void ExecuteNode(NodeBase node);
 }

@@ -9,19 +9,20 @@ public class UnlockableDoorWithLock : UnlockableDoor
     protected bool basicLockState = false;
 
     // Start is called before the first frame update
-    void Start()
+    protected override void Start()
     {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
+        base.Start();
+        SetLock(basicLockState);
     }
 
     protected override bool CanUnlock()
     {
+        Debug.Log($"CanUnlock returned {basicLockState}");
         return basicLockState; 
+    }
+
+    public void SetLock(bool state)
+    {
+        basicLockState = state;
     }
 }

@@ -16,7 +16,7 @@ public class UnlockableDoor : Unlockable
     private float timeToLock = 0.0f;
 
     // Start is called before the first frame update
-    void Start()
+    protected virtual void Start()
     {
         foreach (Transform t in GetComponentsInChildren<Transform>())
         {
@@ -45,7 +45,7 @@ public class UnlockableDoor : Unlockable
     // Update is called once per frame
     protected override void Update()
     {
-        if (timeToLock <= 0.0f)
+        if (timeToLock <= 0.0f || !CanUnlock())
         {
             if (isUnlocked)
             {
@@ -54,12 +54,16 @@ public class UnlockableDoor : Unlockable
             }
             Lock();
         }
-        if (CanUnlock())
+        if (CanUnlock() && !isUnlocked)
         {
             Debug.Log("Unlocking!");
             timeToLock = doorOpenDuration + doorOpeningTime;
             Debug.Log("ttl: " + timeToLock);
             Unlock();
+        }
+        else if(!CanUnlock() && isUnlocked)
+        {
+            Lock();
         }
         else if(isUnlocked)
         {

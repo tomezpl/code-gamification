@@ -18,6 +18,11 @@ public class PlatformProgramController : ProgramController
     // Time taken already to raise current platform (each PlatformProgram can only raise one platform at a tick!)
     protected float currentRaiseTime = 0.0f;
 
+    public PlatformProgramController() : base()
+    {
+        functions.Add("raisePlatform", new Action<int>(RaisePlatform));
+    }
+
     protected override void Start()
     {
         base.Start();
@@ -87,11 +92,11 @@ public class PlatformProgramController : ProgramController
                     // raisePlatform(index)
                     case "raisePlatform":
                         int index = -1;
-                        if(Int32.TryParse(functionCall.parameters[0].Value, out index))
+                        if(int.TryParse(functionCall.parameters[0].Value, out index))
                         {
                             if(index >= 0)
                             {
-                                RaisePlatform(index);
+                                functions[functionCall.functionName].DynamicInvoke(index);
                                 // Increment the raising timer so that we know when we can set the processingDone flag
                                 currentRaiseTime += Time.deltaTime;
                             }

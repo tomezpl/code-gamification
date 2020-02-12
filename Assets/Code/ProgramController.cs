@@ -16,6 +16,8 @@ public abstract class ProgramController : Interactable
 
     // This is a sort of a "locking mechanism". If a tick needs more than tickTime to perform its actions (e.g. lerping 3D positions), 
     // then set this to false, and the program won't progress to the next node until it's set back to true.
+    //
+    // If using this, remember to set this to false in ExecuteNode, then back to true once you meet the termination condition in ExecuteFrame.
     protected bool processingDone = true;
 
     protected bool processingDoneLastFrame = true;
@@ -65,6 +67,7 @@ public abstract class ProgramController : Interactable
         }
     }
 
+    // Returns false if ExecuteFrame needs to proceed to next node on the next call.
     public virtual bool ExecuteFrame()
     {
         // TODO: move this to a separate method and leave ExecuteFrame as an abstract function?

@@ -37,6 +37,11 @@ public class UnlockableDoor : Unlockable
         playerTransform = GameObject.Find("Player").transform;
     }
 
+    protected virtual bool CanUnlock()
+    {
+        return Input.GetKeyDown(KeyCode.Space) && !isUnlocked && DistanceCheck();
+    }
+
     // Update is called once per frame
     protected override void Update()
     {
@@ -49,7 +54,7 @@ public class UnlockableDoor : Unlockable
             }
             Lock();
         }
-        if (Input.GetKeyDown(KeyCode.Space) && !isUnlocked && DistanceCheck())
+        if (CanUnlock())
         {
             Debug.Log("Unlocking!");
             timeToLock = doorOpenDuration + doorOpeningTime;

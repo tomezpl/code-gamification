@@ -81,6 +81,7 @@ public class PlatformProgramController : ProgramController
             if(CheckNodeType(currentNode) == "FunctionCallBase")
             {
                 FunctionCallBase functionCall = currentNode.GetComponent<FunctionCallBase>();
+                // TODO: rewrite so we have a Dictionary of function names and function delegates, along with an array of types describing each parameter's type
                 switch(functionCall.functionName)
                 {
                     // raisePlatform(index)

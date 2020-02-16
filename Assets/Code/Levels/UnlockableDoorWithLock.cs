@@ -17,7 +17,6 @@ public class UnlockableDoorWithLock : UnlockableDoor
 
     protected override bool CanUnlock()
     {
-        Debug.Log($"CanUnlock returned {basicLockState}");
         return basicLockState; 
     }
 

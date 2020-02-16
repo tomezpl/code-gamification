@@ -39,7 +39,6 @@ public class UnlockableDoor : Unlockable
 
     protected virtual bool CanUnlock()
     {
-        Debug.Log($"CanUnlock: {Input.GetKeyDown(KeyCode.Space) && !isUnlocked && DistanceCheck()}");
         return Input.GetKeyDown(KeyCode.Space) && !isUnlocked && DistanceCheck();
     }
 

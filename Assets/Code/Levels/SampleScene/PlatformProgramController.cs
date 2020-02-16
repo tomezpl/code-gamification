@@ -33,13 +33,15 @@ public class PlatformProgramController : ProgramController
     protected void GetPlatformPositions()
     {
         Programmable[] platforms = PlatformContainer.GetComponentsInChildren<Programmable>();
+
         originalPositions = new List<Vector3>();
         // TODO: this loop will crash if there are other children in PlatformContainer than Platform objects!
         for (int i = 0; i < platforms.Length; i++)
         {
-            if (platforms[i].name.Contains("Platform"))
+            GameObject platform = GetChildProgrammable(PlatformContainer, i);
+            if (platform.name.Contains("Platform"))
             {
-                originalPositions.Add(platforms[i].transform.localPosition);
+                originalPositions.Add(platform.transform.localPosition);
             }
         }
     }
@@ -130,16 +132,7 @@ public class PlatformProgramController : ProgramController
 
     protected void RaisePlatform(int index)
     {
-
-        Programmable[] platforms = PlatformContainer.GetComponentsInChildren<Programmable>();
-        foreach(Programmable platform in platforms)
-        {
-            if(platform.index == index)
-            {
-                // TODO: platform movement
-                platform.transform.localPosition = Vector3.Lerp(platform.transform.localPosition, originalPositions[index] + new Vector3(0.0f, stepHeight, 0.0f), currentRaiseTime / raisingTime);
-                break;
-            }
-        }
+        Programmable platform = GetChildProgrammable(PlatformContainer, index).GetComponent<Programmable>();
+        platform.transform.localPosition = Vector3.Lerp(platform.transform.localPosition, originalPositions[index] + new Vector3(0.0f, stepHeight, 0.0f), currentRaiseTime / raisingTime);
     }
 }

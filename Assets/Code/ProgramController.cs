@@ -132,6 +132,19 @@ public abstract class ProgramController : Interactable
         return null;
     }
 
+    protected GameObject GetChildProgrammable(GameObject container, int index = 0)
+    {
+        Programmable[] programmables = container.GetComponentsInChildren<Programmable>();
+        foreach(Programmable programmable in programmables)
+        {
+            if(programmable.index == index)
+            {
+                return programmable.gameObject;
+            }
+        }
+        return null;
+    }
+
     // Performs actions defined by the Node
     // TODO: add some core functionality e.g. assigning, arithmetic etc? Then return bool to indicate if anything was invoked from the base method.
     // If not, only then continue to the derived implementations of this.

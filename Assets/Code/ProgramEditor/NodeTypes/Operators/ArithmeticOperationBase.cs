@@ -16,6 +16,8 @@ public class ArithmeticOperationBase : FunctionCallBase
 
         bool wasInitialised = isInitialised;
 
+        functionNamePrefix = "arithmetic";
+
         base.InitialiseNode();
 
         if (parameters == null || parameters.Count < 2)
@@ -39,7 +41,14 @@ public class ArithmeticOperationBase : FunctionCallBase
 
     public override void UpdateFunctionProperties()
     {
-        functionName = $"arithmetic{(string.IsNullOrWhiteSpace(operatorName) ? "" : ": " + operatorName)}";
+        if (!string.IsNullOrWhiteSpace(functionNamePrefix))
+        {
+            functionName = $"{functionNamePrefix}{(string.IsNullOrWhiteSpace(operatorName) ? "" : $": {operatorName}")}";
+        }
+        else
+        {
+            functionName = operatorName;
+        }
 
         base.UpdateFunctionProperties();
 
@@ -52,6 +61,6 @@ public class ArithmeticOperationBase : FunctionCallBase
 
     public override string Serialize()
     {
-        return $"{(leftHand.IsReference ? leftHand.Name : leftHand.Value)} {operatorStr} {(rightHand.IsReference ? rightHand.Name : rightHand.Value)}";
+        return $"{leftHand.Value} {operatorStr} {rightHand.Value}";
     }
 }

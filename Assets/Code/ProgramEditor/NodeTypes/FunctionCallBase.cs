@@ -6,6 +6,7 @@ using UnityEngine.UI;
 public class FunctionCallBase : NodeBase
 {
     public string functionName;
+    public string functionNamePrefix;
     public ushort paramCount; // number of parameters
     [SerializeField]
     public List<FunctionParameter> parameters;

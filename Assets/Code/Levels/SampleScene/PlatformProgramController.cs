@@ -46,17 +46,16 @@ public class PlatformProgramController : ProgramController
         }
     }
 
-    public override void ExecuteNode(NodeBase node)
+    public override bool ExecuteNode(NodeBase node)
     {
+        if (base.ExecuteNode(node))
+            return false;
+
         Debug.Log(CheckNodeType(node));
         switch(CheckNodeType(node))
         {
             // Handlers for different commands
-            case "ProgramStart":
-                Debug.Log("Program starting!");
-                processingDone = true;
-                break;
-            case "FunctionCallBase":
+            case NodeType.FunctionCallBase:
                 Debug.Log($"Handling function {node.GetComponent<FunctionCallBase>().functionName}.");
 
                 // If this node is going to alter the platform positions (e.g. by raising them), 
@@ -70,12 +69,15 @@ public class PlatformProgramController : ProgramController
                     GetPlatformPositions();
                     currentRaiseTime = 0.0f;
                     processingDone = false;
+                    return true;
                 }
                 break;
             default:
                 Debug.Log("Unidentified node.");
                 break;
         }
+
+        return false;
     }
 
     public override bool ExecuteFrame()
@@ -85,7 +87,7 @@ public class PlatformProgramController : ProgramController
 
         if(!processingDone)
         {
-            if(CheckNodeType(currentNode) == "FunctionCallBase")
+            if(CheckNodeType(currentNode) == NodeType.FunctionCallBase)
             {
                 FunctionCallBase functionCall = currentNode.GetComponent<FunctionCallBase>();
                 // TODO: rewrite so we have a Dictionary of function names and function delegates, along with an array of types describing each parameter's type

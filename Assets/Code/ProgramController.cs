@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 // Implement this base class to add function calls that can execute in ExecuteFrame()
-public abstract class ProgramController : Interactable
+public class ProgramController : Interactable
 {
     public Transform editorUi;
 
@@ -33,9 +33,13 @@ public abstract class ProgramController : Interactable
 
     protected Dictionary<string, System.Delegate> functions;
 
+    // This is used by CheckNodeType
+    public enum NodeType { Unknown, FunctionCallBase, ProgramStart, ArithmeticOperationBase, CodeBlock, AssignValue };
+
     public ProgramController() : base()
     {
         functions = new Dictionary<string, System.Delegate>();
+        symbolTable = new Dictionary<string, FunctionParameter>();
     }
 
     // Start is called before the first frame update
@@ -115,21 +119,24 @@ public abstract class ProgramController : Interactable
         return true; // good to continue with any child implementations of this method
     }
 
-    // Checks type of node and returns it as string
-    protected string CheckNodeType(NodeBase node)
+    // Checks type of node and returns it as NodeType
+    // MAKE SURE TO FOLLOW THE INHERITANCE HIERARCHY FROM CHILD TO BASE. Otherwise, you'll run into problems where everything is a NodeBase...
+    protected NodeType CheckNodeType(NodeBase node)
     {
         if (node.gameObject.GetComponent<ProgramStart>())
-            return "ProgramStart";
-        if (node.gameObject.GetComponent<FunctionCallBase>())
-            return "FunctionCallBase";
+            return NodeType.ProgramStart;
+        if (node.gameObject.GetComponent<AssignValue>())
+            return NodeType.AssignValue;
         if (node.gameObject.GetComponent<ArithmeticOperationBase>())
-            return "ArithmeticOperationBase";
+            return NodeType.ArithmeticOperationBase;
+        if (node.gameObject.GetComponent<FunctionCallBase>())
+            return NodeType.FunctionCallBase;
         if (node.gameObject.GetComponent<CodeBlock>())
-            return "CodeBlock";
+            return NodeType.CodeBlock;
 
         // If type can't be determined, return null
         Debug.LogWarning("Couldn't determine type of node, returning null! Check if ProgramController.CheckNodeType has been updated correctly with new node types.");
-        return null;
+        return NodeType.Unknown;
     }
 
     protected GameObject GetChildProgrammable(GameObject container, int index = 0)
@@ -148,5 +155,28 @@ public abstract class ProgramController : Interactable
     // Performs actions defined by the Node
     // TODO: add some core functionality e.g. assigning, arithmetic etc? Then return bool to indicate if anything was invoked from the base method.
     // If not, only then continue to the derived implementations of this.
-    public abstract void ExecuteNode(NodeBase node);
+    public virtual bool ExecuteNode(NodeBase node)
+    {
+        switch (CheckNodeType(node))
+        {
+            // Handlers for different commands
+            case NodeType.ProgramStart:
+                Debug.Log("Program starting!");
+                processingDone = true;
+                return true;
+            case NodeType.AssignValue:
+                AssignValue assignValue = node.GetComponent<AssignValue>();
+                if (!symbolTable.ContainsKey(assignValue.leftHand.Value))
+                {
+                    symbolTable.Add(assignValue.leftHand.Value, assignValue.rightHand);
+                }
+                else
+                {
+                    symbolTable[assignValue.leftHand.Value] = assignValue.rightHand;
+                }
+                return true;
+        }
+
+        return false;
+    }
 }

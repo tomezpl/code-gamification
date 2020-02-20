@@ -54,11 +54,34 @@ public class EditorDraggableNode : MonoBehaviour
         }
     }
 
+    // Checks if this object is a "Reference" prefab.
+    public bool IsReference()
+    {
+        return transform.childCount == 1 && GetComponentInChildren<Text>().name == "Text";
+    }
+
     public void DoubleClick()
     {
         if (transform.name == "FuncName")
         {
             DispatchEditingProperty(new System.Action<string>(FunctionNameEditingFinished), GetComponentInParent<FunctionCallBase>().functionName);
+        }
+        else if (IsReference() || (transform.name.Contains("Parameter") && name != "Parameter"))
+        {
+            // TODO
+            int paramIndex = -1;
+            if(transform.name.Contains("Parameter") && name != "Parameter")
+            {
+                paramIndex = System.Convert.ToInt32(transform.name.Substring("Parameter".Length)) - 1;
+            }
+            if (paramIndex >= 0)
+            {
+                DispatchEditingProperty(new System.Action<string>(ParamEditingFinished), GetComponentInParent<FunctionCallBase>().parameters[paramIndex].Value);
+            }
+            else
+            {
+                DispatchEditingProperty(new System.Action<string>(ReferenceEditingFinished), GetComponentInChildren<Text>().text);
+            }
         }
     }
 
@@ -78,10 +101,37 @@ public class EditorDraggableNode : MonoBehaviour
         owner.editingNodeProperty = true;
     }
 
+    public void ReferenceEditingFinished(string finalValue)
+    {
+        GetComponentInChildren<Text>().text = finalValue;
+    }
+
+    public void ParamEditingFinished(string finalValue)
+    {
+        int paramIndex = -1;
+        if (transform.name.Contains("Parameter") && name != "Parameter")
+        {
+            paramIndex = System.Convert.ToInt32(transform.name.Substring("Parameter".Length)) - 1;
+        }
+        if (paramIndex >= 0)
+        {
+            GetComponentInParent<FunctionCallBase>().parameters[paramIndex].Value = finalValue;
+            GetComponentInParent<FunctionCallBase>().UpdateFunctionProperties();
+        }
+    }
+
     public void FunctionNameEditingFinished(string finalName)
     {
         Debug.Log($"Got back '{finalName}'.");
         GetComponentInParent<FunctionCallBase>().functionName = finalName;
+
+        // TODO: maybe this should be done in FunctionCallBase?
+        if (owner.programController && owner.programController.functions.ContainsKey(finalName))
+        {
+            GetComponentInParent<FunctionCallBase>().paramCount = (ushort)owner.programController.functions[finalName].Method.GetParameters().Length;
+            GetComponentInParent<FunctionCallBase>().parameters = new List<FunctionParameter>(GetComponentInParent<FunctionCallBase>().paramCount);
+        }
+
         GetComponentInParent<FunctionCallBase>().UpdateFunctionProperties();
     }
 
@@ -141,7 +191,10 @@ public class EditorDraggableNode : MonoBehaviour
         }
         if(clickCounter >= 2)
         {
-            DoubleClick();
+            if (transform.parent != owner)
+            {
+                DoubleClick();
+            }
             clickCounter = 0;
         }
         if(timeSinceClick > doubleClickAllowedTime)

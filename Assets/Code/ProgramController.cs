@@ -31,7 +31,7 @@ public class ProgramController : Interactable
     // Variables, constants etc. that are present in this program
     public Dictionary<string, FunctionParameter> symbolTable;
 
-    protected Dictionary<string, System.Delegate> functions;
+    public Dictionary<string, System.Delegate> functions;
 
     // This is used by CheckNodeType
     public enum NodeType { Unknown, FunctionCallBase, ProgramStart, ArithmeticOperationBase, CodeBlock, AssignValue };
@@ -50,6 +50,7 @@ public class ProgramController : Interactable
         else
         {
             program = editorUi.GetComponent<EditorProgram>();
+            program.programController = this;
             currentNode = program.programStart;
         }
     }

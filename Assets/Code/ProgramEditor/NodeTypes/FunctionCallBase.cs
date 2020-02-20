@@ -14,22 +14,64 @@ public class FunctionCallBase : NodeBase
     // UI stuff:
     public GameObject functionNameText;
 
+    protected Vector2 firstParamOrigin;
+    protected Rect firstParamRect;
+    protected float firstParamWidth, firstParamHeight;
+
+    static GameObject ParameterTemplate;
+
     // Start is called before the first frame update
     public override void InitialiseNode()
     {
         base.InitialiseNode();
+
+        if (transform.Find("Parameter"))
+        {
+            firstParamOrigin = transform.Find("Parameter").localPosition;
+            firstParamRect = transform.Find("Parameter").GetComponent<RectTransform>().rect;
+            firstParamWidth = transform.Find("Parameter").GetComponent<RectTransform>().sizeDelta.x;
+            firstParamHeight = transform.Find("Parameter").GetComponent<RectTransform>().sizeDelta.y;
+            transform.Find("Parameter").gameObject.SetActive(false);
+            if(ParameterTemplate == null)
+            {
+                ParameterTemplate = transform.Find("Parameter").gameObject;
+                ParameterTemplate.transform.SetParent(FindElementContainer());
+            }
+            else
+            {
+                Destroy(transform.Find("Parameter").gameObject);
+            }
+
+            GetComponent<RectTransform>().SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, GetComponent<RectTransform>().rect.height - firstParamRect.height);
+        }
+
+        if(parameters == null)
+        {
+            parameters = new List<FunctionParameter>();
+            for(int i = 0; i < paramCount; i++)
+            {
+                parameters.Add(new FunctionParameter());
+            }
+        }
+        UpdateFunctionProperties();
+    }
+
+    public override void Start()
+    {
+        base.Start();
+
         UpdateFunctionProperties();
     }
 
     public void OnValidate()
     {
-        UpdateFunctionProperties();
+        //UpdateFunctionProperties();
     }
 
     public override void Reset()
     {
         base.Reset();
-        UpdateFunctionProperties();
+        //UpdateFunctionProperties();
     }
 
     public virtual void UpdateFunctionProperties()
@@ -42,7 +84,37 @@ public class FunctionCallBase : NodeBase
         for (ushort i = 0; i < paramCount && parameters != null && i < parameters.Count; i++)
         {
             // TODO: type checking, pointing references to scene objects, etc.
-            transform.Find($"Parameter{i + 1}").GetComponentInChildren<Text>().text = parameters[i].Value;
+            Transform param = transform.Find($"Parameter{i + 1}");
+            if (param == null)
+            {
+                //GameObject paramPrefab = Resources.Load("Prefabs/ProgramEditor/Nodes/Parameter") as GameObject;
+
+                GameObject paramObject = Instantiate(ParameterTemplate, transform);
+                paramObject.SetActive(true);
+
+                GetComponent<RectTransform>().SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, GetComponent<RectTransform>().rect.height + firstParamRect.height);
+
+                float margin = Mathf.Abs(firstParamOrigin.y - transform.Find("FuncName").localPosition.y);
+
+                //GetComponent<RectTransform>().sizeDelta = new Vector2(GetComponent<RectTransform>().sizeDelta.x, GetComponent<RectTransform>().rect.height + firstParamRect.height);
+
+                //paramObject.transform.SetParent(transform);
+
+                //paramObject.GetComponent<RectTransform>().SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, GetComponent<RectTransform>().rect.width);
+                //paramObject.GetComponent<RectTransform>().SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, firstParamRect.height);
+
+                paramObject.transform.localPosition = new Vector3(0.0f, firstParamRect.y + margin * i + firstParamRect.height * i);
+
+                //paramObject.GetComponent<RectTransform>().sizeDelta = new Vector2(firstParamWidth, firstParamHeight);
+
+                //GetComponent<RectTransform>().sizeDelta = new Vector2(GetComponent<RectTransform>().sizeDelta.x, GetComponent<RectTransform>().rect.height + firstParamRect.height);
+
+                paramObject.name = $"Parameter{i+1}";
+            }
+            else
+            {
+                param.GetComponentInChildren<Text>().text = $"{parameters[i].Name}={parameters[i].Value}";
+            }
         }
     }
 

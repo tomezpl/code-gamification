@@ -10,11 +10,11 @@ public class EditorProgram : MonoBehaviour
     public GameObject elementContainer;
 
     public ProgramStart programStart;
+    public ProgramController programController;
 
     public int framesToDisable = 2;
 
     int frameCounter = 0;
-
     protected static Dictionary<string, KeyValuePair<string, GameObject>> nodePrefabs = null;
 
     public GUISkin guiSkin;
@@ -219,7 +219,8 @@ public class EditorProgram : MonoBehaviour
                 float y = editingNodeInPlaceRect.y;
                 float width = editingNodeInPlaceRect.width;
                 float height = editingNodeInPlaceRect.height;
-                editedNodeValue = GUI.TextField(new Rect(x, y - width/2.0f, width, height), editedNodeValue);
+                float cvsHeight = elementContainer.GetComponentInParent<RectTransform>().rect.height;
+                editedNodeValue = GUI.TextField(new Rect(x, Screen.height - (y + height), width, height), editedNodeValue);
             }
             else
             {

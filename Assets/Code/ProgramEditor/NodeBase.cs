@@ -91,13 +91,13 @@ public abstract class NodeBase : MonoBehaviour, IProgramNode
 
     public void Awake()
     {
-        Start();
+        //Start();
     }
 
     public virtual void Reset()
     {
-        isInitialised = false;
-        InitialiseNode();
+        //isInitialised = false;
+        //InitialiseNode();
     }
 
     public virtual void InitialiseNode()

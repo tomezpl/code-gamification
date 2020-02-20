@@ -14,6 +14,10 @@ public class EditorProgram : MonoBehaviour
     public int framesToDisable = 2;
 
     int frameCounter = 0;
+
+    protected static Dictionary<string, KeyValuePair<string, GameObject>> nodePrefabs = null;
+
+    public GUISkin guiSkin;
     
     public bool EditorActive {
         get { return editorActive; }
@@ -38,6 +42,10 @@ public class EditorProgram : MonoBehaviour
     }
 
     private bool editorActive = false;
+
+    public bool enableEditorOnStartup = false;
+
+    private bool choosingNode = false;
 
     void DisableEditor()
     {
@@ -75,9 +83,26 @@ public class EditorProgram : MonoBehaviour
         editorActive = true;
     }
 
+    GameObject AddNode(string type = "NodeBase", float x = 0.0f, float y = 0.0f)
+    {
+        GameObject nodeObject = Instantiate(nodePrefabs[type].Value, elementContainer.transform);
+
+        nodeObject.transform.localPosition = new Vector3(x, y, 0.0f);
+
+        return nodeObject;
+    }
+
     // Start is called before the first frame update
     void Start()
     {
+        // Load editor node prefabs from Resources
+        if(nodePrefabs == null)
+        {
+            nodePrefabs = new Dictionary<string, KeyValuePair<string, GameObject>>();
+            nodePrefabs.Add("AssignValue", new KeyValuePair<string, GameObject>("Set variable: Assigns a value to a variable. The variable is created if it doesn't exist.", Resources.Load("Prefabs/ProgramEditor/Nodes/Operations/AssignValue") as GameObject));
+            nodePrefabs.Add("FunctionCallBase", new KeyValuePair<string, GameObject>("Function call: Triggers the specified function. Can pass parameters.", Resources.Load("Prefabs/ProgramEditor/Nodes/Operations/FunctionCall") as GameObject));
+        }
+
         if(!lineCanvas)
             lineCanvas = transform.Find("LineCanvas").GetComponent<Canvas>();
 
@@ -87,7 +112,10 @@ public class EditorProgram : MonoBehaviour
         if (!programStart)
             programStart = elementContainer.GetComponentInChildren<ProgramStart>();
 
-        DisableEditor();
+        if (!enableEditorOnStartup)
+        {
+            DisableEditor();
+        }
     }
 
     // Update is called once per frame
@@ -98,8 +126,55 @@ public class EditorProgram : MonoBehaviour
         // Editor creation occurs at startup so we may need a couple of frames to disable it for good measure?
         if (frameCounter < framesToDisable)
         {
-            DisableEditor();
+            if (!enableEditorOnStartup)
+            {
+                DisableEditor();
+            }
             frameCounter++;
+        }
+
+        if(Input.GetKeyUp(KeyCode.Tab))
+        {
+            choosingNode = !choosingNode;
+        }
+    }
+
+    private Vector2 ndcToScreen(Vector2 ndc)
+    {
+        return new Vector2(ndc.x * Screen.width, ndc.y * Screen.height);
+    }
+
+    private Vector2 ndcToScreen(float x, float y)
+    {
+        return ndcToScreen(new Vector2(x, y));
+    }
+
+    private void OnGUI()
+    {
+        GUI.skin = guiSkin;
+
+        if (choosingNode)
+        {
+            GUI.Box(new Rect(ndcToScreen(0.5f - 0.5f / 2.0f, 0.25f), ndcToScreen(0.5f, 0.5f)), "Choose a node type to add:");
+
+            List<string> nodeTypeStrings = new List<string>();
+            foreach(string nodeTypeString in nodePrefabs.Keys)
+            {
+                nodeTypeStrings.Add(nodeTypeString);
+            }
+
+            for (int i = 0; i < nodeTypeStrings.Count; i++)
+            {
+                float buttonHeight = 0.05f;
+                float buttonWidth = 0.475f;
+                bool pressed = GUI.Button(new Rect(ndcToScreen(0.5f - buttonWidth/2.0f, 0.3f + buttonHeight * (float)i + 0.01f * (float)i), ndcToScreen(buttonWidth, buttonHeight)), nodePrefabs[nodeTypeStrings[i]].Key);
+                if(pressed)
+                {
+                    AddNode(nodeTypeStrings[i]);
+                    choosingNode = false;
+                    break;
+                }
+            }
         }
     }
 

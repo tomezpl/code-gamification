@@ -49,6 +49,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   elementContainer: {fileID: 3694425637225236705}
   programStart: {fileID: 0}
+  framesToDisable: 2
+  guiSkin: {fileID: 11400000, guid: 5cac01251ca465f40a842848c06374ee, type: 2}
+  enableEditorOnStartup: 0
 --- !u!1 &1672456976744827108
 GameObject:
   m_ObjectHideFlags: 0

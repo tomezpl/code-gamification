@@ -14,14 +14,28 @@ public class EditorDraggableNode : MonoBehaviour
 
     protected Vector2 lastFramePointer;
 
+    public EditorProgram owner;
+
+    public bool allowDrag = true;
+
     // Start is called before the first frame update
     void Start()
     {
         rectTransform = GetComponent<RectTransform>();
+
+        // Find the owner EditorProgram
+        Transform ownerTransform = transform.parent;
+        while ((owner = ownerTransform.GetComponent<EditorProgram>()) == null)
+        {
+            ownerTransform = ownerTransform.parent;
+        }
     }
 
     public void Drag(Vector2 input)
     {
+        if (!allowDrag)
+            return;
+
         if (!isDragged)
         {
             lastFramePointer = input; // set last frame already to anchor point
@@ -62,6 +76,21 @@ public class EditorDraggableNode : MonoBehaviour
         if(Input.GetKeyDown(KeyCode.Delete) && nodeRect.Contains(pointer))
         {
             GetComponent<NodeBase>().DeleteNode();
+        }
+
+        // Linking nodes
+        if(Input.GetKeyUp(KeyCode.Mouse1) && nodeRect.Contains(pointer))
+        {
+            if(!owner.linkingNodes)
+            {
+                owner.linkingNodes = true;
+                owner.linkingNodesObjects[0] = gameObject;
+            }
+            else
+            {
+                owner.linkingNodesObjects[1] = gameObject;
+                owner.LinkCurrentlySelectedObjects();
+            }
         }
 
         lastFramePointer = pointer;

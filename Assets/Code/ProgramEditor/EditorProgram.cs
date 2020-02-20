@@ -45,7 +45,10 @@ public class EditorProgram : MonoBehaviour
 
     public bool enableEditorOnStartup = false;
 
+    // Editor state
     private bool choosingNode = false;
+    public bool linkingNodes = false;
+    public GameObject[] linkingNodesObjects = new GameObject[2];
 
     void DisableEditor()
     {
@@ -90,6 +93,17 @@ public class EditorProgram : MonoBehaviour
         nodeObject.transform.localPosition = new Vector3(x, y, 0.0f);
 
         return nodeObject;
+    }
+
+    public void LinkCurrentlySelectedObjects()
+    {
+        linkingNodes = false;
+        linkingNodesObjects[0].GetComponent<NodeBase>().NextNodeObject = linkingNodesObjects[1];
+        if (linkingNodesObjects[1].GetComponent<NodeBase>())
+        {
+            linkingNodesObjects[0].GetComponent<NodeBase>().nextNode = linkingNodesObjects[1].GetComponent<NodeBase>();
+        }
+        linkingNodesObjects[0] = linkingNodesObjects[1] = null;
     }
 
     // Start is called before the first frame update

@@ -52,6 +52,10 @@ MonoBehaviour:
   framesToDisable: 2
   guiSkin: {fileID: 11400000, guid: 5cac01251ca465f40a842848c06374ee, type: 2}
   enableEditorOnStartup: 0
+  linkingNodes: 0
+  linkingNodesObjects:
+  - {fileID: 0}
+  - {fileID: 0}
 --- !u!1 &1672456976744827108
 GameObject:
   m_ObjectHideFlags: 0
@@ -606,22 +610,22 @@ PrefabInstance:
     - target: {fileID: 2136966838798769424, guid: 61919e04345a5a543a7d857695cf409f,
         type: 3}
       propertyPath: m_LocalRotation.x
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2136966838798769424, guid: 61919e04345a5a543a7d857695cf409f,
         type: 3}
       propertyPath: m_LocalRotation.y
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2136966838798769424, guid: 61919e04345a5a543a7d857695cf409f,
         type: 3}
       propertyPath: m_LocalRotation.z
-      value: 0.38268343
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2136966838798769424, guid: 61919e04345a5a543a7d857695cf409f,
         type: 3}
       propertyPath: m_LocalRotation.w
-      value: -0.9238796
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2136966838798769424, guid: 61919e04345a5a543a7d857695cf409f,
         type: 3}
@@ -641,7 +645,7 @@ PrefabInstance:
     - target: {fileID: 2136966838798769424, guid: 61919e04345a5a543a7d857695cf409f,
         type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
-      value: -45.000004
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2136966838798769424, guid: 61919e04345a5a543a7d857695cf409f,
         type: 3}
@@ -656,12 +660,12 @@ PrefabInstance:
     - target: {fileID: 2136966838798769424, guid: 61919e04345a5a543a7d857695cf409f,
         type: 3}
       propertyPath: m_SizeDelta.x
-      value: 39.8
+      value: 75
       objectReference: {fileID: 0}
     - target: {fileID: 2136966838798769424, guid: 61919e04345a5a543a7d857695cf409f,
         type: 3}
       propertyPath: m_SizeDelta.y
-      value: 39.59999
+      value: 75
       objectReference: {fileID: 0}
     - target: {fileID: 2136966838798769424, guid: 61919e04345a5a543a7d857695cf409f,
         type: 3}
@@ -781,12 +785,12 @@ PrefabInstance:
     - target: {fileID: 6053813968394144474, guid: 71d445b6bbe4f3f4cb40e4278b630bbe,
         type: 3}
       propertyPath: m_SizeDelta.x
-      value: 100
+      value: 75
       objectReference: {fileID: 0}
     - target: {fileID: 6053813968394144474, guid: 71d445b6bbe4f3f4cb40e4278b630bbe,
         type: 3}
       propertyPath: m_SizeDelta.y
-      value: 100
+      value: 75
       objectReference: {fileID: 0}
     - target: {fileID: 6053813968394144474, guid: 71d445b6bbe4f3f4cb40e4278b630bbe,
         type: 3}

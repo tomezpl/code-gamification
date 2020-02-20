@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 6053813968394144474}
   - component: {fileID: 3691902932091857457}
   - component: {fileID: 7543048123672824330}
+  - component: {fileID: 8921425330666162808}
   m_Layer: 5
   m_Name: ProgramStart
   m_TagString: Untagged
@@ -37,7 +38,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: -446.09998, y: 200.4}
-  m_SizeDelta: {x: 847.8, y: 363.6}
+  m_SizeDelta: {x: 75, y: 75}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &3691902932091857457
 CanvasRenderer:
@@ -63,6 +64,20 @@ MonoBehaviour:
   indentLevel: 0
   isInitialised: 0
   inLoop: 0
+--- !u!114 &8921425330666162808
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2099601258778209364}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3fd0eb0103fc5a74aa8d7793ecebf922, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  owner: {fileID: 0}
+  allowDrag: 0
 --- !u!1 &2998680394638202942
 GameObject:
   m_ObjectHideFlags: 0

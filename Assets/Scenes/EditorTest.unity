@@ -198,6 +198,26 @@ PrefabInstance:
       propertyPath: NextNodeObject
       value: 
       objectReference: {fileID: 221800062}
+    - target: {fileID: 375000544038754144, guid: 8bd35e97c6cf6c540af720a3ec75b487,
+        type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 75
+      objectReference: {fileID: 0}
+    - target: {fileID: 375000544038754144, guid: 8bd35e97c6cf6c540af720a3ec75b487,
+        type: 3}
+      propertyPath: m_SizeDelta.y
+      value: 75
+      objectReference: {fileID: 0}
+    - target: {fileID: 5521196247340137957, guid: 8bd35e97c6cf6c540af720a3ec75b487,
+        type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 75
+      objectReference: {fileID: 0}
+    - target: {fileID: 5521196247340137957, guid: 8bd35e97c6cf6c540af720a3ec75b487,
+        type: 3}
+      propertyPath: m_SizeDelta.y
+      value: 75
+      objectReference: {fileID: 0}
     - target: {fileID: 1672456976029044503, guid: 8bd35e97c6cf6c540af720a3ec75b487,
         type: 3}
       propertyPath: enableEditorOnStartup

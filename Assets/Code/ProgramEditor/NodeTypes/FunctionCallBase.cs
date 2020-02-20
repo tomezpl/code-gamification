@@ -87,8 +87,6 @@ public class FunctionCallBase : NodeBase
             Transform param = transform.Find($"Parameter{i + 1}");
             if (param == null)
             {
-                //GameObject paramPrefab = Resources.Load("Prefabs/ProgramEditor/Nodes/Parameter") as GameObject;
-
                 GameObject paramObject = Instantiate(ParameterTemplate, transform);
                 paramObject.SetActive(true);
 
@@ -96,25 +94,13 @@ public class FunctionCallBase : NodeBase
 
                 float margin = Mathf.Abs(firstParamOrigin.y - transform.Find("FuncName").localPosition.y);
 
-                //GetComponent<RectTransform>().sizeDelta = new Vector2(GetComponent<RectTransform>().sizeDelta.x, GetComponent<RectTransform>().rect.height + firstParamRect.height);
-
-                //paramObject.transform.SetParent(transform);
-
-                //paramObject.GetComponent<RectTransform>().SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, GetComponent<RectTransform>().rect.width);
-                //paramObject.GetComponent<RectTransform>().SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, firstParamRect.height);
-
                 paramObject.transform.localPosition = new Vector3(0.0f, firstParamRect.y + margin * i + firstParamRect.height * i);
 
-                //paramObject.GetComponent<RectTransform>().sizeDelta = new Vector2(firstParamWidth, firstParamHeight);
-
-                //GetComponent<RectTransform>().sizeDelta = new Vector2(GetComponent<RectTransform>().sizeDelta.x, GetComponent<RectTransform>().rect.height + firstParamRect.height);
-
                 paramObject.name = $"Parameter{i+1}";
+
+                param = paramObject.transform;
             }
-            else
-            {
-                param.GetComponentInChildren<Text>().text = $"{parameters[i].Name}={parameters[i].Value}";
-            }
+            param.GetComponentInChildren<Text>().text = $"{parameters[i].Name}={parameters[i].Value}";
         }
     }
 

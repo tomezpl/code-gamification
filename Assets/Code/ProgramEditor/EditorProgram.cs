@@ -153,7 +153,7 @@ public class EditorProgram : MonoBehaviour
             frameCounter++;
         }
 
-        if(Input.GetKeyUp(KeyCode.Tab))
+        if(Input.GetKeyUp(KeyCode.Tab) && EditorActive)
         {
             choosingNode = !choosingNode;
         }

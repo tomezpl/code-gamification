@@ -128,8 +128,13 @@ public class EditorDraggableNode : MonoBehaviour
         // TODO: maybe this should be done in FunctionCallBase?
         if (owner.programController && owner.programController.functions.ContainsKey(finalName))
         {
-            GetComponentInParent<FunctionCallBase>().paramCount = (ushort)owner.programController.functions[finalName].Method.GetParameters().Length;
-            GetComponentInParent<FunctionCallBase>().parameters = new List<FunctionParameter>(GetComponentInParent<FunctionCallBase>().paramCount);
+            System.Reflection.ParameterInfo[] paramInfo = owner.programController.functions[finalName].Method.GetParameters();
+            GetComponentInParent<FunctionCallBase>().paramCount = (ushort)paramInfo.Length;
+            GetComponentInParent<FunctionCallBase>().parameters = new List<FunctionParameter>();
+            for(int i = 0; i < paramInfo.Length; i++)
+            {
+                GetComponentInParent<FunctionCallBase>().parameters.Add(new FunctionParameter { Type = paramInfo[i].ParameterType.ToString(), Name = paramInfo[i].Name, Value = "" });
+            }
         }
 
         GetComponentInParent<FunctionCallBase>().UpdateFunctionProperties();

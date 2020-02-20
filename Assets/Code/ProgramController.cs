@@ -74,12 +74,16 @@ public class ProgramController : Interactable
             }
         }
 
-        if (DistanceCheck())
+        // Before doing key detection, first check if the user isn't inputting anything in the editor
+        if (!editorUi.GetComponent<EditorProgram>().editingNodeProperty)
         {
-            if (Input.GetKeyUp(KeyCode.E))
-                program.EditorActive = !program.EditorActive;
-            if (Input.GetKeyUp(KeyCode.Space))
-                programRunning = !programRunning;
+            if (DistanceCheck())
+            {
+                if (Input.GetKeyUp(KeyCode.E))
+                    program.EditorActive = !program.EditorActive;
+                if (Input.GetKeyUp(KeyCode.Space))
+                    programRunning = !programRunning;
+            }
         }
     }
 

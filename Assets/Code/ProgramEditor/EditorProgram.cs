@@ -49,6 +49,12 @@ public class EditorProgram : MonoBehaviour
     private bool choosingNode = false;
     public bool linkingNodes = false;
     public GameObject[] linkingNodesObjects = new GameObject[2];
+    public bool editingNodeProperty = false;
+    public string editingNodeValue = ""; // original value of the string that is edited - this will be returned if Esc is pressed
+    public string editedNodeValue = ""; // final edited value to return if Enter is pressed
+    public bool editingNodeInPlace = false;
+    public Rect editingNodeInPlaceRect = new Rect();
+    public System.Action<string> editingNodeFinishedClb = null;
 
     void DisableEditor()
     {
@@ -151,6 +157,20 @@ public class EditorProgram : MonoBehaviour
         {
             choosingNode = !choosingNode;
         }
+
+        if (editingNodeProperty)
+        {
+            if (Input.GetKeyDown(KeyCode.Escape))
+            {
+                editingNodeFinishedClb.DynamicInvoke(editingNodeValue);
+                editingNodeProperty = false;
+            }
+            else if (Input.GetKeyDown(KeyCode.Return))
+            {
+                editingNodeFinishedClb.DynamicInvoke(editedNodeValue);
+                editingNodeProperty = false;
+            }
+        }
     }
 
     private Vector2 ndcToScreen(Vector2 ndc)
@@ -188,6 +208,22 @@ public class EditorProgram : MonoBehaviour
                     choosingNode = false;
                     break;
                 }
+            }
+        }
+
+        if (editingNodeProperty)
+        {
+            if (editingNodeInPlace)
+            {
+                float x = editingNodeInPlaceRect.x;
+                float y = editingNodeInPlaceRect.y;
+                float width = editingNodeInPlaceRect.width;
+                float height = editingNodeInPlaceRect.height;
+                editedNodeValue = GUI.TextField(new Rect(x, y - width/2.0f, width, height), editedNodeValue);
+            }
+            else
+            {
+                editedNodeValue = GUI.TextField(new Rect(ndcToScreen(0.5f - 0.375f / 2.0f, 0.5f - 0.05f / 2.0f), ndcToScreen(0.375f, 0.05f)), editedNodeValue);
             }
         }
     }

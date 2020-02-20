@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 
+// This script can actually be used for clickables etc. anything interactive, this name is irrelevant anymore.
 public class EditorDraggableNode : MonoBehaviour
 {
     protected RectTransform rectTransform;
@@ -17,6 +18,10 @@ public class EditorDraggableNode : MonoBehaviour
     public EditorProgram owner;
 
     public bool allowDrag = true;
+
+    protected int clickCounter;
+    protected float timeSinceClick;
+    protected const float doubleClickAllowedTime = 1.0f;
 
     // Start is called before the first frame update
     void Start()
@@ -33,7 +38,7 @@ public class EditorDraggableNode : MonoBehaviour
 
     public void Drag(Vector2 input)
     {
-        if (!allowDrag)
+        if (!allowDrag || owner.editingNodeProperty)
             return;
 
         if (!isDragged)
@@ -47,6 +52,37 @@ public class EditorDraggableNode : MonoBehaviour
             Vector2 delta = -1 * (lastFramePointer - input);
             rectTransform.Translate(delta);
         }
+    }
+
+    public void DoubleClick()
+    {
+        if (transform.name == "FuncName")
+        {
+            DispatchEditingProperty(new System.Action<string>(FunctionNameEditingFinished), GetComponentInParent<FunctionCallBase>().functionName);
+        }
+    }
+
+    public void DispatchEditingProperty(System.Action<string> finishedCallback, string initValue)
+    {
+        owner.editedNodeValue = owner.editingNodeValue = initValue;
+
+        Vector3[] corners = { Vector3.zero, Vector3.zero, Vector3.zero, Vector3.zero };
+
+        // Get screen-space rectangle of the node
+        rectTransform.GetWorldCorners(corners);
+        Rect nodeRect = new Rect(corners[0], corners[2] - corners[0]);
+
+        owner.editingNodeInPlaceRect = nodeRect;
+        owner.editingNodeInPlace = true;
+        owner.editingNodeFinishedClb = finishedCallback;
+        owner.editingNodeProperty = true;
+    }
+
+    public void FunctionNameEditingFinished(string finalName)
+    {
+        Debug.Log($"Got back '{finalName}'.");
+        GetComponentInParent<FunctionCallBase>().functionName = finalName;
+        GetComponentInParent<FunctionCallBase>().UpdateFunctionProperties();
     }
 
     // Update is called once per frame
@@ -79,19 +115,41 @@ public class EditorDraggableNode : MonoBehaviour
         }
 
         // Linking nodes
-        if(Input.GetKeyUp(KeyCode.Mouse1) && nodeRect.Contains(pointer))
+        // Check if this Draggable isn't part of another node.
+        if (transform.parent == owner.elementContainer.transform)
         {
-            if(!owner.linkingNodes)
+            if (Input.GetKeyUp(KeyCode.Mouse1) && nodeRect.Contains(pointer))
             {
-                owner.linkingNodes = true;
-                owner.linkingNodesObjects[0] = gameObject;
-            }
-            else
-            {
-                owner.linkingNodesObjects[1] = gameObject;
-                owner.LinkCurrentlySelectedObjects();
+                if (!owner.linkingNodes)
+                {
+                    owner.linkingNodes = true;
+                    owner.linkingNodesObjects[0] = gameObject;
+                }
+                else
+                {
+                    owner.linkingNodesObjects[1] = gameObject;
+                    owner.LinkCurrentlySelectedObjects();
+                }
             }
         }
+
+        // Double-click: usually this is editing a node
+        if(Input.GetKeyUp(KeyCode.Mouse0) && nodeRect.Contains(pointer))
+        {
+            clickCounter++;
+            timeSinceClick = 0.0f;
+        }
+        if(clickCounter >= 2)
+        {
+            DoubleClick();
+            clickCounter = 0;
+        }
+        if(timeSinceClick > doubleClickAllowedTime)
+        {
+            clickCounter = 0;
+        }
+
+        timeSinceClick += Time.deltaTime;
 
         lastFramePointer = pointer;
     }

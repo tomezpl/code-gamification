@@ -100,7 +100,7 @@ public class FunctionCallBase : NodeBase
 
                 param = paramObject.transform;
             }
-            param.GetComponentInChildren<Text>().text = $"{parameters[i].Name}={parameters[i].Value}";
+            param.GetComponentInChildren<Text>().text = $"{parameters[i].Name}{(!string.IsNullOrWhiteSpace(parameters[i].Name) ? "=" : "")}{parameters[i].Value}";
         }
     }
 

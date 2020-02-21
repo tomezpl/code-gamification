@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class ProgramStart : NodeBase
 {
@@ -25,7 +26,9 @@ public class ProgramStart : NodeBase
 
             while (currentNode != null)
             {
-                fullProgram += $"{((IProgramNode)currentNode).Serialize()}\n";
+                string currentLine = ((IProgramNode)currentNode).Serialize();
+                // Add current line to full program
+                fullProgram += $"{currentLine}\n";
                 if (currentNode.NextNodeObject != null)
                 {
                     currentNode = currentNode.NextNodeObject.GetComponent<NodeBase>();

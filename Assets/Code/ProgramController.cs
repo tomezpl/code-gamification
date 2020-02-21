@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 // Implement this base class to add function calls that can execute in ExecuteFrame()
 public class ProgramController : Interactable
@@ -101,6 +102,8 @@ public class ProgramController : Interactable
                 if (!waitForNextTick)
                 {
                     ExecuteNode(currentNode);
+                    string currentLine = ((IProgramNode)currentNode).Serialize();
+                    GameObject.Find("OutputRenderer").transform.Find("Canvas").GetComponentInChildren<Text>().text = currentLine;
                 }
                 else
                 {

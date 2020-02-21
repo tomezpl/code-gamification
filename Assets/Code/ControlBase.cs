@@ -1,6 +1,8 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 abstract public class ControlBase : MonoBehaviour
 {
@@ -8,10 +10,60 @@ abstract public class ControlBase : MonoBehaviour
     protected const string hAxis = "Horizontal", vAxis = "Vertical", mAxisX = "Mouse X", mAxisY = "Mouse Y", sprintBtn = "Sprint";
     protected const float camPitchCap = 80.0f, camPitchCapNeg = 360.0f - camPitchCap;
 
+    public bool allowConsole = true;
+
+    public bool consoleVisible = false;
+
+    string enteredCommand = "";
+
     protected virtual void Update()
     {
-        KeyboardMove();
-        MouseLook();
+        if (!consoleVisible)
+        {
+            KeyboardMove();
+            MouseLook();
+        }
+        DebugControls();
+    }
+
+    protected void DebugControls()
+    {
+        if(allowConsole)
+        {
+            if(Input.GetKeyUp(KeyCode.BackQuote))
+            {
+                consoleVisible = !consoleVisible;
+            }
+            if(consoleVisible)
+            {
+                if(Input.GetKeyUp(KeyCode.Return))
+                {
+                    switch (enteredCommand.ToLower())
+                    {
+                        case "quit":
+                            Application.Quit();
+                            break;
+                        case "restart":
+                            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+                            break;
+                    }
+                    if (enteredCommand.ToLower().Contains("load "))
+                    {
+                        int index = Convert.ToInt32(enteredCommand.Trim().Substring("load ".Length));
+                        SceneManager.LoadScene(index);
+                    }
+                    consoleVisible = false;
+                }
+            }
+        }
+    }
+
+    void OnGUI()
+    {
+        if(consoleVisible)
+        {
+            enteredCommand = GUI.TextField(new Rect(0, 0, Screen.width, 20.0f), enteredCommand);
+        }
     }
 
     // Process entity movement input

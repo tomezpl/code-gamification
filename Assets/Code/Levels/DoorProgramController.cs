@@ -8,6 +8,9 @@ public class DoorProgramController : ProgramController
     // Controlled door
     public GameObject doorObject;
 
+    float timer = 0.0f;
+    bool timerActive = false;
+
     public DoorProgramController() : base()
     {
         functions.Add("setLock", new System.Action<bool>(SetLock));
@@ -16,6 +19,8 @@ public class DoorProgramController : ProgramController
     protected virtual void SetLock(bool state)
     {
         doorObject.GetComponent<UnlockableDoorWithLock>().SetLock(state);
+        timer = doorObject.GetComponent<UnlockableDoorWithLock>().doorOpenDuration + doorObject.GetComponent<UnlockableDoorWithLock>().doorOpeningTime;
+        timerActive = true;
     }
 
     public override bool ExecuteNode(NodeBase node)
@@ -43,6 +48,8 @@ public class DoorProgramController : ProgramController
                     bool state = false;
                     if (bool.TryParse(functionCall.parameters[0].Value, out state))
                     {
+                        // we need a custom amount of time for processing this node
+                        processingDone = false;
                         func.DynamicInvoke(state);
                         return true;
                     }
@@ -56,6 +63,27 @@ public class DoorProgramController : ProgramController
         }
 
         return false;
+    }
+
+    public override bool ExecuteFrame()
+    {
+        if (!base.ExecuteFrame())
+            return false;
+
+        timer -= Time.deltaTime;
+
+        if(timerActive)
+        {
+            if (timer <= 0.0f)
+            {
+                timer = 0.0f;
+                timerActive = false;
+
+                processingDone = true;
+            }
+        }
+
+        return true;
     }
 
     // Start is called before the first frame update

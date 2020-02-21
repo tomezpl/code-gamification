@@ -19,7 +19,7 @@ public class ProgramController : Interactable
     // then set this to false, and the program won't progress to the next node until it's set back to true.
     //
     // If using this, remember to set this to false in ExecuteNode, then back to true once you meet the termination condition in ExecuteFrame.
-    protected bool processingDone = true;
+    public bool processingDone = true;
 
     protected bool processingDoneLastFrame = true;
 
@@ -58,7 +58,7 @@ public class ProgramController : Interactable
         // Add OutputRenderer if it doesn't exist yet
         if(!GameObject.Find("OutputRenderer"))
         {
-            Instantiate(Resources.Load("Prefabs/ProgramEditor/OutputRenderer"));
+            Instantiate(Resources.Load("Prefabs/ProgramEditor/OutputRenderer")).name = "OutputRenderer";
         }
 
         transform.Find("CurrentLine").gameObject.SetActive(false);

@@ -54,6 +54,14 @@ public class ProgramController : Interactable
             program.programController = this;
             currentNode = program.programStart;
         }
+
+        // Add OutputRenderer if it doesn't exist yet
+        if(!GameObject.Find("OutputRenderer"))
+        {
+            Instantiate(Resources.Load("Prefabs/ProgramEditor/OutputRenderer"));
+        }
+
+        transform.Find("CurrentLine").gameObject.SetActive(false);
     }
 
     // Update is called once per frame
@@ -103,6 +111,7 @@ public class ProgramController : Interactable
                 {
                     ExecuteNode(currentNode);
                     string currentLine = ((IProgramNode)currentNode).Serialize();
+                    transform.Find("CurrentLine").gameObject.SetActive(true);
                     GameObject.Find("OutputRenderer").transform.Find("Canvas").GetComponentInChildren<Text>().text = currentLine;
                 }
                 else
@@ -121,6 +130,8 @@ public class ProgramController : Interactable
             {
                 programRunning = false;
                 currentNode = program.programStart;
+                GameObject.Find("OutputRenderer").transform.Find("Canvas").GetComponentInChildren<Text>().text = "";
+                transform.Find("CurrentLine").gameObject.SetActive(false);
                 return false;
             }
         }

@@ -92,7 +92,10 @@ public class ProgramController : Interactable
                 if (Input.GetKeyUp(KeyCode.E))
                     program.EditorActive = !program.EditorActive;
                 if (Input.GetKeyUp(KeyCode.Space))
-                    programRunning = !programRunning;
+                {
+                    processingDone = true;
+                    programRunning = true;
+                }
             }
         }
     }

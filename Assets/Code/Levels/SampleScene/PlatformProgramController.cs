@@ -12,15 +12,16 @@ public class PlatformProgramController : ProgramController
     // Original local positions of the platforms
     protected List<Vector3> originalPositions = new List<Vector3>();
 
-    // Time it takes to raise a platform (in seconds)
+    // Time it takes to raise/lower a platform (in seconds)
     public float raisingTime = 0.5f;
 
-    // Time taken already to raise current platform (each PlatformProgram can only raise one platform at a tick!)
+    // Time taken already to raise/lower current platform (each PlatformProgram can only raise/lower one platform at a tick!)
     protected float currentRaiseTime = 0.0f;
 
     public PlatformProgramController() : base()
     {
         functions.Add("raisePlatform", new Action<int>(RaisePlatform));
+        functions.Add("lowerPlatform", new Action<int>(LowerPlatform));
     }
 
     protected override void Start()
@@ -64,7 +65,9 @@ public class PlatformProgramController : ProgramController
                 //
                 // Also, set a timer to mark processing as done after raisingTime passes.
                 // Lastly, set processingDone to false, indicating that we may need an irregular tick time for this (the computer won't continue until processingDone is true)
-                if(node.GetComponent<FunctionCallBase>().functionName == "raisePlatform")
+                // TODO: replace the Action type value in the functions dictionary with a FunctionCall class that contains an "irregularTick" flag
+                // TODO: GetPlatformPositions() should be in a virtual override (IrregularTickInit, IrregularTickFrame, IrregularTickFinished)
+                if(node.GetComponent<FunctionCallBase>().functionName == "raisePlatform" || node.GetComponent<FunctionCallBase>().functionName == "lowerPlatform")
                 {
                     GetPlatformPositions();
                     currentRaiseTime = 0.0f;
@@ -91,15 +94,16 @@ public class PlatformProgramController : ProgramController
             {
                 FunctionCallBase functionCall = currentNode.GetComponent<FunctionCallBase>();
                 // TODO: rewrite so we have a Dictionary of function names and function delegates, along with an array of types describing each parameter's type
-                switch(functionCall.functionName)
+                if (functions.ContainsKey(functionCall.functionName))
                 {
-                    // raisePlatform(index)
-                    case "raisePlatform":
+                    if (functions[functionCall.functionName].Method.GetParameters()[0].ParameterType.Name.Contains("Int"))
+                    {
                         int index = -1;
-                        if(int.TryParse(functionCall.parameters[0].Value, out index))
+                        if (int.TryParse(functionCall.parameters[0].Value, out index))
                         {
-                            if(index >= 0)
+                            if (index >= 0)
                             {
+                                Debug.Log($"Calling {functionCall.functionName}({index})");
                                 functions[functionCall.functionName].DynamicInvoke(index);
                                 // Increment the raising timer so that we know when we can set the processingDone flag
                                 currentRaiseTime += Time.deltaTime;
@@ -113,11 +117,11 @@ public class PlatformProgramController : ProgramController
                         {
                             Debug.LogWarning($"Can't convert platform index to integer ({gameObject.name}).");
                         }
-
-                        break;
-                    default:
-                        Debug.Log($"Unknown function {functionCall.functionName}.");
-                        break;
+                    }
+                }
+                else
+                {
+                    Debug.Log($"Unknown function {functionCall.functionName}.");
                 }
             }
 
@@ -136,5 +140,10 @@ public class PlatformProgramController : ProgramController
     {
         Programmable platform = GetChildProgrammable(PlatformContainer, index).GetComponent<Programmable>();
         platform.transform.localPosition = Vector3.Lerp(platform.transform.localPosition, originalPositions[index] + new Vector3(0.0f, stepHeight, 0.0f), currentRaiseTime / raisingTime);
+    }
+    protected void LowerPlatform(int index)
+    {
+        Programmable platform = GetChildProgrammable(PlatformContainer, index).GetComponent<Programmable>();
+        platform.transform.localPosition = Vector3.Lerp(platform.transform.localPosition, originalPositions[index] - new Vector3(0.0f, stepHeight, 0.0f), currentRaiseTime / raisingTime);
     }
 }

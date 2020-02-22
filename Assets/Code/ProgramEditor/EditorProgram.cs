@@ -141,6 +141,9 @@ public class EditorProgram : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        // Lock player movement if in editor
+        GameObject.Find("Player").GetComponent<FPPControl>().allowMove = !EditorActive;
+
         DrawNodeLinks();
 
         // Editor creation occurs at startup so we may need a couple of frames to disable it for good measure?

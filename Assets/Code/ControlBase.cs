@@ -12,13 +12,15 @@ abstract public class ControlBase : MonoBehaviour
 
     public bool allowConsole = true;
 
+    public bool allowMove = true;
+
     public bool consoleVisible = false;
 
     string enteredCommand = "";
 
     protected virtual void Update()
     {
-        if (!consoleVisible)
+        if (!consoleVisible && allowMove)
         {
             KeyboardMove();
             MouseLook();

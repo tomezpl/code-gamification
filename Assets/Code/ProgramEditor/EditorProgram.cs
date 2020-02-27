@@ -47,6 +47,8 @@ public class EditorProgram : MonoBehaviour
 
     // Editor state
     private bool choosingNode = false;
+    private bool choosingFunctionCall = false;
+    GameObject addedNode = null;
     public bool linkingNodes = false;
     public GameObject[] linkingNodesObjects = new GameObject[2];
     public bool editingNodeProperty = false;
@@ -121,6 +123,7 @@ public class EditorProgram : MonoBehaviour
             nodePrefabs = new Dictionary<string, KeyValuePair<string, GameObject>>();
             nodePrefabs.Add("AssignValue", new KeyValuePair<string, GameObject>("Set variable: Assigns a value to a variable. The variable is created if it doesn't exist.", Resources.Load("Prefabs/ProgramEditor/Nodes/Operations/AssignValue") as GameObject));
             nodePrefabs.Add("FunctionCallBase", new KeyValuePair<string, GameObject>("Function call: Triggers the specified function. Can pass parameters.", Resources.Load("Prefabs/ProgramEditor/Nodes/Operations/FunctionCall") as GameObject));
+            nodePrefabs.Add("WhileLoop", new KeyValuePair<string, GameObject>("While loop: Repeats a block of code as long as condition is met.", Resources.Load("Prefabs/ProgramEditor/Nodes/Operations/WhileLoop") as GameObject));
         }
 
         if(!lineCanvas)
@@ -192,24 +195,66 @@ public class EditorProgram : MonoBehaviour
 
         if (choosingNode)
         {
-            GUI.Box(new Rect(ndcToScreen(0.5f - 0.5f / 2.0f, 0.25f), ndcToScreen(0.5f, 0.5f)), "Choose a node type to add:");
+            GUI.Box(new Rect(ndcToScreen(0.5f - 0.75f / 2.0f, 0.25f), ndcToScreen(0.75f, 0.5f)), !choosingFunctionCall ? "Choose a node type to add:" : "Choose function to call");
 
-            List<string> nodeTypeStrings = new List<string>();
-            foreach(string nodeTypeString in nodePrefabs.Keys)
+            if (!choosingFunctionCall)
             {
-                nodeTypeStrings.Add(nodeTypeString);
-            }
-
-            for (int i = 0; i < nodeTypeStrings.Count; i++)
-            {
-                float buttonHeight = 0.05f;
-                float buttonWidth = 0.475f;
-                bool pressed = GUI.Button(new Rect(ndcToScreen(0.5f - buttonWidth/2.0f, 0.3f + buttonHeight * (float)i + 0.01f * (float)i), ndcToScreen(buttonWidth, buttonHeight)), nodePrefabs[nodeTypeStrings[i]].Key);
-                if(pressed)
+                // TODO: This could just be reduced to one foreach with a counter variable, instead of a foreach & for-loop. Potential performance boost.
+                List<string> nodeTypeStrings = new List<string>();
+                foreach (string nodeTypeString in nodePrefabs.Keys)
                 {
-                    AddNode(nodeTypeStrings[i]);
-                    choosingNode = false;
-                    break;
+                    nodeTypeStrings.Add(nodeTypeString);
+                }
+
+                for (int i = 0; i < nodeTypeStrings.Count; i++)
+                {
+                    float buttonHeight = 0.05f;
+                    float buttonWidth = 0.7f;
+                    bool pressed = GUI.Button(new Rect(ndcToScreen(0.5f - buttonWidth / 2.0f, 0.3f + buttonHeight * (float)i + 0.01f * (float)i), ndcToScreen(buttonWidth, buttonHeight)), nodePrefabs[nodeTypeStrings[i]].Key);
+                    if (pressed)
+                    {
+                        addedNode = AddNode(nodeTypeStrings[i]);
+                        if (nodeTypeStrings[i] == "FunctionCallBase")
+                        {
+                            choosingFunctionCall = true;
+                        }
+                        else
+                        {
+                            choosingNode = false;
+                        }
+                        // Fixes node link renderer
+                        addedNode.name = addedNode.name.Replace("(Clone)", $"{(addedNode.GetInstanceID())}");
+                        break;
+                    }
+                }
+            }
+            if(choosingFunctionCall)
+            {
+                List<string> functionNames = new List<string>();
+                foreach (string functionName in programController.functions.Keys)
+                {
+                    string paramList = "";
+                    foreach(System.Reflection.ParameterInfo funcParams in programController.functions[functionName].Method.GetParameters())
+                    {
+                        paramList += $"{funcParams.Name}, ";
+                    }
+                    paramList = paramList.Substring(0, paramList.LastIndexOf(','));
+                    functionNames.Add($"{functionName}({paramList})");
+                }
+                functionNames.Add("Other: type function name manually.");
+
+                for (int i = 0; i < functionNames.Count; i++)
+                {
+                    float buttonHeight = 0.05f;
+                    float buttonWidth = 0.7f;
+                    bool pressed = GUI.Button(new Rect(ndcToScreen(0.5f - buttonWidth / 2.0f, 0.3f + buttonHeight * (float)i + 0.01f * (float)i), ndcToScreen(buttonWidth, buttonHeight)), functionNames[i]);
+                    if (pressed)
+                    {
+                        addedNode.GetComponent<EditorDraggableNode>().FunctionNameEditingFinished(functionNames[i].Substring(0, functionNames[i].IndexOf('(')));
+                        choosingNode = false;
+                        choosingFunctionCall = false;
+                        break;
+                    }
                 }
             }
         }

@@ -20,25 +20,28 @@ public class WhileLoop : CodeBlock
         base.InitialiseNode();
 
         {
-            NodeBase currentNode = FirstBodyNodeObject.GetComponent<NodeBase>();
-            while(currentNode != null)
+            if (FirstBodyNodeObject)
             {
-                currentNode.inLoop = true;
-
-                NodeBase lastNode = currentNode;
-                if (currentNode.NextNodeObject != null)
+                NodeBase currentNode = FirstBodyNodeObject.GetComponent<NodeBase>() == null ? null : FirstBodyNodeObject.GetComponent<NodeBase>();
+                while (currentNode != null)
                 {
-                    currentNode = currentNode.NextNodeObject.GetComponent<NodeBase>();
-                }
-                else
-                {
-                    break;
-                }
+                    currentNode.inLoop = true;
 
-                // Reinitialise node
-                currentNode.isInitialised = false;
-                currentNode.indentLevel -= 2; // Don't ask why - this just fixes tabulation.
-                lastNode.InitialiseNode();
+                    NodeBase lastNode = currentNode;
+                    if (currentNode.NextNodeObject != null)
+                    {
+                        currentNode = currentNode.NextNodeObject.GetComponent<NodeBase>();
+                    }
+                    else
+                    {
+                        break;
+                    }
+
+                    // Reinitialise node
+                    currentNode.isInitialised = false;
+                    currentNode.indentLevel -= 2; // Don't ask why - this just fixes tabulation.
+                    lastNode.InitialiseNode();
+                }
             }
         }
 

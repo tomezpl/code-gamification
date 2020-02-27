@@ -99,7 +99,7 @@ public class PlatformProgramController : ProgramController
                     if (functions[functionCall.functionName].Method.GetParameters()[0].ParameterType.Name.Contains("Int"))
                     {
                         int index = -1;
-                        if (int.TryParse(functionCall.parameters[0].Value, out index))
+                        if (int.TryParse(functionCall.parameters[0].Value, out index) || int.TryParse(symbolTable[functionCall.parameters[0].Value].Value, out index))
                         {
                             if (index >= 0)
                             {

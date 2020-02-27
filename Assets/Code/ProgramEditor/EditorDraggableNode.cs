@@ -163,16 +163,10 @@ public class EditorDraggableNode : MonoBehaviour
             isDragged = false;
         }
 
-        // Other events:
-        if(Input.GetKeyDown(KeyCode.Delete) && nodeRect.Contains(pointer))
-        {
-            GetComponent<NodeBase>().DeleteNode();
-        }
-
-        // Linking nodes
         // Check if this Draggable isn't part of another node.
         if (transform.parent == owner.elementContainer.transform)
         {
+            // Linking nodes
             if (Input.GetKeyUp(KeyCode.Mouse1) && nodeRect.Contains(pointer))
             {
                 if (!owner.linkingNodes)
@@ -186,10 +180,16 @@ public class EditorDraggableNode : MonoBehaviour
                     owner.LinkCurrentlySelectedObjects();
                 }
             }
+
+            // Other events: Deleting node
+            if (Input.GetKeyDown(KeyCode.Delete) && nodeRect.Contains(pointer) && GetComponent<NodeBase>())
+            {
+                GetComponent<NodeBase>().DeleteNode();
+            }
         }
 
         // Double-click: usually this is editing a node
-        if(Input.GetKeyUp(KeyCode.Mouse0) && nodeRect.Contains(pointer))
+        if (Input.GetKeyUp(KeyCode.Mouse0) && nodeRect.Contains(pointer))
         {
             clickCounter++;
             timeSinceClick = 0.0f;

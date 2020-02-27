@@ -141,9 +141,9 @@ public abstract class NodeBase : MonoBehaviour, IProgramNode
             {
                 node.NextNodeObject = NextNodeObject;
                 node.nextNode = nextNode;
-                Destroy(gameObject);
                 break;
             }
         }
+        Destroy(gameObject);
     }
 }

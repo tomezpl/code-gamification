@@ -49,6 +49,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   elementContainer: {fileID: 3694425637225236705}
   programStart: {fileID: 0}
+  programController: {fileID: 0}
   framesToDisable: 2
   guiSkin: {fileID: 11400000, guid: 5cac01251ca465f40a842848c06374ee, type: 2}
   enableEditorOnStartup: 0
@@ -56,6 +57,16 @@ MonoBehaviour:
   linkingNodesObjects:
   - {fileID: 0}
   - {fileID: 0}
+  editingNodeProperty: 0
+  editingNodeValue: 
+  editedNodeValue: 
+  editingNodeInPlace: 0
+  editingNodeInPlaceRect:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 0
+    height: 0
 --- !u!1 &1672456976744827108
 GameObject:
   m_ObjectHideFlags: 0
@@ -197,7 +208,7 @@ MonoBehaviour:
   m_UiScaleMode: 1
   m_ReferencePixelsPerUnit: 100
   m_ScaleFactor: 1
-  m_ReferenceResolution: {x: 1000, y: 1000}
+  m_ReferenceResolution: {x: 2000, y: 2000}
   m_ScreenMatchMode: 0
   m_MatchWidthOrHeight: 0
   m_PhysicalUnit: 3
@@ -556,7 +567,7 @@ MonoBehaviour:
   m_UiScaleMode: 1
   m_ReferencePixelsPerUnit: 100
   m_ScaleFactor: 1
-  m_ReferenceResolution: {x: 1000, y: 1000}
+  m_ReferenceResolution: {x: 2000, y: 2000}
   m_ScreenMatchMode: 0
   m_MatchWidthOrHeight: 0
   m_PhysicalUnit: 3

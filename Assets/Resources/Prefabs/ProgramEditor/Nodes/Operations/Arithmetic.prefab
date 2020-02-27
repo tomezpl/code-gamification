@@ -319,6 +319,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3fd0eb0103fc5a74aa8d7793ecebf922, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  owner: {fileID: 0}
+  allowDrag: 1
 --- !u!114 &3489957883770011716
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -333,7 +335,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   NextNodeObject: {fileID: 0}
   indentLevel: 0
+  isInitialised: 0
+  inLoop: 0
   functionName: arithmetic
+  functionNamePrefix: 
   paramCount: 2
   parameters:
   - Name: 

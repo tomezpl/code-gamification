@@ -26,9 +26,12 @@ public class ProgramStart : NodeBase
 
             while (currentNode != null)
             {
-                string currentLine = ((IProgramNode)currentNode).Serialize();
-                // Add current line to full program
-                fullProgram += $"{currentLine}\n";
+                if (!(currentNode.GetComponent<ArithmeticOperationBase>() && !currentNode.GetComponent<AssignValue>()))
+                {
+                    string currentLine = ((IProgramNode)currentNode).Serialize();
+                    // Add current line to full program
+                    fullProgram += $"{currentLine}\n";
+                }
                 if (currentNode.NextNodeObject != null)
                 {
                     currentNode = currentNode.NextNodeObject.GetComponent<NodeBase>();

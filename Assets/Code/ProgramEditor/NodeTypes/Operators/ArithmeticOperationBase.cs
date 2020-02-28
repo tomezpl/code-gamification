@@ -11,6 +11,8 @@ public class ArithmeticOperationBase : FunctionCallBase
 
     public GameObject operatorText;
 
+    public bool wrap = false;
+
     public override void InitialiseNode()
     {
 
@@ -50,6 +52,18 @@ public class ArithmeticOperationBase : FunctionCallBase
             functionName = operatorName;
         }
 
+        if (prevArithmetic)
+        {
+            if (!GetComponent<AssignValue>())
+            {
+                leftHand.Value = prevArithmetic.Serialize();
+            }
+            else
+            {
+                rightHand.Value = prevArithmetic.Serialize();
+            }
+        }
+
         base.UpdateFunctionProperties();
 
         if (operatorText == null)
@@ -61,6 +75,27 @@ public class ArithmeticOperationBase : FunctionCallBase
 
     public override string Serialize()
     {
-        return $"{leftHand.Value} {operatorStr} {rightHand.Value}";
+        return $"{(wrap ? "(" : "")}{(prevArithmetic ? prevArithmetic.Serialize() : leftHand.Value)} {operatorStr} {rightHand.Value}{(wrap ? ")" : "")}";
+    }
+
+    public virtual double GetResult(ref Dictionary<string, FunctionParameter> symbolTable)
+    {
+        string expr = Serialize();
+
+        foreach(string symbol in symbolTable.Keys)
+        {
+            if(expr.Contains(symbol))
+            {
+                expr = expr.Replace(symbol, symbolTable[symbol].Value);
+            }
+        }
+
+        try
+        {
+            return System.Convert.ToDouble(new System.Data.DataTable().Compute(expr, null));
+        } catch(System.Exception)
+        {
+            return 0;
+        }
     }
 }

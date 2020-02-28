@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -18,13 +19,18 @@ public class FunctionCallBase : NodeBase
     protected Rect firstParamRect;
     protected float firstParamWidth, firstParamHeight;
 
+    // Used to instantiate parameters
     static GameObject ParameterTemplate;
+
+    // Used for arithmetic operation chain, to feed arithmetic expressions & evaluated results into assignValue righthands/functionCall params
+    public ArithmeticOperationBase prevArithmetic;
 
     // Start is called before the first frame update
     public override void InitialiseNode()
     {
         base.InitialiseNode();
 
+        // TODO: performance fixes, this can be optimised by storing Parameter in a variable
         if (transform.Find("Parameter"))
         {
             firstParamOrigin = transform.Find("Parameter").localPosition;
@@ -76,6 +82,24 @@ public class FunctionCallBase : NodeBase
 
     public virtual void UpdateFunctionProperties()
     {
+        // TODO: maybe enable a prompt that asks the user if they want to use the arithmetic chain as a default value for param0 or type their own?
+        if(paramCount == 1 && prevArithmetic != null)
+        {
+            if(parameters.Count < 1)
+            {
+                parameters.Capacity = 1;
+            }
+            if(parameters[0] == null)
+            {
+                parameters[0] = new FunctionParameter();
+            }
+            // TODO: use variable instead of getcomponent
+            parameters[0].Value = prevArithmetic.GetComponent<ArithmeticOperationBase>().GetResult(ref computer.symbolTable).ToString();
+            parameters[0].Expression = prevArithmetic.GetComponent<ArithmeticOperationBase>().Serialize();
+            parameters[0].Type = "Int";
+            parameters[0].IsReference = false;
+        }
+
         if (functionNameText == null)
         {
             functionNameText = transform.Find("FuncName").transform.Find("Text").gameObject;
@@ -100,6 +124,7 @@ public class FunctionCallBase : NodeBase
 
                 param = paramObject.transform;
             }
+            // Name is the parameter name as defined by the function. Not a variable name. If we haven't defined the parameter name, don't show the = character.
             param.GetComponentInChildren<Text>().text = $"{parameters[i].Name}{(!string.IsNullOrWhiteSpace(parameters[i].Name) ? "=" : "")}{parameters[i].Value}";
         }
     }
@@ -148,5 +173,29 @@ public class FunctionCallBase : NodeBase
     {
         Debug.Log(GetFunctionName());
         return $"{GetFunctionName()}({GetParameterListString()})";
+    }
+
+    public object[] GetRawParameters()
+    {
+        List<object> ret = new List<object>();
+
+        foreach(FunctionParameter parameter in parameters)
+        {
+            string type = parameter.Type.ToLower();
+            if (type.Contains("num") || type.Contains("int") || type.Contains("double"))
+            {
+                ret.Add(Convert.ToInt32(parameter.Value));
+            }
+            else if(type.Contains("str"))
+            {
+                ret.Add(parameter.Value);
+            }
+            else if(type.Contains("bool"))
+            {
+                ret.Add(Convert.ToBoolean(parameter.Value.ToLower()));
+            }
+        }
+
+        return ret.ToArray();
     }
 }

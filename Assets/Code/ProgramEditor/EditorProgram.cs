@@ -110,6 +110,18 @@ public class EditorProgram : MonoBehaviour
         if (linkingNodesObjects[1].GetComponent<NodeBase>())
         {
             linkingNodesObjects[0].GetComponent<NodeBase>().nextNode = linkingNodesObjects[1].GetComponent<NodeBase>();
+
+            // Arithmetic chain
+            // All arithmetic operations are chained together until a function call or an assign operation, which terminate the chain.
+            if(linkingNodesObjects[0].GetComponent<ArithmeticOperationBase>() && !linkingNodesObjects[0].GetComponent<AssignValue>())
+            {
+                // TODO: maybe this should just be expanded to NodeBase instead of FunctionCallBase? what about CodeBlocks, conditionals may need this?
+                if(linkingNodesObjects[1].GetComponent<FunctionCallBase>() && (!linkingNodesObjects[1].GetComponent<ArithmeticOperationBase>() || linkingNodesObjects[1].GetComponent<AssignValue>()))
+                {
+                    linkingNodesObjects[1].GetComponent<FunctionCallBase>().prevArithmetic = linkingNodesObjects[0].GetComponent<ArithmeticOperationBase>();
+                    linkingNodesObjects[1].GetComponent<FunctionCallBase>().UpdateFunctionProperties();
+                }
+            }
         }
         linkingNodesObjects[0] = linkingNodesObjects[1] = null;
     }
@@ -123,6 +135,10 @@ public class EditorProgram : MonoBehaviour
             nodePrefabs = new Dictionary<string, KeyValuePair<string, GameObject>>();
             nodePrefabs.Add("AssignValue", new KeyValuePair<string, GameObject>("Set variable: Assigns a value to a variable. The variable is created if it doesn't exist.", Resources.Load("Prefabs/ProgramEditor/Nodes/Operations/AssignValue") as GameObject));
             nodePrefabs.Add("FunctionCallBase", new KeyValuePair<string, GameObject>("Function call: Triggers the specified function. Can pass parameters.", Resources.Load("Prefabs/ProgramEditor/Nodes/Operations/FunctionCall") as GameObject));
+
+            // ArithmeticOperationBase uses ArithmeticAdd as a default.
+            nodePrefabs.Add("ArithmeticOperationBase", new KeyValuePair<string, GameObject>("Arithmetic: Performs arithmetic math operations.", Resources.Load("Prefabs/ProgramEditor/Nodes/Operations/ArithmeticAdd") as GameObject));
+
             nodePrefabs.Add("WhileLoop", new KeyValuePair<string, GameObject>("While loop: Repeats a block of code as long as condition is met.", Resources.Load("Prefabs/ProgramEditor/Nodes/Operations/WhileLoop") as GameObject));
         }
 
@@ -145,7 +161,10 @@ public class EditorProgram : MonoBehaviour
     void Update()
     {
         // Lock player movement if in editor
-        GameObject.Find("Player").GetComponent<FPPControl>().allowMove = !EditorActive;
+        if (GameObject.Find("Player"))
+        {
+            GameObject.Find("Player").GetComponent<FPPControl>().allowMove = !EditorActive;
+        }
 
         DrawNodeLinks();
 
@@ -156,12 +175,17 @@ public class EditorProgram : MonoBehaviour
             {
                 DisableEditor();
             }
+            else
+            {
+                EnableEditor();
+            }
             frameCounter++;
         }
 
         if(Input.GetKeyUp(KeyCode.Tab) && EditorActive)
         {
             choosingNode = !choosingNode;
+            choosingFunctionCall = choosingNode && choosingFunctionCall;
         }
 
         if (editingNodeProperty)
@@ -250,7 +274,15 @@ public class EditorProgram : MonoBehaviour
                     bool pressed = GUI.Button(new Rect(ndcToScreen(0.5f - buttonWidth / 2.0f, 0.3f + buttonHeight * (float)i + 0.01f * (float)i), ndcToScreen(buttonWidth, buttonHeight)), functionNames[i]);
                     if (pressed)
                     {
-                        addedNode.GetComponent<EditorDraggableNode>().FunctionNameEditingFinished(functionNames[i].Substring(0, functionNames[i].IndexOf('(')));
+                        // Last functionName is always the manually typed function
+                        if (i != functionNames.Count - 1)
+                        {
+                            addedNode.GetComponent<EditorDraggableNode>().FunctionNameEditingFinished(functionNames[i].Substring(0, functionNames[i].IndexOf('(')));
+                        }
+                        else
+                        {
+                            addedNode.GetComponent<EditorDraggableNode>().FunctionNameEditingFinished("");
+                        }
                         choosingNode = false;
                         choosingFunctionCall = false;
                         break;

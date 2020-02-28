@@ -25,6 +25,8 @@ public abstract class NodeBase : MonoBehaviour, IProgramNode
 
     protected GameObject nodeLinker;
 
+    protected ProgramController computer;
+
     public virtual void Start()
     {
         // Unless overriden, not null and not in a loop, assign nextNode as node interface of the NextNodeObject
@@ -36,6 +38,23 @@ public abstract class NodeBase : MonoBehaviour, IProgramNode
         if(NextNodeObject == null)
         {
             Debug.LogWarning($"NextNodeObject on {gameObject}::{this} is set to null! If this is intended (e.g. last node in a loop), this should be corrected on startup.");
+        }
+
+        // Find owner computer
+        {
+            Transform computerTransform = transform.parent;
+            while(computerTransform)
+            {
+                if (computerTransform.GetComponent<ProgramController>())
+                {
+                    computer = computerTransform.GetComponent<ProgramController>();
+                    break;
+                }
+                else
+                {
+                    computerTransform = computerTransform.parent;
+                }
+            }
         }
 
         // TODO: Perhaps search for ProgramEnd as nextNode fallback?

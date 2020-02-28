@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
+using System;
 
 // This script can actually be used for clickables etc. anything interactive, this name is irrelevant anymore.
 public class EditorDraggableNode : MonoBehaviour
@@ -18,10 +19,14 @@ public class EditorDraggableNode : MonoBehaviour
     public EditorProgram owner;
 
     public bool allowDrag = true;
+    // is this clickable the arithmetic operator in the UI? if so, mark as true in prefab inspector
+    public bool isArithmeticOperator = false;
 
     protected int clickCounter;
     protected float timeSinceClick;
     protected const float doubleClickAllowedTime = 1.0f;
+
+    public static bool nodeAlreadyDragged = false;
 
     // Start is called before the first frame update
     void Start()
@@ -38,13 +43,14 @@ public class EditorDraggableNode : MonoBehaviour
 
     public void Drag(Vector2 input)
     {
-        if (!allowDrag || owner.editingNodeProperty)
+        if (!allowDrag || owner.editingNodeProperty || (nodeAlreadyDragged && !isDragged))
             return;
 
         if (!isDragged)
         {
             lastFramePointer = input; // set last frame already to anchor point
             isDragged = true;
+            nodeAlreadyDragged = true;
             anchorPoint = input - new Vector2(rectTransform.rect.xMin, rectTransform.rect.yMin);
         }
         else
@@ -57,12 +63,16 @@ public class EditorDraggableNode : MonoBehaviour
     // Checks if this object is a "Reference" prefab.
     public bool IsReference()
     {
-        return transform.childCount == 1 && GetComponentInChildren<Text>().name == "Text";
+        return !isArithmeticOperator && transform.childCount == 1 && GetComponentInChildren<Text>().name == "Text";
     }
 
     public void DoubleClick()
     {
-        if (transform.name == "FuncName")
+        if (isArithmeticOperator)
+        {
+            DispatchEditingProperty(new System.Action<string>(ArithmeticOpEditingFinished), GetComponentInParent<ArithmeticOperationBase>().operatorStr);
+        }
+        else if (transform.name == "FuncName")
         {
             DispatchEditingProperty(new System.Action<string>(FunctionNameEditingFinished), GetComponentInParent<FunctionCallBase>().functionName);
         }
@@ -70,7 +80,7 @@ public class EditorDraggableNode : MonoBehaviour
         {
             // TODO
             int paramIndex = -1;
-            if(transform.name.Contains("Parameter") && name != "Parameter")
+            if (transform.name.Contains("Parameter") && name != "Parameter")
             {
                 paramIndex = System.Convert.ToInt32(transform.name.Substring("Parameter".Length)) - 1;
             }
@@ -82,6 +92,21 @@ public class EditorDraggableNode : MonoBehaviour
             {
                 DispatchEditingProperty(new System.Action<string>(ReferenceEditingFinished), GetComponentInChildren<Text>().text);
             }
+        }
+    }
+
+    public void ArithmeticOpEditingFinished(string finalValue)
+    {
+        if (string.IsNullOrWhiteSpace(finalValue))
+            return;
+
+        Dictionary<string, string> allowedOperators = new Dictionary<string, string> { { "+", "add" }, { "-", "subtract" }, { "*", "multiply" }, { "/", "divide" }, { "%", "modulo" } };
+        string enteredOp = finalValue.Trim()[0].ToString();
+        if (allowedOperators.ContainsKey(enteredOp))
+        {
+            GetComponentInParent<ArithmeticOperationBase>().operatorStr = enteredOp;
+            GetComponentInParent<ArithmeticOperationBase>().operatorName = allowedOperators[enteredOp];
+            GetComponentInParent<ArithmeticOperationBase>().UpdateFunctionProperties();
         }
     }
 
@@ -117,6 +142,12 @@ public class EditorDraggableNode : MonoBehaviour
         {
             GetComponentInParent<FunctionCallBase>().parameters[paramIndex].Value = finalValue;
             GetComponentInParent<FunctionCallBase>().UpdateFunctionProperties();
+
+            ArithmeticOperationBase potentialArithmetic = GetComponentInParent<ArithmeticOperationBase>();
+            if (potentialArithmetic != null && potentialArithmetic.NextNodeObject != null && potentialArithmetic.NextNodeObject.GetComponent<FunctionCallBase>().prevArithmetic == potentialArithmetic)
+            {
+                potentialArithmetic.NextNodeObject.GetComponent<FunctionCallBase>().UpdateFunctionProperties();
+            }
         }
     }
 
@@ -161,6 +192,7 @@ public class EditorDraggableNode : MonoBehaviour
         if(Input.GetKeyUp(KeyCode.Mouse0))
         {
             isDragged = false;
+            nodeAlreadyDragged = false;
         }
 
         // Check if this Draggable isn't part of another node.

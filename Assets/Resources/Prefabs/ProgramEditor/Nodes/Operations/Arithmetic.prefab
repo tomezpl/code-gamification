@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 6831758711286456713}
   - component: {fileID: 6831758711286456711}
   - component: {fileID: 6831758711286456712}
+  - component: {fileID: 3872283748896091458}
   m_Layer: 5
   m_Name: Text
   m_TagString: Untagged
@@ -77,6 +78,21 @@ MonoBehaviour:
     m_VerticalOverflow: 0
     m_LineSpacing: 1
   m_Text: 
+--- !u!114 &3872283748896091458
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6831758711286456714}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3fd0eb0103fc5a74aa8d7793ecebf922, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  owner: {fileID: 0}
+  allowDrag: 0
+  isArithmeticOperator: 0
 --- !u!1 &6831758713219338628
 GameObject:
   m_ObjectHideFlags: 0
@@ -88,6 +104,7 @@ GameObject:
   - component: {fileID: 6831758713219338627}
   - component: {fileID: 6831758713219338625}
   - component: {fileID: 6831758713219338626}
+  - component: {fileID: 7745407687557145734}
   m_Layer: 5
   m_Name: Operator
   m_TagString: Untagged
@@ -151,6 +168,21 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &7745407687557145734
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6831758713219338628}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3fd0eb0103fc5a74aa8d7793ecebf922, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  owner: {fileID: 0}
+  allowDrag: 0
+  isArithmeticOperator: 1
 --- !u!1 &8791909241486527199
 GameObject:
   m_ObjectHideFlags: 0
@@ -321,6 +353,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   owner: {fileID: 0}
   allowDrag: 1
+  isArithmeticOperator: 0
 --- !u!114 &3489957883770011716
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -343,26 +376,32 @@ MonoBehaviour:
   parameters:
   - Name: 
     Value: 
+    Expression: 
     Type: 
     IsReference: 0
   - Name: 
     Value: 
+    Expression: 
     Type: 
     IsReference: 0
   functionNameText: {fileID: 8791909241486527199}
+  prevArithmetic: {fileID: 0}
   leftHand:
     Name: 
     Value: 
+    Expression: 
     Type: 
     IsReference: 0
   rightHand:
     Name: 
     Value: 
+    Expression: 
     Type: 
     IsReference: 0
   operatorStr: 
   operatorName: 
   operatorText: {fileID: 6831758711286456714}
+  wrap: 0
 --- !u!1 &8791909242533541893
 GameObject:
   m_ObjectHideFlags: 0

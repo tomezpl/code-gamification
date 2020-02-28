@@ -9,6 +9,13 @@ public class Interactable : MonoBehaviour
 
     public bool DistanceCheck()
     {
-        return Vector3.Distance(GameObject.Find("Player").transform.position, transform.position) <= interactionRadius;
+        if (GameObject.Find("Player"))
+        {
+            return Vector3.Distance(GameObject.Find("Player").transform.position, transform.position) <= interactionRadius;
+        }
+        else
+        {
+            return true;
+        }
     }
 }

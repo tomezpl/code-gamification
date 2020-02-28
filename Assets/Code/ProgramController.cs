@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -34,13 +35,26 @@ public class ProgramController : Interactable
 
     public Dictionary<string, System.Delegate> functions;
 
+    // Prepend symbol names with this if the symbol is only used internally by the game.
+    public const string HiddenSymbolPrefix = "_INTERNAL_GAME:";
+
     // This is used by CheckNodeType
-    public enum NodeType { Unknown, FunctionCallBase, ProgramStart, ArithmeticOperationBase, CodeBlock, AssignValue };
+    public enum NodeType { Unknown, FunctionCallBase, ProgramStart, ArithmeticOperationBase, CodeBlock, AssignValue, ProgramEnd };
+
+    public string outputBuffer = "";
 
     public ProgramController() : base()
     {
         functions = new Dictionary<string, System.Delegate>();
         symbolTable = new Dictionary<string, FunctionParameter>();
+
+        functions.Add("print", new System.Action<string>(OutPrint));
+    }
+
+    public void OutPrint(string text)
+    {
+        outputBuffer += $"{text}\n";
+        Debug.Log(text);
     }
 
     // Start is called before the first frame update
@@ -61,7 +75,10 @@ public class ProgramController : Interactable
             Instantiate(Resources.Load("Prefabs/ProgramEditor/OutputRenderer")).name = "OutputRenderer";
         }
 
-        transform.Find("CurrentLine").gameObject.SetActive(false);
+        if (transform.Find("CurrentLine"))
+        {
+            transform.Find("CurrentLine").gameObject.SetActive(false);
+        }
     }
 
     // Update is called once per frame
@@ -114,7 +131,10 @@ public class ProgramController : Interactable
                 {
                     ExecuteNode(currentNode);
                     string currentLine = ((IProgramNode)currentNode).Serialize();
-                    transform.Find("CurrentLine").gameObject.SetActive(true);
+                    if (transform.Find("CurrentLine"))
+                    {
+                        transform.Find("CurrentLine").gameObject.SetActive(true);
+                    }
                     GameObject.Find("OutputRenderer").transform.Find("Canvas").GetComponentInChildren<Text>().text = currentLine;
                 }
                 else
@@ -134,7 +154,10 @@ public class ProgramController : Interactable
                 programRunning = false;
                 currentNode = program.programStart;
                 GameObject.Find("OutputRenderer").transform.Find("Canvas").GetComponentInChildren<Text>().text = "";
-                transform.Find("CurrentLine").gameObject.SetActive(false);
+                if (transform.Find("CurrentLine"))
+                {
+                    transform.Find("CurrentLine").gameObject.SetActive(false);
+                }
                 return false;
             }
         }
@@ -147,6 +170,8 @@ public class ProgramController : Interactable
     {
         if (node.gameObject.GetComponent<ProgramStart>())
             return NodeType.ProgramStart;
+        if (node.gameObject.GetComponent<ProgramEnd>())
+            return NodeType.ProgramEnd;
         if (node.gameObject.GetComponent<AssignValue>())
             return NodeType.AssignValue;
         if (node.gameObject.GetComponent<ArithmeticOperationBase>())
@@ -185,18 +210,39 @@ public class ProgramController : Interactable
             case NodeType.ProgramStart:
                 Debug.Log("Program starting!");
                 processingDone = true;
+
+                symbolTable = new Dictionary<string, FunctionParameter>();
+                outputBuffer = "";
+
                 return true;
             case NodeType.AssignValue:
                 AssignValue assignValue = node.GetComponent<AssignValue>();
+                string symbolVal = assignValue.prevArithmetic ? assignValue.prevArithmetic.GetResult(ref symbolTable).ToString() : assignValue.rightHand.Value;
+                Debug.Log($"Assigning {symbolVal}");
                 if (!symbolTable.ContainsKey(assignValue.leftHand.Value))
                 {
-                    symbolTable.Add(assignValue.leftHand.Value, assignValue.rightHand);
+                    // TODO: Type = "Int" won't always work, we need a generic type like Number, however Reflection.ParameterInfo needs to be converted in that case
+                    symbolTable.Add(assignValue.leftHand.Value, new FunctionParameter { Name = assignValue.rightHand.Name, Type = "Int", Value = symbolVal } ); ;
                 }
                 else
                 {
-                    symbolTable[assignValue.leftHand.Value] = assignValue.rightHand;
+                    symbolTable[assignValue.leftHand.Value] = new FunctionParameter { Name = assignValue.rightHand.Name, Type = "Int", Value = symbolVal };
                 }
                 return true;
+            case NodeType.ArithmeticOperationBase:
+                processingDone = true;
+                return true;
+            case NodeType.ProgramEnd:
+                processingDone = true;
+                programRunning = false;
+                return true;
+            case NodeType.FunctionCallBase:
+                if(new ProgramController().functions.ContainsKey(node.GetComponent<FunctionCallBase>().functionName))
+                {
+                    functions[node.GetComponent<FunctionCallBase>().functionName].DynamicInvoke(node.GetComponent<FunctionCallBase>().GetRawParameters());
+                    return true;
+                }
+                break;
         }
 
         return false;

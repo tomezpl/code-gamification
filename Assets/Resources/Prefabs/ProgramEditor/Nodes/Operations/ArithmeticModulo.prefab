@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 6776448463749000039}
   - component: {fileID: 6776448463749000037}
   - component: {fileID: 6776448463749000038}
+  - component: {fileID: 1064905239772006159}
   m_Layer: 5
   m_Name: Operator
   m_TagString: Untagged
@@ -74,6 +75,21 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &1064905239772006159
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6776448463749000032}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3fd0eb0103fc5a74aa8d7793ecebf922, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  owner: {fileID: 0}
+  allowDrag: 0
+  isArithmeticOperator: 1
 --- !u!1 &6776448465711307630
 GameObject:
   m_ObjectHideFlags: 0
@@ -315,6 +331,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3fd0eb0103fc5a74aa8d7793ecebf922, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  owner: {fileID: 0}
+  allowDrag: 1
+  isArithmeticOperator: 0
 --- !u!1 &8846949267585708091
 GameObject:
   m_ObjectHideFlags: 0

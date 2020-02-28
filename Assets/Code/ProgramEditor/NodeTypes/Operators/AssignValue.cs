@@ -15,4 +15,17 @@ public class AssignValue : ArithmeticOperationBase
         functionNamePrefix = "";
         UpdateFunctionProperties();
     }
+
+    public override void Update()
+    {
+        base.Update();
+
+        if (prevArithmetic)
+            rightHand.Value = prevArithmetic.Serialize();
+    }
+
+    public override string Serialize()
+    {
+        return $"{leftHand.Value} = {(prevArithmetic ? prevArithmetic.Serialize() : rightHand.Value)}";
+    }
 }

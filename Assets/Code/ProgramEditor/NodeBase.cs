@@ -27,6 +27,9 @@ public abstract class NodeBase : MonoBehaviour, IProgramNode
 
     protected ProgramController computer;
 
+    // a conditional statement, like an if statement or a loop, inside which this Node is nested
+    public LogicalBlock ownerLoop;
+
     public virtual void Start()
     {
         // Unless overriden, not null and not in a loop, assign nextNode as node interface of the NextNodeObject
@@ -160,9 +163,27 @@ public abstract class NodeBase : MonoBehaviour, IProgramNode
             {
                 node.NextNodeObject = NextNodeObject;
                 node.nextNode = nextNode;
+
+                if(node.GetComponent<CodeBlock>() != null)
+                {
+                    ((NodeBase)(node.GetComponent<CodeBlock>().firstBodyNode)).ownerLoop = null;
+                    ((NodeBase)(node.GetComponent<CodeBlock>().firstBodyNode)).PropagateOwnershipChanges();
+                }
+
                 break;
             }
         }
         Destroy(gameObject);
+    }
+
+    public void PropagateOwnershipChanges()
+    {
+        NodeBase currentNode = (NodeBase)nextNode;
+
+        while(currentNode != null)
+        {
+            currentNode.ownerLoop = ownerLoop;
+            currentNode = (NodeBase)currentNode.nextNode;
+        }
     }
 }

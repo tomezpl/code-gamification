@@ -246,6 +246,33 @@ public class EditorDraggableNode : MonoBehaviour
             {
                 if (!owner.linkingNodes)
                 {
+                    // Deteremining the right LinkingMode for CodeBlocks
+                    if (GetComponent<CodeBlock>() != null)
+                    {
+                        // coords of the point needed to be right-clicked in order to select a firstBodyNode
+                        Vector2 firstBodyHook = new Vector2(nodeRect.xMin + nodeRect.width / 2.0f, nodeRect.yMax);
+                        Vector2 nextHook = new Vector2(nodeRect.xMax, nodeRect.yMin + nodeRect.height / 2.0f);
+
+                        // Check if it's node A and not node B
+                        if (owner.linkingNodesObjects[0] == null)
+                        {
+                            if (Vector2.Distance(pointer, firstBodyHook) < Vector2.Distance(pointer, nextHook))
+                            {
+                                owner.linkingNodeMode = EditorProgram.LinkingMode.FirstBodyNode;
+                            }
+                            else
+                            {
+                                owner.linkingNodeMode = EditorProgram.LinkingMode.NextNode;
+                            }
+                        }
+                    }
+                    // By default, non-CodeBlocks have NextNode linkingmode
+                    else
+                    {
+                        owner.linkingNodeMode = EditorProgram.LinkingMode.NextNode;
+                    }
+
+
                     owner.linkingNodes = true;
                     owner.linkingNodesObjects[0] = gameObject;
                 }

@@ -39,7 +39,7 @@ public class ProgramController : Interactable
     public const string HiddenSymbolPrefix = "_INTERNAL_GAME:";
 
     // This is used by CheckNodeType
-    public enum NodeType { Unknown, FunctionCallBase, ProgramStart, ArithmeticOperationBase, CodeBlock, AssignValue, ProgramEnd };
+    public enum NodeType { Unknown, FunctionCallBase, ProgramStart, ArithmeticOperationBase, CodeBlock, AssignValue, ProgramEnd, LogicalBlock, WhileLoop };
 
     public string outputBuffer = "";
 
@@ -144,7 +144,16 @@ public class ProgramController : Interactable
                 firstTick = false;
                 if (processingDone)
                 {
-                    currentNode = currentNode.NextNodeObject.GetComponent<NodeBase>();
+                    // Regular flow
+                    if (currentNode.nextNode != null)
+                    {
+                        currentNode = currentNode.NextNodeObject.GetComponent<NodeBase>();
+                    }
+                    // Reached end of loop
+                    else if(currentNode.nextNode == null && currentNode.ownerLoop != null)
+                    {
+                        currentNode = currentNode.ownerLoop;
+                    }
                     Debug.Log("Continuing to next node!");
                     return false;
                 }
@@ -172,12 +181,18 @@ public class ProgramController : Interactable
             return NodeType.ProgramStart;
         if (node.gameObject.GetComponent<ProgramEnd>())
             return NodeType.ProgramEnd;
+
         if (node.gameObject.GetComponent<AssignValue>())
             return NodeType.AssignValue;
         if (node.gameObject.GetComponent<ArithmeticOperationBase>())
             return NodeType.ArithmeticOperationBase;
         if (node.gameObject.GetComponent<FunctionCallBase>())
             return NodeType.FunctionCallBase;
+
+        if (node.gameObject.GetComponent<WhileLoop>())
+            return NodeType.WhileLoop;
+        if (node.gameObject.GetComponent<LogicalBlock>())
+            return NodeType.LogicalBlock;
         if (node.gameObject.GetComponent<CodeBlock>())
             return NodeType.CodeBlock;
 
@@ -212,6 +227,7 @@ public class ProgramController : Interactable
                 processingDone = true;
 
                 symbolTable = new Dictionary<string, FunctionParameter>();
+                // TODO: this doesn't actually reset the buffer?
                 outputBuffer = "";
 
                 return true;
@@ -222,7 +238,7 @@ public class ProgramController : Interactable
                 if (!symbolTable.ContainsKey(assignValue.leftHand.Value))
                 {
                     // TODO: Type = "Int" won't always work, we need a generic type like Number, however Reflection.ParameterInfo needs to be converted in that case
-                    symbolTable.Add(assignValue.leftHand.Value, new FunctionParameter { Name = assignValue.rightHand.Name, Type = "Int", Value = symbolVal } ); ;
+                    symbolTable.Add(assignValue.leftHand.Value, new FunctionParameter { Name = assignValue.rightHand.Name, Type = "Int", Value = symbolVal }); ;
                 }
                 else
                 {
@@ -237,10 +253,17 @@ public class ProgramController : Interactable
                 programRunning = false;
                 return true;
             case NodeType.FunctionCallBase:
-                if(new ProgramController().functions.ContainsKey(node.GetComponent<FunctionCallBase>().functionName))
+                if (new ProgramController().functions.ContainsKey(node.GetComponent<FunctionCallBase>().functionName))
                 {
                     functions[node.GetComponent<FunctionCallBase>().functionName].DynamicInvoke(node.GetComponent<FunctionCallBase>().GetRawParameters());
                     return true;
+                }
+                break;
+            case NodeType.LogicalBlock: case NodeType.WhileLoop:
+                if (node.GetComponent<LogicalBlock>().condition.Evaluate(ref symbolTable))
+                {
+                    currentNode = (NodeBase)(node.GetComponent<LogicalBlock>().firstBodyNode);
+                    return ExecuteNode(currentNode);
                 }
                 break;
         }

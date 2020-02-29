@@ -46,10 +46,12 @@ public class EditorProgram : MonoBehaviour
     public bool enableEditorOnStartup = false;
 
     // Editor state
+    public enum LinkingMode { NextNode, FirstBodyNode }
     private bool choosingNode = false;
     private bool choosingFunctionCall = false;
     GameObject addedNode = null;
     public bool linkingNodes = false;
+    public LinkingMode linkingNodeMode = LinkingMode.NextNode;
     public GameObject[] linkingNodesObjects = new GameObject[2];
     public bool editingNodeProperty = false;
     public string editingNodeValue = ""; // original value of the string that is edited - this will be returned if Esc is pressed
@@ -106,21 +108,57 @@ public class EditorProgram : MonoBehaviour
     public void LinkCurrentlySelectedObjects()
     {
         linkingNodes = false;
-        linkingNodesObjects[0].GetComponent<NodeBase>().NextNodeObject = linkingNodesObjects[1];
+        if (linkingNodeMode == LinkingMode.NextNode)
+        {
+            linkingNodesObjects[0].GetComponent<NodeBase>().NextNodeObject = linkingNodesObjects[1];
+        }
+        else if(linkingNodeMode == LinkingMode.FirstBodyNode)
+        {
+            // failsafe
+            if (linkingNodesObjects[0].GetComponent<CodeBlock>() == null)
+            {
+                linkingNodes = false;
+                linkingNodesObjects[0] = linkingNodesObjects[1] = null;
+                return;
+            }
+            else
+            {
+                linkingNodesObjects[0].GetComponent<CodeBlock>().FirstBodyNodeObject = linkingNodesObjects[1];
+            }
+        }
         if (linkingNodesObjects[1].GetComponent<NodeBase>())
         {
-            linkingNodesObjects[0].GetComponent<NodeBase>().nextNode = linkingNodesObjects[1].GetComponent<NodeBase>();
+            if (linkingNodeMode == LinkingMode.NextNode)
+            {
+                linkingNodesObjects[0].GetComponent<NodeBase>().nextNode = linkingNodesObjects[1].GetComponent<NodeBase>();
+            }
+            else if(linkingNodeMode == LinkingMode.FirstBodyNode)
+            {
+                linkingNodesObjects[0].GetComponent<CodeBlock>().firstBodyNode = linkingNodesObjects[1].GetComponent<NodeBase>();
+            }
 
             // Arithmetic chain
             // All arithmetic operations are chained together until a function call or an assign operation, which terminate the chain.
             if(linkingNodesObjects[0].GetComponent<ArithmeticOperationBase>() && !linkingNodesObjects[0].GetComponent<AssignValue>())
             {
-                // TODO: maybe this should just be expanded to NodeBase instead of FunctionCallBase? what about CodeBlocks, conditionals may need this?
+                // TODO: VERY IMPORTANT: maybe this should just be expanded to NodeBase instead of FunctionCallBase? what about CodeBlocks, conditionals may need this?
                 if(linkingNodesObjects[1].GetComponent<FunctionCallBase>() && (!linkingNodesObjects[1].GetComponent<ArithmeticOperationBase>() || linkingNodesObjects[1].GetComponent<AssignValue>()))
                 {
                     linkingNodesObjects[1].GetComponent<FunctionCallBase>().prevArithmetic = linkingNodesObjects[0].GetComponent<ArithmeticOperationBase>();
                     linkingNodesObjects[1].GetComponent<FunctionCallBase>().UpdateFunctionProperties();
                 }
+            }
+
+            // Assign firstbody loop/logicalblock ownership
+            if (linkingNodesObjects[0].GetComponent<LogicalBlock>() != null && linkingNodeMode == LinkingMode.FirstBodyNode)
+            {
+                linkingNodesObjects[1].GetComponent<NodeBase>().ownerLoop = linkingNodesObjects[0].GetComponent<LogicalBlock>();
+            }
+
+            // Propagate loop/logicalblock ownership
+            if (linkingNodesObjects[0].GetComponent<NodeBase>().ownerLoop != null && linkingNodeMode == LinkingMode.NextNode)
+            {
+                linkingNodesObjects[1].GetComponent<NodeBase>().ownerLoop = linkingNodesObjects[0].GetComponent<NodeBase>().ownerLoop;
             }
         }
         linkingNodesObjects[0] = linkingNodesObjects[1] = null;

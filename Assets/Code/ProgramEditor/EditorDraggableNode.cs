@@ -68,13 +68,19 @@ public class EditorDraggableNode : MonoBehaviour
 
     public void DoubleClick()
     {
-        if (isArithmeticOperator)
+        // Check if conditional
+        if(transform.name == "Comparison")
         {
-            DispatchEditingProperty(new System.Action<string>(ArithmeticOpEditingFinished), GetComponentInParent<ArithmeticOperationBase>().operatorStr);
+            DispatchEditingProperty(new Action<string>(LogicalOpEditingFinished), transform.parent.GetComponentInParent<LogicalBlock>().condition.comparison);
         }
+        else if (isArithmeticOperator)
+        {
+            DispatchEditingProperty(new Action<string>(ArithmeticOpEditingFinished), GetComponentInParent<ArithmeticOperationBase>().operatorStr);
+        }
+        // Check if function name
         else if (transform.name == "FuncName")
         {
-            DispatchEditingProperty(new System.Action<string>(FunctionNameEditingFinished), GetComponentInParent<FunctionCallBase>().functionName);
+            DispatchEditingProperty(new Action<string>(FunctionNameEditingFinished), GetComponentInParent<FunctionCallBase>().functionName);
         }
         else if (IsReference() || (transform.name.Contains("Parameter") && name != "Parameter"))
         {
@@ -84,14 +90,48 @@ public class EditorDraggableNode : MonoBehaviour
             {
                 paramIndex = System.Convert.ToInt32(transform.name.Substring("Parameter".Length)) - 1;
             }
+            // FunctionCallBase
             if (paramIndex >= 0)
             {
+                Debug.Log("HEY");
                 DispatchEditingProperty(new System.Action<string>(ParamEditingFinished), GetComponentInParent<FunctionCallBase>().parameters[paramIndex].Value);
             }
+            // LogicalBlock
+            else if(transform.name == "LHReference" || transform.name == "RHReference")
+            {
+                Debug.Log("HEY");
+                if (transform.name == "LHReference")
+                {
+                    DispatchEditingProperty(new Action<string>(x => ReferenceEditingFinished(transform.parent.GetComponentInParent<LogicalBlock>().condition.leftHand.Value = x)), transform.parent.GetComponentInParent<LogicalBlock>().condition.leftHand.Value);
+                }
+                else if (transform.name == "RHReference")
+                {
+                    DispatchEditingProperty(new Action<string>(x => ReferenceEditingFinished(transform.parent.GetComponentInParent<LogicalBlock>().condition.rightHand.Value = x)), transform.parent.GetComponentInParent<LogicalBlock>().condition.rightHand.Value);
+                }
+            }
+            // Unknown
             else
             {
+                Debug.Log("HEY");
                 DispatchEditingProperty(new System.Action<string>(ReferenceEditingFinished), GetComponentInChildren<Text>().text);
             }
+        }
+    }
+
+    public void LogicalOpEditingFinished(string finalValue)
+    {
+        if(string.IsNullOrWhiteSpace(finalValue))
+        {
+            return;
+        }
+
+        List<string> allowedOperators = new List<string>{ "==", "!=", ">=", "<=", ">", "<" };
+
+        string enteredOp = finalValue.Trim();
+        if(allowedOperators.Contains(enteredOp))
+        {
+            transform.parent.GetComponentInParent<LogicalBlock>().condition.comparison = enteredOp;
+            transform.parent.GetComponentInParent<LogicalBlock>().UpdateUI();
         }
     }
 
@@ -128,11 +168,14 @@ public class EditorDraggableNode : MonoBehaviour
 
     public void ReferenceEditingFinished(string finalValue)
     {
+        Debug.Log("KAY");
         GetComponentInChildren<Text>().text = finalValue;
     }
 
     public void ParamEditingFinished(string finalValue)
     {
+
+        Debug.Log("JAY");
         int paramIndex = -1;
         if (transform.name.Contains("Parameter") && name != "Parameter")
         {

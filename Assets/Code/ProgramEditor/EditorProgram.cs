@@ -108,6 +108,21 @@ public class EditorProgram : MonoBehaviour
     public void LinkCurrentlySelectedObjects()
     {
         linkingNodes = false;
+
+        // Cancel linking by linking the same node: removes nextNode from obj0
+        if(linkingNodesObjects[0] == linkingNodesObjects[1])
+        {
+            if(linkingNodesObjects[0].GetComponent<NodeBase>().NextNodeObject != null && linkingNodesObjects[0].GetComponent<NodeBase>().NextNodeObject.GetComponent<FunctionCallBase>() != null)
+            {
+                linkingNodesObjects[0].GetComponent<NodeBase>().NextNodeObject.GetComponent<FunctionCallBase>().prevArithmetic = null;
+            }
+
+            linkingNodesObjects[0].GetComponent<NodeBase>().NextNodeObject = null;
+            linkingNodesObjects[0].GetComponent<NodeBase>().nextNode = null;
+            linkingNodesObjects[0] = linkingNodesObjects[1] = null;
+            return;
+        }
+
         if (linkingNodeMode == LinkingMode.NextNode)
         {
             linkingNodesObjects[0].GetComponent<NodeBase>().NextNodeObject = linkingNodesObjects[1];
@@ -147,6 +162,11 @@ public class EditorProgram : MonoBehaviour
                     linkingNodesObjects[1].GetComponent<FunctionCallBase>().prevArithmetic = linkingNodesObjects[0].GetComponent<ArithmeticOperationBase>();
                     linkingNodesObjects[1].GetComponent<FunctionCallBase>().UpdateFunctionProperties();
                 }
+                else if (linkingNodesObjects[1].GetComponent<ArithmeticOperationBase>())
+                {
+                    linkingNodesObjects[1].GetComponent<ArithmeticOperationBase>().prevArithmetic = linkingNodesObjects[0].GetComponent<ArithmeticOperationBase>();
+                    linkingNodesObjects[1].GetComponent<ArithmeticOperationBase>().UpdateFunctionProperties();
+                }
             }
 
             // Assign firstbody loop/logicalblock ownership
@@ -172,6 +192,7 @@ public class EditorProgram : MonoBehaviour
         {
             nodePrefabs = new Dictionary<string, KeyValuePair<string, GameObject>>();
             nodePrefabs.Add("AssignValue", new KeyValuePair<string, GameObject>("Set variable: Assigns a value to a variable. The variable is created if it doesn't exist.", Resources.Load("Prefabs/ProgramEditor/Nodes/Operations/AssignValue") as GameObject));
+            nodePrefabs.Add("CreateList", new KeyValuePair<string, GameObject>("Create List: Initialises a named list with a specific size.", Resources.Load("Prefabs/ProgramEditor/Nodes/Operations/CreateList") as GameObject));
             nodePrefabs.Add("FunctionCallBase", new KeyValuePair<string, GameObject>("Function call: Triggers the specified function. Can pass parameters.", Resources.Load("Prefabs/ProgramEditor/Nodes/Operations/FunctionCall") as GameObject));
 
             // ArithmeticOperationBase uses ArithmeticAdd as a default.

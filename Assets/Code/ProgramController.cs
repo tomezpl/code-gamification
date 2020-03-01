@@ -39,16 +39,34 @@ public class ProgramController : Interactable
     public const string HiddenSymbolPrefix = "_INTERNAL_GAME:";
 
     // This is used by CheckNodeType
-    public enum NodeType { Unknown, FunctionCallBase, ProgramStart, ArithmeticOperationBase, CodeBlock, AssignValue, ProgramEnd, LogicalBlock, WhileLoop };
+    public enum NodeType { Unknown, FunctionCallBase, ProgramStart, ArithmeticOperationBase, CodeBlock, AssignValue, ProgramEnd, LogicalBlock, WhileLoop, AllocateArray };
 
     public string outputBuffer = "";
+
+    // Initialises a symbol table
+    public void InitSymTable()
+    {
+        symbolTable = new Dictionary<string, FunctionParameter> {
+            { "True", new FunctionParameter { Value = "True", Type = "Boolean" } },
+            { "False", new FunctionParameter { Value = "False", Type = "Boolean" } },
+            { "None", new FunctionParameter() } };
+    }
 
     public ProgramController() : base()
     {
         functions = new Dictionary<string, System.Delegate>();
-        symbolTable = new Dictionary<string, FunctionParameter>();
+        InitSymTable();
 
         functions.Add("print", new System.Action<string>(OutPrint));
+        functions.Add("create list", new Action<int, string>(CreateList));
+    }
+
+    public void CreateList(int size, string name)
+    {
+        if(size < 0 || string.IsNullOrWhiteSpace(name))
+        {
+            // TODO: log error?
+        }
     }
 
     public void OutPrint(string text)
@@ -150,7 +168,7 @@ public class ProgramController : Interactable
                         currentNode = currentNode.NextNodeObject.GetComponent<NodeBase>();
                     }
                     // Reached end of loop
-                    else if(currentNode.nextNode == null && currentNode.ownerLoop != null)
+                    else if(currentNode.nextNode == null && currentNode.ownerLoop != null && currentNode.ownerLoop.GetComponent<WhileLoop>())
                     {
                         currentNode = currentNode.ownerLoop;
                     }
@@ -182,6 +200,8 @@ public class ProgramController : Interactable
         if (node.gameObject.GetComponent<ProgramEnd>())
             return NodeType.ProgramEnd;
 
+        if (node.gameObject.GetComponent<AllocateArray>())
+            return NodeType.AllocateArray;
         if (node.gameObject.GetComponent<AssignValue>())
             return NodeType.AssignValue;
         if (node.gameObject.GetComponent<ArithmeticOperationBase>())
@@ -226,7 +246,7 @@ public class ProgramController : Interactable
                 Debug.Log("Program starting!");
                 processingDone = true;
 
-                symbolTable = new Dictionary<string, FunctionParameter>();
+                InitSymTable();
                 // TODO: this doesn't actually reset the buffer?
                 outputBuffer = "";
 
@@ -234,15 +254,43 @@ public class ProgramController : Interactable
             case NodeType.AssignValue:
                 AssignValue assignValue = node.GetComponent<AssignValue>();
                 string symbolVal = assignValue.prevArithmetic ? assignValue.prevArithmetic.GetResult(ref symbolTable).ToString() : assignValue.rightHand.Value;
-                Debug.Log($"Assigning {symbolVal}");
-                if (!symbolTable.ContainsKey(assignValue.leftHand.Value))
+                string symbolName = "";
+
+                // Is it an array index?
+                string indexName = "";
+                string[] indexSplit = assignValue.leftHand.Value.Split('[');
+                if (indexSplit != null && indexSplit.Length == 2)
                 {
-                    // TODO: Type = "Int" won't always work, we need a generic type like Number, however Reflection.ParameterInfo needs to be converted in that case
-                    symbolTable.Add(assignValue.leftHand.Value, new FunctionParameter { Name = assignValue.rightHand.Name, Type = "Int", Value = symbolVal }); ;
+                    symbolName = indexSplit[0];
+                    indexName = indexSplit[1].Substring(0, indexSplit[1].Length - 1);
                 }
                 else
                 {
-                    symbolTable[assignValue.leftHand.Value] = new FunctionParameter { Name = assignValue.rightHand.Name, Type = "Int", Value = symbolVal };
+                    symbolName = assignValue.leftHand.Value;
+                }
+
+                bool isString = assignValue.leftHand.IsReference ? (symbolTable.ContainsKey(symbolVal) && symbolTable[symbolVal].Value.Trim().StartsWith("\"") && symbolTable[symbolVal].Value.Trim().EndsWith("\"")) : (symbolVal.Trim().StartsWith("\"") && symbolVal.Trim().EndsWith("\""));
+                bool isReference = assignValue.leftHand.IsReference ? true : !isString && symbolTable.ContainsKey(symbolVal);
+
+                if (!string.IsNullOrWhiteSpace(indexName))
+                {
+                    if(symbolTable.ContainsKey(indexName))
+                    {
+                        symbolName += $"[{symbolTable[indexName].Value}]";
+                    }
+                }
+
+                Debug.Log($"Assigning {symbolVal} to {symbolName}");
+                double tempNum = 0.0;
+                string assignedType = (isString ? "String" : (symbolVal.Trim() == "True" || symbolVal.Trim() == "False" ? "Boolean" : (double.TryParse(symbolVal.Trim(), out tempNum) ? "Number" : "")));
+                if (!symbolTable.ContainsKey(symbolName))
+                {
+                    // TODO: Type = "Int" won't always work, we need a generic type like Number, however Reflection.ParameterInfo needs to be converted in that case
+                    symbolTable.Add(symbolName, new FunctionParameter { Name = assignValue.rightHand.Name, Type = isReference ? symbolTable[symbolVal].Type : assignedType, Value = isReference ? symbolTable[symbolVal].Value : symbolVal }); ;
+                }
+                else
+                {
+                    symbolTable[symbolName] = new FunctionParameter { Name = assignValue.rightHand.Name, Type = isReference ? symbolTable[symbolVal].Type : assignedType, Value = isReference ? symbolTable[symbolVal].Value : symbolVal };
                 }
                 return true;
             case NodeType.ArithmeticOperationBase:
@@ -255,7 +303,8 @@ public class ProgramController : Interactable
             case NodeType.FunctionCallBase:
                 if (new ProgramController().functions.ContainsKey(node.GetComponent<FunctionCallBase>().functionName))
                 {
-                    functions[node.GetComponent<FunctionCallBase>().functionName].DynamicInvoke(node.GetComponent<FunctionCallBase>().GetRawParameters());
+                    // TODO: passing a copy of symbolTable here might consume too much memory. Make static?
+                    functions[node.GetComponent<FunctionCallBase>().functionName].DynamicInvoke(node.GetComponent<FunctionCallBase>().GetRawParameters(symbolTable));
                     return true;
                 }
                 break;
@@ -264,6 +313,27 @@ public class ProgramController : Interactable
                 {
                     currentNode = (NodeBase)(node.GetComponent<LogicalBlock>().firstBodyNode);
                     return ExecuteNode(currentNode);
+                }
+                break;
+            case NodeType.AllocateArray:
+                if(node.GetComponent<AllocateArray>())
+                {
+                    int count = -1;
+                    // Check if entered size was a valid >= 0 integer.
+                    // TODO: unexpected behaviour when allocating with size == 0
+                    if ((int.TryParse(node.GetComponent<AllocateArray>().parameters[1].Value, out count) || (symbolTable.ContainsKey(node.GetComponent<AllocateArray>().parameters[0].Value) && int.TryParse(symbolTable[node.GetComponent<AllocateArray>().parameters[0].Value].Value, out count))) && count >= 0)
+                    {
+                        string arrName = node.GetComponent<AllocateArray>().parameters[1].Value;
+                        if (string.IsNullOrWhiteSpace(arrName))
+                        {
+                            // TODO: error too?
+                            return true;
+                        }
+                        for (int i = 0; i < count; i++)
+                        {
+                            symbolTable.Add($"{arrName}[{i}]", new FunctionParameter());
+                        }
+                    }
                 }
                 break;
         }

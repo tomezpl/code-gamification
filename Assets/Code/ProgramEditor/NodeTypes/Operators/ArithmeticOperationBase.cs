@@ -54,10 +54,13 @@ public class ArithmeticOperationBase : FunctionCallBase
 
         if (prevArithmetic)
         {
+            // is this NOT an assignvalue? (e.g. if this is part of the arithmetic chain)
+            // if so, put the values from the chain on the left side
             if (!GetComponent<AssignValue>())
             {
                 leftHand.Value = prevArithmetic.Serialize();
             }
+            // otherwise, put it on the right (left hand would be the symbol name in the assignvalue)
             else
             {
                 rightHand.Value = prevArithmetic.Serialize();

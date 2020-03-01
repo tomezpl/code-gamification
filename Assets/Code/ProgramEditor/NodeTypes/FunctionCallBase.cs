@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -24,6 +23,9 @@ public class FunctionCallBase : NodeBase
 
     // Used for arithmetic operation chain, to feed arithmetic expressions & evaluated results into assignValue righthands/functionCall params
     public ArithmeticOperationBase prevArithmetic;
+
+    // Should only be set to true when changing function
+    public bool needResize = true;
 
     // Start is called before the first frame update
     public override void InitialiseNode()
@@ -105,6 +107,14 @@ public class FunctionCallBase : NodeBase
             functionNameText = transform.Find("FuncName").transform.Find("Text").gameObject;
         }
         functionNameText.GetComponent<Text>().text = functionName;
+
+        float margin = Mathf.Abs(firstParamOrigin.y - functionNameText.GetComponentInParent<RectTransform>().localPosition.y);
+        if (needResize)
+        {
+            GetComponent<RectTransform>().SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, GetComponent<RectTransform>().rect.height + firstParamHeight * (parameters.Count > 2 ? (float)parameters.Count : 1.5f) + margin);
+            needResize = false;
+        }
+
         for (ushort i = 0; i < paramCount && parameters != null && i < parameters.Count; i++)
         {
             // TODO: type checking, pointing references to scene objects, etc.
@@ -114,11 +124,11 @@ public class FunctionCallBase : NodeBase
                 GameObject paramObject = Instantiate(ParameterTemplate, transform);
                 paramObject.SetActive(true);
 
-                GetComponent<RectTransform>().SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, GetComponent<RectTransform>().rect.height + firstParamRect.height);
-
-                float margin = Mathf.Abs(firstParamOrigin.y - transform.Find("FuncName").localPosition.y);
-
-                paramObject.transform.localPosition = new Vector3(0.0f, firstParamRect.y + margin * i + firstParamRect.height * i);
+                //paramObject.transform.localPosition = new Vector3(0.0f, (functionNameText.GetComponentInParent<RectTransform>().rect.yMin * -i + margin));
+                // some really weird maths?
+                float height = paramObject.GetComponent<RectTransform>().rect.height;
+                float origin = parameters.Count > 0 ? ((parameters.Count / 2.0f - parameters.Count) + i) * height : 0.0f;
+                paramObject.transform.localPosition = new Vector3(0.0f, origin);
 
                 paramObject.name = $"Parameter{i+1}";
 
@@ -175,14 +185,19 @@ public class FunctionCallBase : NodeBase
         return $"{GetFunctionName()}({GetParameterListString()})";
     }
 
-    public object[] GetRawParameters()
+    public object[] GetRawParameters(Dictionary<string, FunctionParameter> symbolTable)
     {
         List<object> ret = new List<object>();
 
         foreach(FunctionParameter parameter in parameters)
         {
-            string type = parameter.Type.ToLower();
-            if (type.Contains("num") || type.Contains("int") || type.Contains("double"))
+            string type = parameter.Type == null ? "" : parameter.Type.ToLower();
+
+            bool isString = parameter.IsReference ? (symbolTable.ContainsKey(parameter.Value) && symbolTable[parameter.Value].Value.Trim().StartsWith("\"") && symbolTable[parameter.Value].Value.Trim().EndsWith("\"")) : (parameter.Value.Trim().StartsWith("\"") && parameter.Value.Trim().EndsWith("\""));
+            bool isReference = parameter.IsReference ? true : !isString && symbolTable.ContainsKey(parameter.Value);
+
+            // Types are usually declared on literals...
+            /*if (type.Contains("num") || type.Contains("int") || type.Contains("double"))
             {
                 ret.Add(Convert.ToInt32(parameter.Value));
             }
@@ -193,6 +208,35 @@ public class FunctionCallBase : NodeBase
             else if(type.Contains("bool"))
             {
                 ret.Add(Convert.ToBoolean(parameter.Value.ToLower()));
+            }*/
+            if(isString)
+            {
+                ret.Add(isReference ? symbolTable[parameter.Value].Value : parameter.Value.Trim().Substring(1, parameter.Value.Trim().Length - 2));
+            }
+            else
+            {
+                if(isReference)
+                {
+                    if(parameter.Value.Trim() == "None")
+                    {
+                        ret.Add(null);
+                    }
+                    else if(symbolTable[parameter.Value.Trim()].Type.ToLower().Contains("bool"))
+                    {
+                        ret.Add(bool.Parse(symbolTable[parameter.Value.Trim()].Value.ToLower()));
+                    }
+                    else if(symbolTable[parameter.Value.Trim()].Type.ToLower().Contains("int") || symbolTable[parameter.Value.Trim()].Type.ToLower().Contains("num"))
+                    {
+                        ret.Add(double.Parse(symbolTable[parameter.Value.Trim()].Value));
+                    }
+                }
+                else
+                {
+                    if(parameter.Value.Trim() == "True" || parameter.Value.Trim() == "False")
+                    {
+                        ret.Add(bool.Parse(parameter.Value.Trim().ToLower()));
+                    }
+                }
             }
         }
 

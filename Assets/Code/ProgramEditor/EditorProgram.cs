@@ -316,6 +316,11 @@ public class EditorProgram : MonoBehaviour
                 List<string> functionNames = new List<string>();
                 foreach (string functionName in programController.functions.Keys)
                 {
+                    if(programController.hiddenFunctions.Contains(functionName))
+                    {
+                        continue;
+                    }
+
                     string paramList = "";
                     foreach(System.Reflection.ParameterInfo funcParams in programController.functions[functionName].Method.GetParameters())
                     {

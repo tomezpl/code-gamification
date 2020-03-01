@@ -34,6 +34,7 @@ public class ProgramController : Interactable
     public Dictionary<string, FunctionParameter> symbolTable;
 
     public Dictionary<string, System.Delegate> functions;
+    public List<string> hiddenFunctions = new List<string> { "create list" };
 
     // Prepend symbol names with this if the symbol is only used internally by the game.
     public const string HiddenSymbolPrefix = "_INTERNAL_GAME:";

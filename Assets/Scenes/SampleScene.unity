@@ -1388,8 +1388,9 @@ MonoBehaviour:
   interactionRadiusLock: 1
   interactionRadius: 2.5
   doorOpening: 0.25
-  doorOpeningTime: 1
-  doorOpenDuration: 5
+  doorOpeningTime: 0.25
+  doorOpenDuration: 1
+  fizzBuzzCount: 20
 --- !u!1001 &439387543
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -3933,6 +3934,7 @@ MonoBehaviour:
   interactionRadius: 2.5
   editorUi: {fileID: 855311512}
   tickTime: 0.5
+  currentNode: {fileID: 0}
   programRunning: 0
   processingDone: 1
   hiddenFunctions:
@@ -5003,6 +5005,7 @@ MonoBehaviour:
   interactionRadius: 2.5
   editorUi: {fileID: 1582862810}
   tickTime: 0.5
+  currentNode: {fileID: 0}
   programRunning: 0
   processingDone: 1
   hiddenFunctions:
@@ -5297,7 +5300,8 @@ MonoBehaviour:
   interactionRadiusLock: 1
   interactionRadius: 2.5
   editorUi: {fileID: 1091352956}
-  tickTime: 5
+  tickTime: 1
+  currentNode: {fileID: 0}
   programRunning: 0
   processingDone: 1
   hiddenFunctions:

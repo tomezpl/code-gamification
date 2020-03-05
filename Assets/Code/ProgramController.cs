@@ -83,11 +83,17 @@ public class ProgramController : Interactable
     {
         Dictionary<string, Delegate> ret = new Dictionary<string, Delegate>();
 
+        ret.Add("wait", new Action(Wait));
         ret.Add("print", new System.Action<string>(OutPrint));
         ret.Add("printNewline", new Action(OutPrintNewline));
         ret.Add("create list", new Action<string, string>(CreateList));
 
         return ret;
+    }
+
+    private void Wait()
+    {
+        return;
     }
 
     protected virtual Dictionary<string, Delegate> ControllerFunctions()

@@ -162,7 +162,7 @@ public class FunctionCallBase : NodeBase
                 param = paramObject.transform;
             }
             // Name is the parameter name as defined by the function. Not a variable name. If we haven't defined the parameter name, don't show the = character.
-            param.GetComponentInChildren<Text>().text = $"{parameters[i].Name}{(!string.IsNullOrWhiteSpace(parameters[i].Name) ? "=" : "")}{parameters[i].Value}";
+            param.GetComponentInChildren<Text>().text = $"{parameters[i].Name}{(!string.IsNullOrWhiteSpace(parameters[i].Name) ? "=" : "")}{(string.IsNullOrWhiteSpace(parameters[i].Expression) ? parameters[i].Value : parameters[i].Expression)}";
         }
     }
 
@@ -171,6 +171,11 @@ public class FunctionCallBase : NodeBase
     public override void Update()
     {
         base.Update();
+
+        if(prevArithmetic != null && prevArithmetic.NextNodeObject != gameObject)
+        {
+            prevArithmetic = null;
+        }
     }
 
     public virtual string GetFunctionName()
@@ -189,7 +194,7 @@ public class FunctionCallBase : NodeBase
     // Returns list of comma-separated parameters to be passed in the function call
     public virtual List<string> GetParameterList()
     {
-        return parameters.ConvertAll<string>(p => parameters[parameters.Count - 1] == p ? $"{p.Value}" : $"{p.Value}, ");
+        return parameters.ConvertAll<string>(p => parameters[parameters.Count - 1] == p ? $"{(string.IsNullOrWhiteSpace(p.Expression) ? p.Value : p.Expression)}" : $"{(string.IsNullOrWhiteSpace(p.Expression) ? p.Value : p.Expression)}, ");
     }
 
     // Get results from GetParameterList and parse them as a single string to be added between parentheses of a function call.
@@ -223,6 +228,8 @@ public class FunctionCallBase : NodeBase
             bool isString = parameter.IsReference ? (symbolTable.ContainsKey(parameter.Value) && symbolTable[parameter.Value].Value.Trim().StartsWith("\"") && symbolTable[parameter.Value].Value.Trim().EndsWith("\"")) : (parameter.Value.Trim().StartsWith("\"") && parameter.Value.Trim().EndsWith("\""));
             bool isReference = parameter.IsReference ? true : !isString && symbolTable.ContainsKey(parameter.Value);
 
+            bool isMath = !string.IsNullOrWhiteSpace(parameter.Expression) && prevArithmetic != null;
+
             // Types are usually declared on literals...
             /*if (type.Contains("num") || type.Contains("int") || type.Contains("double"))
             {
@@ -238,30 +245,43 @@ public class FunctionCallBase : NodeBase
             }*/
             if(isString)
             {
+                Debug.Log("Passing string!");
                 ret.Add(isReference ? symbolTable[parameter.Value].Value : parameter.Value.Trim().Substring(1, parameter.Value.Trim().Length - 2));
+            }
+            else if(isMath)
+            {
+                Debug.Log("Passing arithmetic expression!");
+                ret.Add(prevArithmetic.GetResult(ref symbolTable).ToString());
             }
             else
             {
                 if(isReference)
                 {
-                    if(parameter.Value.Trim() == "None")
+                    Debug.Log("Passing bool/number variable!");
+                    if (parameter.Value.Trim() == "None")
                     {
                         ret.Add(null);
                     }
                     else if(symbolTable[parameter.Value.Trim()].Type.ToLower().Contains("bool"))
                     {
-                        ret.Add(bool.Parse(symbolTable[parameter.Value.Trim()].Value.ToLower()));
+                        ret.Add(symbolTable[parameter.Value.Trim()].Value.ToLower());
                     }
                     else if(symbolTable[parameter.Value.Trim()].Type.ToLower().Contains("int") || symbolTable[parameter.Value.Trim()].Type.ToLower().Contains("num"))
                     {
-                        ret.Add(double.Parse(symbolTable[parameter.Value.Trim()].Value));
+                        ret.Add(symbolTable[parameter.Value.Trim()].Value);
                     }
                 }
                 else
                 {
+                    Debug.Log("Passing bool/number literal!");
+                    double number = 0.0;
                     if(parameter.Value.Trim() == "True" || parameter.Value.Trim() == "False")
                     {
-                        ret.Add(bool.Parse(parameter.Value.Trim().ToLower()));
+                        ret.Add(parameter.Value.Trim().ToLower());
+                    }
+                    else if(double.TryParse(parameter.Value.Trim(), out number))
+                    {
+                        ret.Add(parameter.Value.Trim());
                     }
                 }
             }

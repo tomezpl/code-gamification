@@ -53,24 +53,21 @@ public class ProgramController : Interactable
             { "None", new FunctionParameter() } };
     }
 
-    public ProgramController() : base()
-    {
-        functions = new Dictionary<string, System.Delegate>();
-        InitSymTable();
-
-        functions.Add("print", new System.Action<string>(OutPrint));
-        functions.Add("printNewline", new Action(OutPrintNewline));
-        functions.Add("create list", new Action<int, string>(CreateList));
-    }
-
     private void OutPrintNewline()
     {
         outputBuffer += "\n";
     }
 
-    public void CreateList(int size, string name)
+    public void CreateList(string size, string name)
     {
-        if(size < 0 || string.IsNullOrWhiteSpace(name))
+        int nSize = -1;
+
+        if(int.TryParse(size, out nSize))
+        {
+            // TODO
+        }
+
+        if(nSize < 0 || string.IsNullOrWhiteSpace(name))
         {
             // TODO: log error?
         }
@@ -78,13 +75,50 @@ public class ProgramController : Interactable
 
     public void OutPrint(string text)
     {
-        outputBuffer += $"{text}\n";
+        outputBuffer += $"{text}";
         Debug.Log(text);
+    }
+
+    Dictionary<string, Delegate> BaseControllerFunctions()
+    {
+        Dictionary<string, Delegate> ret = new Dictionary<string, Delegate>();
+
+        ret.Add("print", new System.Action<string>(OutPrint));
+        ret.Add("printNewline", new Action(OutPrintNewline));
+        ret.Add("create list", new Action<string, string>(CreateList));
+
+        return ret;
+    }
+
+    protected virtual Dictionary<string, Delegate> ControllerFunctions()
+    {
+        return BaseControllerFunctions();
+    }
+
+    protected virtual void CombineControllerFunctions(Dictionary<string, Delegate> childFunctions)
+    {
+        if(functions == null)
+        {
+            functions = new Dictionary<string, Delegate>();
+        }
+
+        foreach (KeyValuePair<string, Delegate> childFunc in childFunctions)
+        {
+            if (!functions.ContainsKey(childFunc.Key))
+            {
+                functions.Add(childFunc.Key, childFunc.Value);
+            }
+        }
     }
 
     // Start is called before the first frame update
     protected virtual void Start()
     {
+        functions = new Dictionary<string, System.Delegate>();
+        InitSymTable();
+
+        CombineControllerFunctions(ControllerFunctions());
+
         if (!editorUi)
             Debug.LogWarning($"There is no EditorUI present in {gameObject.name}.{name}");
         else
@@ -114,6 +148,9 @@ public class ProgramController : Interactable
         {
             currentNode = (NodeBase)currentNode.nextNode;
             timeSinceTick = tickTime; // Skip the ProgramStart tick
+            InitSymTable();
+            // TODO: this doesn't actually reset the buffer?
+            outputBuffer = "";
         }
         if (programRunning)
         {
@@ -244,7 +281,7 @@ public class ProgramController : Interactable
     // Performs actions defined by the Node
     // TODO: add some core functionality e.g. assigning, arithmetic etc? Then return bool to indicate if anything was invoked from the base method.
     // If not, only then continue to the derived implementations of this.
-    public virtual bool ExecuteNode(NodeBase node)
+    public virtual ExecutionStatus ExecuteNode(NodeBase node)
     {
         switch (CheckNodeType(node))
         {
@@ -253,11 +290,12 @@ public class ProgramController : Interactable
                 Debug.Log("Program starting!");
                 processingDone = true;
 
+                Debug.DebugBreak();
                 InitSymTable();
                 // TODO: this doesn't actually reset the buffer?
                 outputBuffer = "";
 
-                return true;
+                return new ExecutionStatus { success = true, handover = false };
             case NodeType.AssignValue:
                 AssignValue assignValue = node.GetComponent<AssignValue>();
                 string symbolVal = assignValue.prevArithmetic ? assignValue.prevArithmetic.GetResult(ref symbolTable).ToString() : assignValue.rightHand.Value;
@@ -299,21 +337,24 @@ public class ProgramController : Interactable
                 {
                     symbolTable[symbolName] = new FunctionParameter { Name = assignValue.rightHand.Name, Type = isReference ? symbolTable[symbolVal].Type : assignedType, Value = isReference ? symbolTable[symbolVal].Value : symbolVal };
                 }
-                return true;
+                return new ExecutionStatus { success = true, handover = false };
             case NodeType.ArithmeticOperationBase:
                 processingDone = true;
-                return true;
+                return new ExecutionStatus { success = true, handover = false };
             case NodeType.ProgramEnd:
                 processingDone = true;
                 programRunning = false;
-                return true;
+                return new ExecutionStatus { success = true, handover = false };
             case NodeType.FunctionCallBase:
-                if (new ProgramController().functions.ContainsKey(node.GetComponent<FunctionCallBase>().functionName))
+                string funcName = node.GetComponent<FunctionCallBase>().functionName;
+                if (BaseControllerFunctions().ContainsKey(funcName))
                 {
                     // TODO: passing a copy of symbolTable here might consume too much memory. Make static?
-                    functions[node.GetComponent<FunctionCallBase>().functionName].DynamicInvoke(node.GetComponent<FunctionCallBase>().GetRawParameters(symbolTable));
-                    return true;
+                    functions[funcName].DynamicInvoke(node.GetComponent<FunctionCallBase>().GetRawParameters(symbolTable));
+                    Debug.Log($"Found base function {funcName}");
+                    return new ExecutionStatus { success = true, handover = false };
                 }
+                Debug.Log($"Couldn't find base function {funcName}");
                 break;
             case NodeType.LogicalBlock: case NodeType.WhileLoop:
                 if (node.GetComponent<LogicalBlock>().condition.Evaluate(ref symbolTable))
@@ -334,7 +375,7 @@ public class ProgramController : Interactable
                         if (string.IsNullOrWhiteSpace(arrName))
                         {
                             // TODO: error too?
-                            return true;
+                            return new ExecutionStatus { success = false, handover = false };
                         }
                         for (int i = 0; i < count; i++)
                         {
@@ -345,6 +386,6 @@ public class ProgramController : Interactable
                 break;
         }
 
-        return false;
+        return new ExecutionStatus { success = true, handover = true };
     }
 }

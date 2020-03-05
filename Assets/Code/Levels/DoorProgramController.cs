@@ -11,22 +11,25 @@ public class DoorProgramController : ProgramController
     float timer = 0.0f;
     bool timerActive = false;
 
-    public DoorProgramController() : base()
+    protected virtual void SetLock(string state)
     {
-        functions.Add("setLock", new System.Action<bool>(SetLock));
-    }
+        Debug.Log($"Called setLock({state})");
+        bool bState = true;
+        if(!bool.TryParse(state, out bState))
+        {
+            // TODO: error handling?
+        }
 
-    protected virtual void SetLock(bool state)
-    {
-        doorObject.GetComponent<UnlockableDoorWithLock>().SetLock(state);
+        doorObject.GetComponent<UnlockableDoorWithLock>().SetLock(bState);
         timer = doorObject.GetComponent<UnlockableDoorWithLock>().doorOpenDuration + doorObject.GetComponent<UnlockableDoorWithLock>().doorOpeningTime;
         timerActive = true;
     }
 
-    public override bool ExecuteNode(NodeBase node)
+    public override ExecutionStatus ExecuteNode(NodeBase node)
     {
-        if (base.ExecuteNode(node))
-            return false;
+        ExecutionStatus baseStatus = base.ExecuteNode(node);
+        if (!baseStatus.handover)
+            return baseStatus;
 
         switch(CheckNodeType(node))
         {
@@ -41,7 +44,7 @@ public class DoorProgramController : ProgramController
                 catch(Exception)
                 {
                     Debug.Log($"Unknown function {functionCall.functionName}.");
-                    return false;
+                    return new ExecutionStatus { success = false, handover = false };
                 }
                 if (func != null)
                 {
@@ -52,19 +55,19 @@ public class DoorProgramController : ProgramController
                     {
                         // we need a custom amount of time for processing this node
                         processingDone = false;
-                        func.DynamicInvoke(state);
-                        return true;
+                        func.DynamicInvoke(functionCall.parameters[0].Value);
+                        return new ExecutionStatus { success = true, handover = false };
                     }
                     else
                     {
                         Debug.LogWarning($"Can't convert function parameter for function {functionCall.functionName}. ({gameObject.name}).");
-                        return false;
+                        return new ExecutionStatus { success = false, handover = false };
                     }
                 }
                 break;
         }
 
-        return false;
+        return new ExecutionStatus { success = true, handover = false };
     }
 
     public override bool ExecuteFrame()
@@ -88,10 +91,18 @@ public class DoorProgramController : ProgramController
         return true;
     }
 
+    protected override Dictionary<string, Delegate> ControllerFunctions()
+    {
+        return new Dictionary<string, Delegate> { { "setLock", new Action<string>(SetLock) } };
+    }
+
     // Start is called before the first frame update
     protected override void Start()
     {
         base.Start();
-        
+
+        //functions.Add("setLock", new System.Action<string>(SetLock));
+        CombineControllerFunctions(base.ControllerFunctions());
+        CombineControllerFunctions(ControllerFunctions());
     }
 }

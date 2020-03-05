@@ -18,15 +18,16 @@ public class PlatformProgramController : ProgramController
     // Time taken already to raise/lower current platform (each PlatformProgram can only raise/lower one platform at a tick!)
     protected float currentRaiseTime = 0.0f;
 
-    public PlatformProgramController() : base()
+    protected override Dictionary<string, Delegate> ControllerFunctions()
     {
-        functions.Add("raisePlatform", new Action<int>(RaisePlatform));
-        functions.Add("lowerPlatform", new Action<int>(LowerPlatform));
+        return new Dictionary<string, Delegate> { { "raisePlatform", new Action<string>(RaisePlatform) }, { "lowerPlatform", new Action<string>(LowerPlatform) } };
     }
 
     protected override void Start()
     {
         base.Start();
+        CombineControllerFunctions(base.ControllerFunctions());
+        CombineControllerFunctions(ControllerFunctions());
 
         GetPlatformPositions();
     }
@@ -47,10 +48,11 @@ public class PlatformProgramController : ProgramController
         }
     }
 
-    public override bool ExecuteNode(NodeBase node)
+    public override ExecutionStatus ExecuteNode(NodeBase node)
     {
-        if (base.ExecuteNode(node))
-            return false;
+        ExecutionStatus baseStatus = base.ExecuteNode(node);
+        if (!baseStatus.handover)
+            return baseStatus;
 
         Debug.Log(CheckNodeType(node));
         switch(CheckNodeType(node))
@@ -72,7 +74,7 @@ public class PlatformProgramController : ProgramController
                     GetPlatformPositions();
                     currentRaiseTime = 0.0f;
                     processingDone = false;
-                    return true;
+                    return new ExecutionStatus { success = true, handover = false };
                 }
                 break;
             default:
@@ -80,7 +82,7 @@ public class PlatformProgramController : ProgramController
                 break;
         }
 
-        return false;
+        return new ExecutionStatus { success = true, handover = false };
     }
 
     public override bool ExecuteFrame()
@@ -94,29 +96,26 @@ public class PlatformProgramController : ProgramController
             {
                 FunctionCallBase functionCall = currentNode.GetComponent<FunctionCallBase>();
                 // TODO: rewrite so we have a Dictionary of function names and function delegates, along with an array of types describing each parameter's type
-                if (functions.ContainsKey(functionCall.functionName))
+                if (ControllerFunctions().ContainsKey(functionCall.functionName))
                 {
-                    if (functions[functionCall.functionName].Method.GetParameters()[0].ParameterType.Name.Contains("Int"))
+                    int index = -1;
+                    if (int.TryParse(functionCall.parameters[0].Value, out index) || int.TryParse(symbolTable[functionCall.parameters[0].Value].Value, out index))
                     {
-                        int index = -1;
-                        if (int.TryParse(functionCall.parameters[0].Value, out index) || int.TryParse(symbolTable[functionCall.parameters[0].Value].Value, out index))
+                        if (index >= 0)
                         {
-                            if (index >= 0)
-                            {
-                                Debug.Log($"Calling {functionCall.functionName}({index})");
-                                functions[functionCall.functionName].DynamicInvoke(index);
-                                // Increment the raising timer so that we know when we can set the processingDone flag
-                                currentRaiseTime += Time.deltaTime;
-                            }
-                            else
-                            {
-                                Debug.LogWarning("Invalid platform index");
-                            }
+                            Debug.Log($"Calling {functionCall.functionName}({index})");
+                            functions[functionCall.functionName].DynamicInvoke(functionCall.parameters[0].Value);
+                            // Increment the raising timer so that we know when we can set the processingDone flag
+                            currentRaiseTime += Time.deltaTime;
                         }
                         else
                         {
-                            Debug.LogWarning($"Can't convert platform index to integer ({gameObject.name}).");
+                            Debug.LogWarning("Invalid platform index");
                         }
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"Can't convert platform index to integer ({gameObject.name}).");
                     }
                 }
                 else
@@ -136,14 +135,26 @@ public class PlatformProgramController : ProgramController
         return true;
     }
 
-    protected void RaisePlatform(int index)
+    protected void RaisePlatform(string index)
     {
-        Programmable platform = GetChildProgrammable(PlatformContainer, index).GetComponent<Programmable>();
-        platform.transform.localPosition = Vector3.Lerp(platform.transform.localPosition, originalPositions[index] + new Vector3(0.0f, stepHeight, 0.0f), currentRaiseTime / raisingTime);
+        int nIndex = -1;
+        if(!int.TryParse(index, out nIndex))
+        {
+
+        }
+
+        Programmable platform = GetChildProgrammable(PlatformContainer, nIndex).GetComponent<Programmable>();
+        platform.transform.localPosition = Vector3.Lerp(platform.transform.localPosition, originalPositions[nIndex] + new Vector3(0.0f, stepHeight, 0.0f), currentRaiseTime / raisingTime);
     }
-    protected void LowerPlatform(int index)
+    protected void LowerPlatform(string index)
     {
-        Programmable platform = GetChildProgrammable(PlatformContainer, index).GetComponent<Programmable>();
-        platform.transform.localPosition = Vector3.Lerp(platform.transform.localPosition, originalPositions[index] - new Vector3(0.0f, stepHeight, 0.0f), currentRaiseTime / raisingTime);
+        int nIndex = -1;
+        if (!int.TryParse(index, out nIndex))
+        {
+
+        }
+
+        Programmable platform = GetChildProgrammable(PlatformContainer, nIndex).GetComponent<Programmable>();
+        platform.transform.localPosition = Vector3.Lerp(platform.transform.localPosition, originalPositions[nIndex] - new Vector3(0.0f, stepHeight, 0.0f), currentRaiseTime / raisingTime);
     }
 }

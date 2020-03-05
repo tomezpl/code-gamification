@@ -25,7 +25,7 @@ public abstract class NodeBase : MonoBehaviour, IProgramNode
 
     protected GameObject nodeLinker;
 
-    protected ProgramController computer;
+    public ProgramController computer;
 
     // a conditional statement, like an if statement or a loop, inside which this Node is nested
     public LogicalBlock ownerLoop;
@@ -48,9 +48,9 @@ public abstract class NodeBase : MonoBehaviour, IProgramNode
             Transform computerTransform = transform.parent;
             while(computerTransform)
             {
-                if (computerTransform.GetComponent<ProgramController>())
+                if (computerTransform.GetComponent<EditorProgram>())
                 {
-                    computer = computerTransform.GetComponent<ProgramController>();
+                    computer = computerTransform.GetComponent<EditorProgram>().programController;
                     break;
                 }
                 else

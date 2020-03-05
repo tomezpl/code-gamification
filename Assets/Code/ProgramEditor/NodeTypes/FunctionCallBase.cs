@@ -27,6 +27,8 @@ public class FunctionCallBase : NodeBase
     // Should only be set to true when changing function
     public bool needResize = true;
 
+    private float initHeight = 0.0f;
+
     // Start is called before the first frame update
     public override void InitialiseNode()
     {
@@ -52,8 +54,9 @@ public class FunctionCallBase : NodeBase
 
             GetComponent<RectTransform>().SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, GetComponent<RectTransform>().rect.height - firstParamRect.height);
         }
+        initHeight = GetComponent<RectTransform>().rect.height;
 
-        if(parameters == null)
+        if (parameters == null)
         {
             parameters = new List<FunctionParameter>();
             for(int i = 0; i < paramCount; i++)
@@ -61,7 +64,7 @@ public class FunctionCallBase : NodeBase
                 parameters.Add(new FunctionParameter());
             }
         }
-        UpdateFunctionProperties();
+        //UpdateFunctionProperties();
     }
 
     public override void Start()
@@ -96,8 +99,11 @@ public class FunctionCallBase : NodeBase
                 parameters[0] = new FunctionParameter();
             }
             // TODO: use variable instead of getcomponent
-            parameters[0].Value = prevArithmetic.GetComponent<ArithmeticOperationBase>().GetResult(ref computer.symbolTable).ToString();
-            parameters[0].Expression = prevArithmetic.GetComponent<ArithmeticOperationBase>().Serialize();
+            ArithmeticOperationBase arithmetic = prevArithmetic;
+            ref Dictionary<string, FunctionParameter> symTable = ref computer.symbolTable;
+            double result = arithmetic.GetResult(ref symTable);
+            parameters[0].Value = result.ToString();
+            parameters[0].Expression = arithmetic.Serialize();
             parameters[0].Type = "Int";
             parameters[0].IsReference = false;
         }
@@ -109,11 +115,32 @@ public class FunctionCallBase : NodeBase
         functionNameText.GetComponent<Text>().text = functionName;
 
         float margin = Mathf.Abs(firstParamOrigin.y - functionNameText.GetComponentInParent<RectTransform>().localPosition.y);
-        if (needResize)
+
+        // Remove any parameter UI objects
+        List<Transform> paramsToDestroy = new List<Transform>();
+        foreach(Transform child in GetComponentsInChildren<Transform>())
         {
-            GetComponent<RectTransform>().SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, GetComponent<RectTransform>().rect.height + firstParamHeight * (parameters.Count > 2 ? (float)parameters.Count : 1.5f) + margin);
-            needResize = false;
+            if(child.name.StartsWith("Parameter"))
+            {
+                paramsToDestroy.Add(child);
+            }
         }
+        if (parameters.Count < paramsToDestroy.Count)
+        {
+            foreach (Transform param in paramsToDestroy)
+            {
+                if (Convert.ToInt32(param.name.Replace("Parameter", "")) > parameters.Count)
+                {
+                    Destroy(param.gameObject);
+                    GetComponent<RectTransform>().SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, (initHeight == 0.0f ? GetComponent<RectTransform>().rect.height : initHeight) - firstParamHeight * (parameters.Count > 2 ? (float)parameters.Count : 1.5f) - margin);
+                }
+            }
+        }
+        /*if (needResize)
+        {*/
+            GetComponent<RectTransform>().SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, (initHeight == 0.0f ? GetComponent<RectTransform>().rect.height : initHeight) + firstParamHeight * (parameters.Count > 2 ? (float)parameters.Count : 1.5f) + margin);
+            //needResize = false;
+        //}
 
         for (ushort i = 0; i < paramCount && parameters != null && i < parameters.Count; i++)
         {

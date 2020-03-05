@@ -307,6 +307,12 @@ public class EditorProgram : MonoBehaviour
                         }
                         // Fixes node link renderer
                         addedNode.name = addedNode.name.Replace("(Clone)", $"{(addedNode.GetInstanceID())}");
+
+                        // Special cases
+                        if(nodeTypeStrings[i] == "CreateList")
+                        {
+                            addedNode.GetComponentInParent<AllocateArray>().InitialiseNode();
+                        }
                         break;
                     }
                 }
@@ -326,7 +332,10 @@ public class EditorProgram : MonoBehaviour
                     {
                         paramList += $"{funcParams.Name}, ";
                     }
-                    paramList = paramList.Substring(0, paramList.LastIndexOf(','));
+                    if (!string.IsNullOrWhiteSpace(paramList))
+                    {
+                        paramList = paramList.Substring(0, paramList.LastIndexOf(','));
+                    }
                     functionNames.Add($"{functionName}({paramList})");
                 }
                 functionNames.Add("Other: type function name manually.");

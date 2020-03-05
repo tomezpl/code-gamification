@@ -59,7 +59,13 @@ public class ProgramController : Interactable
         InitSymTable();
 
         functions.Add("print", new System.Action<string>(OutPrint));
+        functions.Add("printNewline", new Action(OutPrintNewline));
         functions.Add("create list", new Action<int, string>(CreateList));
+    }
+
+    private void OutPrintNewline()
+    {
+        outputBuffer += "\n";
     }
 
     public void CreateList(int size, string name)

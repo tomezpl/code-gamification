@@ -216,9 +216,16 @@ public class ProgramController : Interactable
                         currentNode = currentNode.NextNodeObject.GetComponent<NodeBase>();
                     }
                     // Reached end of loop
-                    else if(currentNode.nextNode == null && currentNode.ownerLoop != null && currentNode.ownerLoop.GetComponent<WhileLoop>())
+                    else if(currentNode.nextNode == null && currentNode.ownerLoop != null)
                     {
-                        currentNode = currentNode.ownerLoop;
+                        if (currentNode.ownerLoop.GetComponent<WhileLoop>())
+                        {
+                            currentNode = currentNode.ownerLoop;
+                        }
+                        else if(currentNode.ownerLoop.GetComponent<LogicalBlock>())
+                        {
+                            currentNode = (NodeBase)currentNode.ownerLoop.nextNode;
+                        }
                     }
                     Debug.Log("Continuing to next node!");
                     return false;
@@ -371,7 +378,15 @@ public class ProgramController : Interactable
             case NodeType.LogicalBlock: case NodeType.WhileLoop:
                 if (node.GetComponent<LogicalBlock>().condition.Evaluate(ref symbolTable))
                 {
-                    currentNode = (NodeBase)(node.GetComponent<LogicalBlock>().firstBodyNode);
+                    NodeBase nodeToFollow = (NodeBase)(node.GetComponent<LogicalBlock>().firstBodyNode);
+                    if(nodeToFollow != null)
+                    {
+                        currentNode = nodeToFollow;
+                    }
+                    else
+                    {
+                        currentNode = (NodeBase)currentNode.nextNode;
+                    }
                     return ExecuteNode(currentNode);
                 }
                 break;

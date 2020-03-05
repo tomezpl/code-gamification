@@ -98,7 +98,6 @@ public class FunctionCallBase : NodeBase
             {
                 parameters[0] = new FunctionParameter();
             }
-            // TODO: use variable instead of getcomponent
             ArithmeticOperationBase arithmetic = prevArithmetic;
             ref Dictionary<string, FunctionParameter> symTable = ref computer.symbolTable;
             double result = arithmetic.GetResult(ref symTable);

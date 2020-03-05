@@ -12,7 +12,7 @@ public class ProgramController : Interactable
     public double tickTime = 1.0;
     protected double timeSinceTick = 0.0;
     protected EditorProgram program;
-    protected NodeBase currentNode;
+    public NodeBase currentNode;
 
     public bool programRunning = false;
 
@@ -146,7 +146,10 @@ public class ProgramController : Interactable
         timeSinceTick += Time.deltaTime;
         if(currentNode == program.programStart && currentNode.NextNodeObject != null)
         {
-            currentNode = (NodeBase)currentNode.nextNode;
+            if (programRunning)
+            {
+                currentNode = (NodeBase)currentNode.nextNode;
+            }
             timeSinceTick = tickTime; // Skip the ProgramStart tick
             InitSymTable();
             // TODO: this doesn't actually reset the buffer?
@@ -170,10 +173,11 @@ public class ProgramController : Interactable
             {
                 if (Input.GetKeyUp(KeyCode.E))
                     program.EditorActive = !program.EditorActive;
-                if (Input.GetKeyUp(KeyCode.Space))
+                if (Input.GetKeyUp(KeyCode.Space) && !programRunning)
                 {
                     processingDone = true;
                     programRunning = true;
+                    currentNode = program.programStart;
                 }
             }
         }
@@ -283,6 +287,13 @@ public class ProgramController : Interactable
     // If not, only then continue to the derived implementations of this.
     public virtual ExecutionStatus ExecuteNode(NodeBase node)
     {
+        if (node == null)
+        {
+            programRunning = false;
+            currentNode = program.programStart;
+            return new ExecutionStatus { success = false, handover = false };
+        }
+
         switch (CheckNodeType(node))
         {
             // Handlers for different commands
@@ -339,8 +350,9 @@ public class ProgramController : Interactable
                 }
                 return new ExecutionStatus { success = true, handover = false };
             case NodeType.ArithmeticOperationBase:
-                processingDone = true;
-                return new ExecutionStatus { success = true, handover = false };
+                // Arithmetic only takes a tick when it gets executed
+                currentNode = (NodeBase)currentNode.nextNode;
+                return ExecuteNode(currentNode);
             case NodeType.ProgramEnd:
                 processingDone = true;
                 programRunning = false;

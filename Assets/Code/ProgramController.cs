@@ -233,7 +233,7 @@ public class ProgramController : Interactable
                             currentNode = (NodeBase)currentNode.ownerLoop.nextNode;
                         }
                     }
-                    Debug.Log("Continuing to next node!");
+                    Debug.Log($"Continuing to next node: {currentNode.name}");
                     return false;
                 }
             }

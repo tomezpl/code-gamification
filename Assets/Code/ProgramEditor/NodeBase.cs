@@ -33,7 +33,7 @@ public abstract class NodeBase : MonoBehaviour, IProgramNode
     public virtual void Start()
     {
         // Unless overriden, not null and not in a loop, assign nextNode as node interface of the NextNodeObject
-        if(nextNode == null && !inLoop && NextNodeObject != null)
+        if(nextNode == null && /*!inLoop &&*/ NextNodeObject != null)
         {
             NodeBase nextNodeBase = NextNodeObject.GetComponent<NodeBase>();
             nextNode = (IProgramNode)nextNodeBase;

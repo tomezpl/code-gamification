@@ -102,7 +102,7 @@ public class PlatformProgramController : ProgramController
                     {
                         if (index >= 0)
                         {
-                            Debug.Log($"Calling {functionCall.functionName}({index})");
+                            //Debug.Log($"Calling {functionCall.functionName}({index})");
                             functions[functionCall.functionName].DynamicInvoke(index.ToString());
                             // Increment the raising timer so that we know when we can set the processingDone flag
                             currentRaiseTime += Time.deltaTime;

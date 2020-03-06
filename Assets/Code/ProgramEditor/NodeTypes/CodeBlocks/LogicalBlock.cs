@@ -46,7 +46,6 @@ public class LogicalBlock : CodeBlock
     // Similar to FunctionCallBase.UpdateFunctionParameters
     public virtual void UpdateUI()
     {
-        Debug.Log("GAY");
         if (ConditionalObject == null)
         {
             if (transform.Find("ConditionBar").transform.Find("Conditional") != null)

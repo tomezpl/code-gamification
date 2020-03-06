@@ -95,7 +95,6 @@ public class PlatformProgramController : ProgramController
             if(CheckNodeType(currentNode) == NodeType.FunctionCallBase)
             {
                 FunctionCallBase functionCall = currentNode.GetComponent<FunctionCallBase>();
-                // TODO: rewrite so we have a Dictionary of function names and function delegates, along with an array of types describing each parameter's type
                 if (ControllerFunctions().ContainsKey(functionCall.functionName))
                 {
                     int index = -1;
@@ -104,7 +103,7 @@ public class PlatformProgramController : ProgramController
                         if (index >= 0)
                         {
                             Debug.Log($"Calling {functionCall.functionName}({index})");
-                            functions[functionCall.functionName].DynamicInvoke(functionCall.parameters[0].Value);
+                            functions[functionCall.functionName].DynamicInvoke(index.ToString());
                             // Increment the raising timer so that we know when we can set the processingDone flag
                             currentRaiseTime += Time.deltaTime;
                         }
@@ -140,7 +139,7 @@ public class PlatformProgramController : ProgramController
         int nIndex = -1;
         if(!int.TryParse(index, out nIndex))
         {
-
+            Debug.Log("Invalid platform index, defaulting to 0.");
         }
 
         Programmable platform = GetChildProgrammable(PlatformContainer, nIndex).GetComponent<Programmable>();
@@ -151,7 +150,7 @@ public class PlatformProgramController : ProgramController
         int nIndex = -1;
         if (!int.TryParse(index, out nIndex))
         {
-
+            Debug.Log("Invalid platform index, defaulting to 0.");
         }
 
         Programmable platform = GetChildProgrammable(PlatformContainer, nIndex).GetComponent<Programmable>();

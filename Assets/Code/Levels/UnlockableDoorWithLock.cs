@@ -6,6 +6,8 @@ public class UnlockableDoorWithLock : UnlockableDoor
 {
     public enum LockType { BasicLock = 0, LogicGate, KeyCode, FizzBuzz };
 
+    public int fizzBuzzCount = 20;
+
     protected bool basicLockState = true;
 
     // Start is called before the first frame update

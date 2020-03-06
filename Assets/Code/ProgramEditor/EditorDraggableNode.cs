@@ -187,7 +187,7 @@ public class EditorDraggableNode : MonoBehaviour
             GetComponentInParent<FunctionCallBase>().UpdateFunctionProperties();
 
             ArithmeticOperationBase potentialArithmetic = GetComponentInParent<ArithmeticOperationBase>();
-            if (potentialArithmetic != null && potentialArithmetic.NextNodeObject != null && potentialArithmetic.NextNodeObject.GetComponent<FunctionCallBase>().prevArithmetic == potentialArithmetic)
+            if (potentialArithmetic != null && potentialArithmetic.NextNodeObject != null && potentialArithmetic.NextNodeObject.GetComponent<FunctionCallBase>() && potentialArithmetic.NextNodeObject.GetComponent<FunctionCallBase>().prevArithmetic == potentialArithmetic)
             {
                 potentialArithmetic.NextNodeObject.GetComponent<FunctionCallBase>().UpdateFunctionProperties();
             }

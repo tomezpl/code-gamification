@@ -109,6 +109,12 @@ public abstract class NodeBase : MonoBehaviour, IProgramNode
     public virtual void Update()
     {
         //RenderNodeLinker();
+
+        // Propagate ownerLoop
+        if(NextNodeObject != null)
+        {
+            NextNodeObject.GetComponent<NodeBase>().ownerLoop = ownerLoop;
+        }
     }
 
     public void Awake()

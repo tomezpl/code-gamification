@@ -80,7 +80,7 @@ public class EditorDraggableNode : MonoBehaviour
         // Check if function name
         else if (transform.name == "FuncName")
         {
-            DispatchEditingProperty(new Action<string>(FunctionNameEditingFinished), GetComponentInParent<FunctionCallBase>().functionName);
+            //DispatchEditingProperty(new Action<string>(FunctionNameEditingFinished), GetComponentInParent<FunctionCallBase>().functionName);
         }
         else if (IsReference() || (transform.name.Contains("Parameter") && name != "Parameter"))
         {
@@ -110,7 +110,7 @@ public class EditorDraggableNode : MonoBehaviour
             // Unknown
             else
             {
-                DispatchEditingProperty(new System.Action<string>(ReferenceEditingFinished), GetComponentInChildren<Text>().text);
+                //DispatchEditingProperty(new System.Action<string>(ReferenceEditingFinished), GetComponentInChildren<Text>().text);
             }
         }
     }

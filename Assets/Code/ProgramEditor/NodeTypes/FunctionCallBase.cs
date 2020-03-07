@@ -32,6 +32,7 @@ public class FunctionCallBase : NodeBase
     // Start is called before the first frame update
     public override void InitialiseNode()
     {
+        bool wasInitialised = isInitialised;
         base.InitialiseNode();
 
         // TODO: performance fixes, this can be optimised by storing Parameter in a variable
@@ -51,10 +52,13 @@ public class FunctionCallBase : NodeBase
             {
                 Destroy(transform.Find("Parameter").gameObject);
             }
-
-            GetComponent<RectTransform>().SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, GetComponent<RectTransform>().rect.height - firstParamRect.height);
+            if (initHeight == 0.0f)
+            {
+                GetComponent<RectTransform>().SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, GetComponent<RectTransform>().rect.height - firstParamRect.height);
+                initHeight = GetComponent<RectTransform>().rect.height;
+            }
+            Debug.Log($"{name}.initHeight : {initHeight}");
         }
-        initHeight = GetComponent<RectTransform>().rect.height;
 
         if (parameters == null)
         {
@@ -71,6 +75,8 @@ public class FunctionCallBase : NodeBase
     {
         base.Start();
 
+        //if (!isInitialised)
+            //InitialiseNode();
         UpdateFunctionProperties();
     }
 

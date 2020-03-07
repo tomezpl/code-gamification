@@ -33,9 +33,9 @@ public class LogicalBlock : CodeBlock
                     }
 
                     // Reinitialise node
-                    currentNode.isInitialised = false;
+                    //currentNode.isInitialised = false;
                     currentNode.indentLevel -= 2; // Don't ask why - this just fixes tabulation.
-                    lastNode.InitialiseNode();
+                    //lastNode.InitialiseNode();
                 }
             }
         }

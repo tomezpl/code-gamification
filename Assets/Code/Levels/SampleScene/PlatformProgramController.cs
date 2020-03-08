@@ -9,8 +9,11 @@ public class PlatformProgramController : ProgramController
 
     public float stepHeight = 0.25f;
 
-    // Original local positions of the platforms
-    protected List<Vector3> originalPositions = new List<Vector3>();
+    // Original local positions of the platforms (at the time of calling raisePlatform/lowerPlatform, used to track progress in V3.Lerp)
+    public List<Vector3> originalPositions = new List<Vector3>();
+
+    // Initial local positions of the platforms (at the time of starting the level, used to cap their elevation)
+    public List<Vector3> initPositions;
 
     // Time it takes to raise/lower a platform (in seconds)
     public float raisingTime = 0.5f;
@@ -30,6 +33,11 @@ public class PlatformProgramController : ProgramController
         CombineControllerFunctions(ControllerFunctions());
 
         GetPlatformPositions();
+
+        foreach(Platform platform in PlatformContainer.GetComponentsInChildren<Platform>())
+        {
+            platform.Computer = gameObject;
+        }
     }
 
     protected void GetPlatformPositions()
@@ -45,6 +53,11 @@ public class PlatformProgramController : ProgramController
             {
                 originalPositions.Add(platform.transform.localPosition);
             }
+        }
+
+        if(initPositions == null || initPositions.Count < originalPositions.Count)
+        {
+            initPositions = originalPositions;
         }
     }
 
@@ -69,8 +82,25 @@ public class PlatformProgramController : ProgramController
                 // Lastly, set processingDone to false, indicating that we may need an irregular tick time for this (the computer won't continue until processingDone is true)
                 // TODO: replace the Action type value in the functions dictionary with a FunctionCall class that contains an "irregularTick" flag
                 // TODO: GetPlatformPositions() should be in a virtual override (IrregularTickInit, IrregularTickFrame, IrregularTickFinished)
-                if(node.GetComponent<FunctionCallBase>().functionName == "raisePlatform" || node.GetComponent<FunctionCallBase>().functionName == "lowerPlatform")
+                FunctionCallBase functionCall = node.GetComponent<FunctionCallBase>();
+                if (functionCall.functionName == "raisePlatform" || functionCall.functionName == "lowerPlatform")
                 {
+                    Platform platform = GetChildProgrammable(PlatformContainer, int.Parse(functionCall.parameters[0].Value)).GetComponent<Platform>();
+
+                    // Check elevation boundaries
+                    bool allowElevation = functionCall.functionName == "raisePlatform" && initPositions[platform.index].y + platform.MaxElevation < platform.transform.localPosition.y + stepHeight;
+                    bool allowDown = functionCall.functionName == "lowerPlatform" && initPositions[platform.index].y + platform.MinElevation > platform.transform.localPosition.y - stepHeight;
+                    bool allowMove = allowElevation || allowDown;
+
+                    if (allowMove)
+                    {
+                        // Ignore this call if outside limits
+                        processingDone = true;
+                        return new ExecutionStatus { success = true, handover = false };
+                    }
+
+                    // Otherwise continue with raising/lowering the platform
+
                     GetPlatformPositions();
                     currentRaiseTime = 0.0f;
                     processingDone = false;

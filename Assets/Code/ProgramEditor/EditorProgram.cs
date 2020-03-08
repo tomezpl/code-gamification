@@ -93,6 +93,7 @@ public class EditorProgram : MonoBehaviour
         if (GameObject.Find("Player"))
             GameObject.Find("Player").GetComponentInChildren<Camera>().enabled = false;
         transform.Find("Canvas").GetComponent<Canvas>().enabled = true;
+
         editorActive = true;
     }
 

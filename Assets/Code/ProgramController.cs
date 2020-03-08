@@ -187,6 +187,16 @@ public class ProgramController : Interactable
                 }
             }
         }
+
+        if(transform.Find("CurrentLine") && editorUi.GetComponent<EditorProgram>().EditorActive)
+        {
+            transform.Find("CurrentLine").gameObject.SetActive(false);
+        }
+
+        if (transform.Find("CurrentLine") && !editorUi.GetComponent<EditorProgram>().EditorActive && programRunning)
+        {
+            transform.Find("CurrentLine").gameObject.SetActive(true);
+        }
     }
 
     // Returns false if ExecuteFrame needs to proceed to next node on the next call.
@@ -205,7 +215,14 @@ public class ProgramController : Interactable
                     string currentLine = ((IProgramNode)currentNode).Serialize();
                     if (transform.Find("CurrentLine"))
                     {
-                        transform.Find("CurrentLine").gameObject.SetActive(true);
+                        if (!editorUi.GetComponent<EditorProgram>().EditorActive)
+                        {
+                            transform.Find("CurrentLine").gameObject.SetActive(true);
+                        }
+                        else
+                        {
+                            transform.Find("CurrentLine").gameObject.SetActive(false);
+                        }
                     }
                     GameObject.Find("OutputRenderer").transform.Find("Canvas").GetComponentInChildren<Text>().text = currentLine;
                 }

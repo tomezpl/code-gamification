@@ -57,7 +57,7 @@ public class FunctionCallBase : NodeBase
                 GetComponent<RectTransform>().SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, GetComponent<RectTransform>().rect.height - firstParamRect.height);
                 initHeight = GetComponent<RectTransform>().rect.height;
             }
-            Debug.Log($"{name}.initHeight : {initHeight}");
+            //Debug.Log($"{name}.initHeight : {initHeight}");
         }
 
         if (parameters == null)

@@ -31,8 +31,8 @@ public class UnlockableDoor : Unlockable
                 transformR = t;
             }
         }
-        Debug.Log("LDoor original: " + originalPosL);
-        Debug.Log("RDoor original: " + originalPosR);
+        //Debug.Log("LDoor original: " + originalPosL);
+        //Debug.Log("RDoor original: " + originalPosR);
 
         playerTransform = GameObject.Find("Player").transform;
     }
@@ -49,16 +49,16 @@ public class UnlockableDoor : Unlockable
         {
             if (isUnlocked)
             {
-                Debug.Log("Locking!");
+                //Debug.Log("Locking!");
                 timeToLock = doorOpeningTime;
             }
             Lock();
         }
         if (CanUnlock() && !isUnlocked)
         {
-            Debug.Log("Unlocking!");
+            //Debug.Log("Unlocking!");
             timeToLock = doorOpenDuration + doorOpeningTime;
-            Debug.Log("ttl: " + timeToLock);
+            //Debug.Log("ttl: " + timeToLock);
             Unlock();
         }
         else if(!CanUnlock() && isUnlocked)

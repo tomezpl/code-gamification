@@ -12,13 +12,13 @@ public class Programmable : MonoBehaviour
     public int index = -1;
 
     // Start is called before the first frame update
-    void Start()
+    protected virtual void Start()
     {
         
     }
 
     // Update is called once per frame
-    void Update()
+    protected virtual void Update()
     {
         //Computer.GetComponent<ProgramController>().ExecuteFrame(index, gameObject);
 

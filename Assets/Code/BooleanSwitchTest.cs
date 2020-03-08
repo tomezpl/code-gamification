@@ -5,7 +5,7 @@ using UnityEngine;
 public class BooleanSwitchTest : MonoBehaviour
 {
     public Material offMaterialForCasing, offMaterialForInside, onMaterialForCasing, onMaterialForInside;
-    private bool isEnabled = false;
+    public bool isEnabled = false;
     public GameObject insideBit, insideLight;
     public float triggerRadius = 2.5f; // Distance at which the boolean switch can be triggered with the Spacebar
 
@@ -22,7 +22,7 @@ public class BooleanSwitchTest : MonoBehaviour
             ToggleBoolean();
     }
 
-    void ToggleBoolean()
+    public void ToggleBoolean()
     {
         isEnabled = !isEnabled;
 

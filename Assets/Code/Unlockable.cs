@@ -5,7 +5,7 @@ using UnityEngine;
 // Base class for doors with keypads, terminals etc.
 abstract public class Unlockable : Interactable
 {
-    protected bool isUnlocked = false;
+    public bool isUnlocked = false;
 
     // Start is called before the first frame update
     void Start()

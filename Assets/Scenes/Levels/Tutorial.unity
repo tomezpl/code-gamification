@@ -1237,6 +1237,11 @@ PrefabInstance:
       propertyPath: Computer
       value: 
       objectReference: {fileID: 1241672455}
+    - target: {fileID: 7798315685204231729, guid: 0342b4f5b6007a940945ebba05ce5244,
+        type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 0342b4f5b6007a940945ebba05ce5244, type: 3}
 --- !u!4 &347924397 stripped
@@ -1274,6 +1279,7 @@ MonoBehaviour:
   doorOpening: 0.25
   doorOpeningTime: 1
   doorOpenDuration: 5
+  fizzBuzzCount: 20
 --- !u!1 &375180649
 GameObject:
   m_ObjectHideFlags: 0
@@ -1593,11 +1599,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 1672456976840935320, guid: 8bd35e97c6cf6c540af720a3ec75b487,
-        type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 4150481526995179440, guid: 8bd35e97c6cf6c540af720a3ec75b487,
         type: 3}
       propertyPath: NextNodeObject
@@ -1622,6 +1623,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_AnchoredPosition.x
       value: 925
+      objectReference: {fileID: 0}
+    - target: {fileID: 1672456976840935320, guid: 8bd35e97c6cf6c540af720a3ec75b487,
+        type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 8bd35e97c6cf6c540af720a3ec75b487, type: 3}
@@ -1894,6 +1900,21 @@ PrefabInstance:
       propertyPath: Computer
       value: 
       objectReference: {fileID: 1241672455}
+    - target: {fileID: 7798315685204231729, guid: 0342b4f5b6007a940945ebba05ce5244,
+        type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5341558309274198244, guid: 0342b4f5b6007a940945ebba05ce5244,
+        type: 3}
+      propertyPath: m_BlockingObjects
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 5341558309274198244, guid: 0342b4f5b6007a940945ebba05ce5244,
+        type: 3}
+      propertyPath: m_BlockingMask.m_Bits
+      value: 4294967295
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 0342b4f5b6007a940945ebba05ce5244, type: 3}
 --- !u!4 &539615779 stripped
@@ -2094,6 +2115,16 @@ PrefabInstance:
       propertyPath: Computer
       value: 
       objectReference: {fileID: 1241672455}
+    - target: {fileID: 7798315685204231729, guid: 0342b4f5b6007a940945ebba05ce5244,
+        type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6478635352813530397, guid: 0342b4f5b6007a940945ebba05ce5244,
+        type: 3}
+      propertyPath: m_Text
+      value: 
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 0342b4f5b6007a940945ebba05ce5244, type: 3}
 --- !u!4 &624689869 stripped
@@ -2130,8 +2161,12 @@ MonoBehaviour:
   interactionRadius: 2.5
   editorUi: {fileID: 703718990}
   tickTime: 1
+  currentNode: {fileID: 0}
   programRunning: 0
   processingDone: 1
+  hiddenFunctions:
+  - create list
+  outputBuffer: 
   PlatformContainer: {fileID: 384540188}
   stepHeight: 0.25
   raisingTime: 0.5
@@ -2449,6 +2484,7 @@ MonoBehaviour:
   doorOpening: 0.25
   doorOpeningTime: 0.1
   doorOpenDuration: 0.2
+  fizzBuzzCount: 20
 --- !u!1001 &751102371
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -3426,8 +3462,12 @@ MonoBehaviour:
   interactionRadius: 2.5
   editorUi: {fileID: 154328653}
   tickTime: 1
+  currentNode: {fileID: 0}
   programRunning: 0
   processingDone: 1
+  hiddenFunctions:
+  - create list
+  outputBuffer: 
   PlatformContainer: {fileID: 384540188}
   stepHeight: 0.25
   raisingTime: 0.5
@@ -3858,11 +3898,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 1672456976840935320, guid: 8bd35e97c6cf6c540af720a3ec75b487,
-        type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 4150481526995179440, guid: 8bd35e97c6cf6c540af720a3ec75b487,
         type: 3}
       propertyPath: NextNodeObject
@@ -3887,6 +3922,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_AnchoredPosition.x
       value: 925
+      objectReference: {fileID: 0}
+    - target: {fileID: 1672456976840935320, guid: 8bd35e97c6cf6c540af720a3ec75b487,
+        type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 8bd35e97c6cf6c540af720a3ec75b487, type: 3}
@@ -3924,8 +3964,12 @@ MonoBehaviour:
   interactionRadius: 3
   editorUi: {fileID: 1139482243}
   tickTime: 0.1
+  currentNode: {fileID: 0}
   programRunning: 0
   processingDone: 1
+  hiddenFunctions:
+  - create list
+  outputBuffer: 
   doorObject: {fileID: 366271056}
 --- !u!1001 &1425332009
 PrefabInstance:
@@ -5137,8 +5181,12 @@ MonoBehaviour:
   interactionRadius: 2.5
   editorUi: {fileID: 1343112389}
   tickTime: 0.1
+  currentNode: {fileID: 0}
   programRunning: 0
   processingDone: 1
+  hiddenFunctions:
+  - create list
+  outputBuffer: 
   doorObject: {fileID: 739052746}
 --- !u!1001 &1802331675
 PrefabInstance:

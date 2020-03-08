@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class Programmable : MonoBehaviour
 {
@@ -20,5 +21,10 @@ public class Programmable : MonoBehaviour
     void Update()
     {
         //Computer.GetComponent<ProgramController>().ExecuteFrame(index, gameObject);
+
+        if(GetComponentInChildren<TextMesh>())
+        {
+            GetComponentInChildren<TextMesh>().text = index.ToString();
+        }
     }
 }

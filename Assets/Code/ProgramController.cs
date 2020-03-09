@@ -14,6 +14,8 @@ public class ProgramController : Interactable
     protected EditorProgram program;
     public NodeBase currentNode;
 
+    public string expectedOutput = "";
+
     public bool programRunning = false;
 
     // This is a sort of a "locking mechanism". If a tick needs more than tickTime to perform its actions (e.g. lerping 3D positions), 
@@ -40,7 +42,7 @@ public class ProgramController : Interactable
     public const string HiddenSymbolPrefix = "_INTERNAL_GAME:";
 
     // This is used by CheckNodeType
-    public enum NodeType { Unknown, FunctionCallBase, ProgramStart, ArithmeticOperationBase, CodeBlock, AssignValue, ProgramEnd, LogicalBlock, WhileLoop, AllocateArray };
+    public enum NodeType { Unknown, FunctionCallBase, ProgramStart, ArithmeticOperationBase, CodeBlock, AssignValue, ProgramEnd, LogicalBlock, WhileLoop, AllocateArray, Continue };
 
     public string outputBuffer = "";
 
@@ -53,7 +55,7 @@ public class ProgramController : Interactable
             { "None", new FunctionParameter() } };
     }
 
-    private void OutPrintNewline()
+    protected void OutPrintNewline()
     {
         outputBuffer += "\n";
     }
@@ -265,6 +267,17 @@ public class ProgramController : Interactable
                     return false;
                 }
             }
+            else if(currentNode.gameObject.name == "ProgramEnd")
+            {
+                ProgramEndCallback();
+                programRunning = false;
+                currentNode = program.programStart;
+                GameObject.Find("OutputRenderer").transform.Find("Canvas").GetComponentInChildren<Text>().text = "";
+                if (transform.Find("CurrentLine"))
+                {
+                    transform.Find("CurrentLine").gameObject.SetActive(false);
+                }
+            }
             else // There was an error. Go back to ProgramStart and stop the program execution.
             {
                 programRunning = false;
@@ -278,6 +291,11 @@ public class ProgramController : Interactable
             }
         }
         return true; // good to continue with any child implementations of this method
+    }
+
+    protected virtual void ProgramEndCallback()
+    {
+        
     }
 
     // Checks type of node and returns it as NodeType
@@ -304,6 +322,9 @@ public class ProgramController : Interactable
             return NodeType.LogicalBlock;
         if (node.gameObject.GetComponent<CodeBlock>())
             return NodeType.CodeBlock;
+
+        if (node.gameObject.GetComponent<Continue>())
+            return NodeType.Continue;
 
         // If type can't be determined, return null
         Debug.LogWarning("Couldn't determine type of node, returning null! Check if ProgramController.CheckNodeType has been updated correctly with new node types.");
@@ -452,6 +473,30 @@ public class ProgramController : Interactable
                             symbolTable.Add($"{arrName}[{i}]", new FunctionParameter());
                         }
                         return new ExecutionStatus { success = true, handover = false };
+                    }
+                }
+                break;
+            case NodeType.Continue:
+                if(node.GetComponent<Continue>())
+                {
+                    // Find the while loop
+                    LogicalBlock owner = node.ownerLoop;
+                    while(owner != null)
+                    {
+                        WhileLoop loop = owner.GetComponent<WhileLoop>();
+                        if (loop != null)
+                        {
+                            currentNode = loop;
+                            return ExecuteNode(currentNode);
+                        }
+                        else
+                        {
+                            owner = owner.ownerLoop;
+                        }
+                    }
+                    if(owner == null)
+                    {
+                        return new ExecutionStatus { success = false, handover = false };
                     }
                 }
                 break;

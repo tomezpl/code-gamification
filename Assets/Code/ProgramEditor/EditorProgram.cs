@@ -201,6 +201,8 @@ public class EditorProgram : MonoBehaviour
 
             nodePrefabs.Add("LogicalBlock", new KeyValuePair<string, GameObject>("If Statement: Runs a block of code if a condition is met.", Resources.Load("Prefabs/ProgramEditor/Nodes/IfStatement") as GameObject));
             nodePrefabs.Add("WhileLoop", new KeyValuePair<string, GameObject>("While loop: Repeats a block of code as long as condition is met.", Resources.Load("Prefabs/ProgramEditor/Nodes/WhileLoop") as GameObject));
+
+            nodePrefabs.Add("Continue", new KeyValuePair<string, GameObject>("Continue: Moves to the next iteration of the loop without waiting for the current one to finish.", Resources.Load("Prefabs/ProgramEditor/Nodes/Continue") as GameObject));
         }
 
         if(!lineCanvas)

@@ -54,6 +54,11 @@ abstract public class ControlBase : MonoBehaviour
                         int index = Convert.ToInt32(enteredCommand.Trim().Substring("load ".Length));
                         SceneManager.LoadScene(index);
                     }
+                    if(enteredCommand.ToLower().Contains("section "))
+                    {
+                        int sectionIndex = Convert.ToInt32(enteredCommand.Trim().Substring("section ".Length));
+                        transform.position = GameObject.Find($"Section{sectionIndex}").transform.position;
+                    }
                     consoleVisible = false;
                 }
             }

@@ -17,8 +17,8 @@ TagManager:
   - TerminalOutput
   - Roof
   - GridBlockedCells
-  - 
-  - 
+  - ProgramOutput
+  - ProgramOutputExpected
   - 
   - 
   - 

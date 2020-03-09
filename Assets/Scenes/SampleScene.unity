@@ -3408,6 +3408,11 @@ PrefabInstance:
       propertyPath: NextNodeObject
       value: 
       objectReference: {fileID: 1613536524}
+    - target: {fileID: 994355781891477064, guid: 996c08b3aad40174e903ce6315bee96e,
+        type: 3}
+      propertyPath: needResize
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 996c08b3aad40174e903ce6315bee96e, type: 3}
 --- !u!1001 &900792678

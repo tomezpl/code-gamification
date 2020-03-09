@@ -21,6 +21,7 @@ public class FanProgramController : ProgramController
         }
 
         fan.speed += accel;
+        fan.speedMult = 1.0f;
     }
 
     private void SpeedDown(string deceleration)

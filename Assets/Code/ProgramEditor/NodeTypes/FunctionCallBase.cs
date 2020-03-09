@@ -168,7 +168,7 @@ public class FunctionCallBase : NodeBase
                 {
                     ref Dictionary<string, FunctionParameter> symTable = ref computer.symbolTable;
                     string resultStr = ArithmeticOperationBase.GetResult(parameters[i].Value, ref symTable);
-                    double result = string.IsNullOrWhiteSpace(resultStr) ? 0 : double.Parse(resultStr);
+                    //double result = string.IsNullOrWhiteSpace(resultStr) ? 0 : double.Parse(resultStr);
                 }
             }
             // Name is the parameter name as defined by the function. Not a variable name. If we haven't defined the parameter name, don't show the = character.

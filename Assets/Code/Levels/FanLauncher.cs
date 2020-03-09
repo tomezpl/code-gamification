@@ -18,7 +18,6 @@ public class FanLauncher : MonoBehaviour
 
     private void OnTriggerStay(Collider other)
     {
-        Debug.Log($"Triggered {other.name}");
         Rigidbody rb = other.GetComponent<Rigidbody>() ? other.GetComponent<Rigidbody>() : (other.GetComponentInParent<Rigidbody>() ? other.GetComponentInParent<Rigidbody>() : null);
         if (rb != null)
         {

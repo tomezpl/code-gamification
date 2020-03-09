@@ -85,7 +85,7 @@ public class PlatformProgramController : ProgramController
                 FunctionCallBase functionCall = node.GetComponent<FunctionCallBase>();
                 if (functionCall.functionName == "raisePlatform" || functionCall.functionName == "lowerPlatform")
                 {
-                    Platform platform = GetChildProgrammable(PlatformContainer, int.Parse(functionCall.parameters[0].Value)).GetComponent<Platform>();
+                    Platform platform = GetChildProgrammable(PlatformContainer, int.Parse((string)functionCall.GetRawParameters(symbolTable)[0])).GetComponent<Platform>();
 
                     // Check elevation boundaries
                     bool allowElevation = functionCall.functionName == "raisePlatform" && initPositions[platform.index].y + platform.MaxElevation < platform.transform.localPosition.y + stepHeight;
@@ -128,7 +128,8 @@ public class PlatformProgramController : ProgramController
                 if (ControllerFunctions().ContainsKey(functionCall.functionName))
                 {
                     int index = -1;
-                    if (int.TryParse(functionCall.parameters[0].Value, out index) || int.TryParse(symbolTable[functionCall.parameters[0].Value].Value, out index))
+                    string val = (string)functionCall.GetRawParameters(symbolTable)[0];
+                    if (int.TryParse(val, out index) || int.TryParse(symbolTable[val].Value, out index))
                     {
                         if (index >= 0)
                         {

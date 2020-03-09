@@ -19,14 +19,17 @@ public class BoolCondition
     {
         bool ret = false;
 
-        bool isLeftString = leftHand.IsReference ? (symbolTable.ContainsKey(leftHand.Value) && symbolTable[leftHand.Value].Value.Trim().StartsWith("\"") && symbolTable[leftHand.Value].Value.Trim().EndsWith("\"")) : (leftHand.Value.Trim().StartsWith("\"") && leftHand.Value.Trim().EndsWith("\""));
-        bool isLeftReference = leftHand.IsReference ? true : !isLeftString && symbolTable.ContainsKey(leftHand.Value);
+        string lh = ArithmeticOperationBase.GetResult(leftHand.Value, ref symbolTable);
+        string rh = ArithmeticOperationBase.GetResult(rightHand.Value, ref symbolTable);
 
-        bool isRightString = rightHand.IsReference ? (symbolTable.ContainsKey(rightHand.Value) && symbolTable[rightHand.Value].Value.Trim().StartsWith("\"") && symbolTable[rightHand.Value].Value.Trim().EndsWith("\"")) : (rightHand.Value.Trim().StartsWith("\"") && rightHand.Value.Trim().EndsWith("\""));
-        bool isRightReference = rightHand.IsReference ? true : !isRightString && symbolTable.ContainsKey(rightHand.Value);
+        bool isLeftString = leftHand.IsReference ? (symbolTable.ContainsKey(rh) && symbolTable[lh].Value.Trim().StartsWith("\"") && symbolTable[lh].Value.Trim().EndsWith("\"")) : (lh.Trim().StartsWith("\"") && lh.Trim().EndsWith("\""));
+        bool isLeftReference = leftHand.IsReference ? true : !isLeftString && symbolTable.ContainsKey(lh);
 
-        string leftValue = isLeftReference ? symbolTable[leftHand.Value].Value : (isLeftString ? leftHand.Value.Trim().Substring(1, leftHand.Value.Trim().Length-2) : leftHand.Value.Trim());
-        string rightValue = isRightReference ? symbolTable[rightHand.Value].Value : (isRightString ? rightHand.Value.Trim().Substring(1, rightHand.Value.Trim().Length - 2) : rightHand.Value.Trim());
+        bool isRightString = rightHand.IsReference ? (symbolTable.ContainsKey(rh) && symbolTable[rh].Value.Trim().StartsWith("\"") && symbolTable[rh].Value.Trim().EndsWith("\"")) : (rh.Trim().StartsWith("\"") && rh.Trim().EndsWith("\""));
+        bool isRightReference = rightHand.IsReference ? true : !isRightString && symbolTable.ContainsKey(rh);
+
+        string leftValue = isLeftReference ? symbolTable[lh].Value : (isLeftString ? lh.Trim().Substring(1, lh.Trim().Length-2) : lh.Trim());
+        string rightValue = isRightReference ? symbolTable[rh].Value : (isRightString ? rh.Trim().Substring(1, rh.Trim().Length - 2) : rh.Trim());
 
         // failsafe for missing/invalid values
         if (string.IsNullOrWhiteSpace(leftValue) || string.IsNullOrWhiteSpace(rightValue))

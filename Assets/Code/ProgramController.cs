@@ -75,6 +75,17 @@ public class ProgramController : Interactable
 
     public void OutPrint(string text)
     {
+        if (text.StartsWith("\"") && text.EndsWith("\""))
+        {
+            if (text.Length >= 3)
+            {
+                text = text.Substring(1, text.Length - 2);
+            }
+            else
+            {
+                text = "";
+            }
+        }
         outputBuffer += $"{text}";
         Debug.Log(text);
     }
@@ -339,7 +350,7 @@ public class ProgramController : Interactable
                 return new ExecutionStatus { success = true, handover = false };
             case NodeType.AssignValue:
                 AssignValue assignValue = node.GetComponent<AssignValue>();
-                string symbolVal = assignValue.prevArithmetic ? assignValue.prevArithmetic.GetResult(ref symbolTable).ToString() : assignValue.rightHand.Value;
+                string symbolVal = ArithmeticOperationBase.GetResult(assignValue.rightHand.Value, ref symbolTable);
                 string symbolName = "";
 
                 // Is it an array index?
@@ -349,6 +360,8 @@ public class ProgramController : Interactable
                 {
                     symbolName = indexSplit[0];
                     indexName = indexSplit[1].Substring(0, indexSplit[1].Length - 1);
+                    indexName = ArithmeticOperationBase.GetResult(indexName, ref symbolTable);
+                    Debug.Log($"\"{currentNode.Serialize()}\": index was {indexName}");
                 }
                 else
                 {
@@ -358,11 +371,16 @@ public class ProgramController : Interactable
                 bool isString = assignValue.leftHand.IsReference ? (symbolTable.ContainsKey(symbolVal) && symbolTable[symbolVal].Value.Trim().StartsWith("\"") && symbolTable[symbolVal].Value.Trim().EndsWith("\"")) : (symbolVal.Trim().StartsWith("\"") && symbolVal.Trim().EndsWith("\""));
                 bool isReference = assignValue.leftHand.IsReference ? true : !isString && symbolTable.ContainsKey(symbolVal);
 
+                Debug.Log($"indexName={indexName}");
                 if (!string.IsNullOrWhiteSpace(indexName))
                 {
                     if(symbolTable.ContainsKey(indexName))
                     {
                         symbolName += $"[{symbolTable[indexName].Value}]";
+                    }
+                    else
+                    {
+                        symbolName += $"[{indexName}]";
                     }
                 }
 
@@ -419,7 +437,8 @@ public class ProgramController : Interactable
                     int count = -1;
                     // Check if entered size was a valid >= 0 integer.
                     // TODO: unexpected behaviour when allocating with size == 0
-                    if ((int.TryParse(node.GetComponent<AllocateArray>().parameters[1].Value, out count) || (symbolTable.ContainsKey(node.GetComponent<AllocateArray>().parameters[0].Value) && int.TryParse(symbolTable[node.GetComponent<AllocateArray>().parameters[0].Value].Value, out count))) && count >= 0)
+                    Debug.Log($"Allocating array with count {(string)node.GetComponent<AllocateArray>().GetRawParameters(symbolTable)[0]}");
+                    if (int.TryParse((string)node.GetComponent<AllocateArray>().GetRawParameters(symbolTable)[0], out count))
                     {
                         string arrName = node.GetComponent<AllocateArray>().parameters[1].Value;
                         if (string.IsNullOrWhiteSpace(arrName))
@@ -429,8 +448,10 @@ public class ProgramController : Interactable
                         }
                         for (int i = 0; i < count; i++)
                         {
+                            Debug.Log($"Adding array element \"{arrName}[{i}]\"");
                             symbolTable.Add($"{arrName}[{i}]", new FunctionParameter());
                         }
+                        return new ExecutionStatus { success = true, handover = false };
                     }
                 }
                 break;

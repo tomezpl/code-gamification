@@ -94,7 +94,7 @@ public class FunctionCallBase : NodeBase
     public virtual void UpdateFunctionProperties()
     {
         // TODO: maybe enable a prompt that asks the user if they want to use the arithmetic chain as a default value for param0 or type their own?
-        if(paramCount == 1 && prevArithmetic != null)
+        /*if(paramCount == 1 && prevArithmetic != null)
         {
             if(parameters.Count < 1)
             {
@@ -105,13 +105,11 @@ public class FunctionCallBase : NodeBase
                 parameters[0] = new FunctionParameter();
             }
             ArithmeticOperationBase arithmetic = prevArithmetic;
-            ref Dictionary<string, FunctionParameter> symTable = ref computer.symbolTable;
-            double result = arithmetic.GetResult(ref symTable);
             parameters[0].Value = result.ToString();
             parameters[0].Expression = arithmetic.Serialize();
             parameters[0].Type = "Int";
             parameters[0].IsReference = false;
-        }
+        }*/
 
         if (functionNameText == null)
         {
@@ -165,6 +163,13 @@ public class FunctionCallBase : NodeBase
                 paramObject.name = $"Parameter{i+1}";
 
                 param = paramObject.transform;
+
+                if (computer != null && computer.symbolTable != null)
+                {
+                    ref Dictionary<string, FunctionParameter> symTable = ref computer.symbolTable;
+                    string resultStr = ArithmeticOperationBase.GetResult(parameters[i].Value, ref symTable);
+                    double result = string.IsNullOrWhiteSpace(resultStr) ? 0 : double.Parse(resultStr);
+                }
             }
             // Name is the parameter name as defined by the function. Not a variable name. If we haven't defined the parameter name, don't show the = character.
             param.GetComponentInChildren<Text>().text = $"{parameters[i].Name}{(!string.IsNullOrWhiteSpace(parameters[i].Name) ? "=" : "")}{(string.IsNullOrWhiteSpace(parameters[i].Expression) ? parameters[i].Value : parameters[i].Expression)}";
@@ -230,10 +235,29 @@ public class FunctionCallBase : NodeBase
         {
             string type = parameter.Type == null ? "" : parameter.Type.ToLower();
 
-            bool isString = parameter.IsReference ? (symbolTable.ContainsKey(parameter.Value) && symbolTable[parameter.Value].Value.Trim().StartsWith("\"") && symbolTable[parameter.Value].Value.Trim().EndsWith("\"")) : (parameter.Value.Trim().StartsWith("\"") && parameter.Value.Trim().EndsWith("\""));
-            bool isReference = parameter.IsReference ? true : !isString && symbolTable.ContainsKey(parameter.Value);
+            string value = parameter.Value;
 
-            bool isMath = !string.IsNullOrWhiteSpace(parameter.Expression) && prevArithmetic != null;
+            // Is it an array index?
+            string indexName = "";
+            string[] indexSplit = parameter.Value.Split('[');
+            if (indexSplit != null && indexSplit.Length == 2)
+            {
+                value = indexSplit[0];
+                indexName = indexSplit[1].Substring(0, indexSplit[1].Length - 1);
+                indexName = ArithmeticOperationBase.GetResult(indexName, ref symbolTable);
+            }
+
+            if (!string.IsNullOrWhiteSpace(indexName))
+                value += $"[{indexName}]";
+
+            bool isString = parameter.IsReference ? (symbolTable.ContainsKey(value) && symbolTable[value].Value.Trim().StartsWith("\"") && symbolTable[value].Value.Trim().EndsWith("\"")) : (value.Trim().StartsWith("\"") && value.Trim().EndsWith("\""));
+            bool isReference = parameter.IsReference ? true : !isString && symbolTable.ContainsKey(value);
+
+            Debug.Log($"{functionName}.GetRawParameters: {parameter.Value}");
+
+            string mathResult = ArithmeticOperationBase.GetResult(value, ref symbolTable);
+            Debug.Log($"mathResult: {mathResult}, paramVal: {value}");
+            bool isMath = mathResult != value;
 
             // Types are usually declared on literals...
             /*if (type.Contains("num") || type.Contains("int") || type.Contains("double"))
@@ -251,45 +275,54 @@ public class FunctionCallBase : NodeBase
             if(isString)
             {
                 Debug.Log("Passing string!");
-                ret.Add(isReference ? symbolTable[parameter.Value].Value : parameter.Value.Trim().Substring(1, parameter.Value.Trim().Length - 2));
+                ret.Add(isReference ? symbolTable[value].Value : value.Trim().Substring(1, value.Trim().Length - 2));
             }
             else if(isMath)
             {
                 Debug.Log("Passing arithmetic expression!");
-                ret.Add(prevArithmetic.GetResult(ref symbolTable).ToString());
+                ret.Add(ArithmeticOperationBase.GetResult(value, ref symbolTable));
             }
             else
             {
                 if(isReference)
                 {
-                    Debug.Log("Passing bool/number variable!");
-                    if (parameter.Value.Trim() == "None")
+                    Debug.Log("Passing variable!");
+                    if (value.Trim() == "None")
                     {
                         ret.Add(null);
                     }
-                    else if(symbolTable[parameter.Value.Trim()].Type.ToLower().Contains("bool"))
+                    else if(symbolTable[value.Trim()].Type.ToLower().Contains("bool"))
                     {
-                        ret.Add(symbolTable[parameter.Value.Trim()].Value.ToLower());
+                        ret.Add(symbolTable[value.Trim()].Value.ToLower());
                     }
-                    else if(symbolTable[parameter.Value.Trim()].Type.ToLower().Contains("int") || symbolTable[parameter.Value.Trim()].Type.ToLower().Contains("num"))
+                    else if(symbolTable[value.Trim()].Type.ToLower().Contains("int") || symbolTable[value.Trim()].Type.ToLower().Contains("num"))
                     {
-                        ret.Add(symbolTable[parameter.Value.Trim()].Value);
+                        ret.Add(symbolTable[value.Trim()].Value);
+                    }
+                    else
+                    {
+                        ret.Add(symbolTable[value.Trim()].Value);
                     }
                 }
                 else
                 {
                     Debug.Log("Passing bool/number literal!");
                     double number = 0.0;
-                    if(parameter.Value.Trim() == "True" || parameter.Value.Trim() == "False")
+                    if(value.Trim() == "True" || value.Trim() == "False")
                     {
-                        ret.Add(parameter.Value.Trim().ToLower());
+                        ret.Add(value.Trim().ToLower());
                     }
-                    else if(double.TryParse(parameter.Value.Trim(), out number))
+                    else if(double.TryParse(value.Trim(), out number))
                     {
-                        ret.Add(parameter.Value.Trim());
+                        ret.Add(value.Trim());
+                    }
+                    else
+                    {
+                        ret.Add("");
                     }
                 }
             }
+            Debug.Log($"Passed {(ret.Count > 0 ? ret[ret.Count - 1] : "nothing")}");
         }
 
         return ret.ToArray();

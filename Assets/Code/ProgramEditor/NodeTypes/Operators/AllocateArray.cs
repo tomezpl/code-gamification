@@ -16,14 +16,6 @@ public class AllocateArray : FunctionCallBase
 
     public override string Serialize()
     {
-        int count = -1;
-        if (!int.TryParse(parameters[0].Value, out count) || count < 0)
-        {
-            return $"{parameters[1].Value} = []";
-        }
-        else
-        {
-            return $"{parameters[1].Value} = [None] * {count}";
-        }
+        return $"{parameters[1].Value} = [None] * {parameters[0].Value}";
     }
 }

@@ -81,9 +81,17 @@ public class ArithmeticOperationBase : FunctionCallBase
         return $"{(wrap ? "(" : "")}{(prevArithmetic ? prevArithmetic.Serialize() : leftHand.Value)} {operatorStr} {rightHand.Value}{(wrap ? ")" : "")}";
     }
 
-    public virtual double GetResult(ref Dictionary<string, FunctionParameter> symbolTable)
+    public static string GetResult(string expr, ref Dictionary<string, FunctionParameter> symbolTable)
     {
-        string expr = Serialize();
+        // Check if there are even arithmetic operations present in the expressions
+        // TODO: this might pick up strings as well
+        if(string.IsNullOrWhiteSpace(expr))
+        {
+            return "";
+        }
+
+        if (!(expr.Contains("+") || expr.Contains("-") || expr.Contains("%") || expr.Contains("/") || expr.Contains("*")))
+            return expr;
 
         foreach(string symbol in symbolTable.Keys)
         {
@@ -95,10 +103,10 @@ public class ArithmeticOperationBase : FunctionCallBase
 
         try
         {
-            return System.Convert.ToDouble(new System.Data.DataTable().Compute(expr, null));
+            return System.Convert.ToDouble(new System.Data.DataTable().Compute(expr, null)).ToString();
         } catch(System.Exception)
         {
-            return 0;
+            return "";
         }
     }
 }

@@ -10,6 +10,7 @@ public class EditorProgram : MonoBehaviour
     public GameObject elementContainer;
 
     public ProgramStart programStart;
+    public ProgramEnd programEnd;
     public ProgramController programController;
 
     public int framesToDisable = 2;
@@ -110,23 +111,75 @@ public class EditorProgram : MonoBehaviour
     {
         linkingNodes = false;
 
+        // Stop here if we're linking nodes that are already connected the same way
+        if(linkingNodeMode == LinkingMode.NextNode)
+        {
+            if(linkingNodesObjects[0].GetComponent<NodeBase>().NextNodeObject == linkingNodesObjects[1])
+            {
+                linkingNodesObjects[0] = linkingNodesObjects[1] = null;
+                return;
+            }
+        }
+        else if(linkingNodeMode == LinkingMode.FirstBodyNode)
+        {
+            if ((NodeBase)(linkingNodesObjects[1].GetComponent<NodeBase>().prevNode) == linkingNodesObjects[1].GetComponent<LogicalBlock>())
+            {
+                linkingNodesObjects[0] = linkingNodesObjects[1] = null;
+                return;
+            }
+        }
+
         // Cancel linking by linking the same node: removes nextNode from obj0
         if(linkingNodesObjects[0] == linkingNodesObjects[1])
         {
-            if(linkingNodesObjects[0].GetComponent<NodeBase>().NextNodeObject != null && linkingNodesObjects[0].GetComponent<NodeBase>().NextNodeObject.GetComponent<FunctionCallBase>() != null)
-            {
-                linkingNodesObjects[0].GetComponent<NodeBase>().NextNodeObject.GetComponent<FunctionCallBase>().prevArithmetic = null;
-            }
-
+            linkingNodesObjects[0].GetComponent<NodeBase>().NextNodeObject.GetComponent<NodeBase>().PrevNodeObject = null;
+            linkingNodesObjects[0].GetComponent<NodeBase>().NextNodeObject.GetComponent<NodeBase>().prevNode = null;
             linkingNodesObjects[0].GetComponent<NodeBase>().NextNodeObject = null;
             linkingNodesObjects[0].GetComponent<NodeBase>().nextNode = null;
             linkingNodesObjects[0] = linkingNodesObjects[1] = null;
             return;
         }
 
+        // Prevent ProgramEnd being used as a prevNode and ProgramStart being used as nextNode
+        if(linkingNodesObjects[0].GetComponent<ProgramEnd>() || linkingNodesObjects[1].GetComponent<ProgramStart>())
+        {
+            linkingNodesObjects[0] = linkingNodesObjects[1] = null;
+            return;
+        }
+
         if (linkingNodeMode == LinkingMode.NextNode)
         {
-            linkingNodesObjects[0].GetComponent<NodeBase>().NextNodeObject = linkingNodesObjects[1];
+            // Prevent connecting to nextNode that's also the prevNode
+            if (linkingNodesObjects[1] == linkingNodesObjects[0].GetComponent<NodeBase>().PrevNodeObject)
+            {
+                linkingNodesObjects[0] = linkingNodesObjects[1] = null;
+                return;
+            }
+            GameObject nextObj = linkingNodesObjects[0].GetComponent<NodeBase>().NextNodeObject;
+            NodeBase nextObjNode = null;
+            if (nextObj != null)
+                nextObjNode = nextObj.GetComponent<NodeBase>();
+
+            // obj0 is no longer its former nextNode's prevNode
+            if (nextObjNode != null && nextObjNode.PrevNodeObject != null && nextObjNode.PrevNodeObject == linkingNodesObjects[0])
+            {
+                nextObjNode.PrevNodeObject.GetComponent<NodeBase>().NextNodeObject = null;
+                nextObjNode.PrevNodeObject.GetComponent<NodeBase>().nextNode = null;
+                nextObjNode.PrevNodeObject = null;
+            }
+            nextObj = linkingNodesObjects[1];
+            nextObjNode = nextObj.GetComponent<NodeBase>();
+            // assign obj0 as obj1's prevNode, unassigning obj1's former prevNode
+            if (nextObjNode != null && nextObjNode.PrevNodeObject != null && nextObjNode.PrevNodeObject != linkingNodesObjects[0])
+            {
+                nextObjNode.PrevNodeObject.GetComponent<NodeBase>().NextNodeObject = null;
+                nextObjNode.PrevNodeObject.GetComponent<NodeBase>().nextNode = null;
+                nextObjNode.PrevNodeObject = linkingNodesObjects[0];
+                linkingNodesObjects[0].GetComponent<NodeBase>().NextNodeObject = linkingNodesObjects[1];
+            }
+
+            nextObjNode.GetComponent<NodeBase>().PrevNodeObject = linkingNodesObjects[0];
+            nextObjNode.GetComponent<NodeBase>().PrevNodeObject.GetComponent<NodeBase>().NextNodeObject = linkingNodesObjects[1];
         }
         else if(linkingNodeMode == LinkingMode.FirstBodyNode)
         {
@@ -140,6 +193,7 @@ public class EditorProgram : MonoBehaviour
             else
             {
                 linkingNodesObjects[0].GetComponent<CodeBlock>().FirstBodyNodeObject = linkingNodesObjects[1];
+                linkingNodesObjects[1].GetComponent<NodeBase>().PrevNodeObject = linkingNodesObjects[0];
             }
         }
         if (linkingNodesObjects[1].GetComponent<NodeBase>())
@@ -147,27 +201,12 @@ public class EditorProgram : MonoBehaviour
             if (linkingNodeMode == LinkingMode.NextNode)
             {
                 linkingNodesObjects[0].GetComponent<NodeBase>().nextNode = linkingNodesObjects[1].GetComponent<NodeBase>();
+                linkingNodesObjects[1].GetComponent<NodeBase>().prevNode = linkingNodesObjects[0].GetComponent<NodeBase>();
             }
             else if(linkingNodeMode == LinkingMode.FirstBodyNode)
             {
                 linkingNodesObjects[0].GetComponent<CodeBlock>().firstBodyNode = linkingNodesObjects[1].GetComponent<NodeBase>();
-            }
-
-            // Arithmetic chain
-            // All arithmetic operations are chained together until a function call or an assign operation, which terminate the chain.
-            if(linkingNodesObjects[0].GetComponent<ArithmeticOperationBase>() && !linkingNodesObjects[0].GetComponent<AssignValue>())
-            {
-                // TODO: VERY IMPORTANT: maybe this should just be expanded to NodeBase instead of FunctionCallBase? what about CodeBlocks, conditionals may need this?
-                if(linkingNodesObjects[1].GetComponent<FunctionCallBase>() && (!linkingNodesObjects[1].GetComponent<ArithmeticOperationBase>() || linkingNodesObjects[1].GetComponent<AssignValue>()))
-                {
-                    linkingNodesObjects[1].GetComponent<FunctionCallBase>().prevArithmetic = linkingNodesObjects[0].GetComponent<ArithmeticOperationBase>();
-                    linkingNodesObjects[1].GetComponent<FunctionCallBase>().UpdateFunctionProperties();
-                }
-                else if (linkingNodesObjects[1].GetComponent<ArithmeticOperationBase>())
-                {
-                    linkingNodesObjects[1].GetComponent<ArithmeticOperationBase>().prevArithmetic = linkingNodesObjects[0].GetComponent<ArithmeticOperationBase>();
-                    linkingNodesObjects[1].GetComponent<ArithmeticOperationBase>().UpdateFunctionProperties();
-                }
+                linkingNodesObjects[1].GetComponent<NodeBase>().prevNode = linkingNodesObjects[0].GetComponent<NodeBase>();
             }
 
             // Assign firstbody loop/logicalblock ownership
@@ -213,6 +252,9 @@ public class EditorProgram : MonoBehaviour
 
         if (!programStart)
             programStart = elementContainer.GetComponentInChildren<ProgramStart>();
+
+        if (!programEnd)
+            programEnd = elementContainer.GetComponentInChildren<ProgramEnd>();
 
         if (!enableEditorOnStartup)
         {

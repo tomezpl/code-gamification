@@ -46,6 +46,13 @@ public class ProgramController : Interactable
 
     public string outputBuffer = "";
 
+    // Returns true if there are any nodes other than Start and End present in the program editor
+    bool hasAnyNodes()
+    {
+        List<NodeBase> nodes = new List<NodeBase>(program.elementContainer.GetComponentsInChildren<NodeBase>());
+        return !(nodes.Count == 2 && nodes.Contains(program.programStart) && nodes.Contains(program.programEnd));
+    }
+
     // Initialises a symbol table
     public void InitSymTable()
     {
@@ -197,6 +204,38 @@ public class ProgramController : Interactable
                     processingDone = true;
                     programRunning = true;
                     currentNode = program.programStart;
+
+                    // Make sure Start and End are linked if they're the only nodes in the program
+                    if(!hasAnyNodes())
+                    {
+                        program.programStart.NextNodeObject = program.programEnd.gameObject;
+                        program.programStart.nextNode = program.programEnd;
+
+                        program.programEnd.PrevNodeObject = program.programStart.gameObject;
+                        program.programEnd.prevNode = program.programStart;
+                    }
+                    // Otherwise, check if the End node is linked to by anything. 
+                    // If not, choose the node that isn't in a loop and doesn't have a nextNode yet.
+                    else
+                    {
+                        if(program.programEnd.PrevNodeObject == null)
+                        {
+                            NodeBase[] nodes = program.elementContainer.GetComponentsInChildren<NodeBase>();
+                            foreach(NodeBase node in nodes)
+                            {
+                                if(node.ownerLoop == null && node.NextNodeObject == null && node.PrevNodeObject != null)
+                                {
+                                    node.NextNodeObject = program.programEnd.gameObject;
+                                    node.nextNode = program.programEnd;
+
+                                    program.programEnd.PrevNodeObject = node.gameObject;
+                                    program.programEnd.prevNode = node;
+
+                                    break;
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }

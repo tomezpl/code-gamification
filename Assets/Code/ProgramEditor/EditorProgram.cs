@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class EditorProgram : MonoBehaviour
 {
@@ -12,6 +13,9 @@ public class EditorProgram : MonoBehaviour
     public ProgramStart programStart;
     public ProgramEnd programEnd;
     public ProgramController programController;
+
+    public GameObject generatedCodeContainer;
+    public Text generatedCodeText;
 
     public int framesToDisable = 2;
 
@@ -61,6 +65,30 @@ public class EditorProgram : MonoBehaviour
     public Rect editingNodeInPlaceRect = new Rect();
     public System.Action<string> editingNodeFinishedClb = null;
 
+    public enum EditorMode { FlowChart, CodeViewer };
+    public EditorMode editorMode = EditorMode.FlowChart;
+
+    void SwitchMode(EditorMode mode)
+    {
+
+        if(mode == EditorMode.FlowChart)
+        {
+            elementContainer.SetActive(true);
+            generatedCodeContainer.SetActive(false);
+            editorMode = mode;
+        }
+        else
+        {
+            if (!string.IsNullOrWhiteSpace(programStart.Serialize()))
+            {
+                elementContainer.SetActive(false);
+                generatedCodeContainer.SetActive(true);
+                generatedCodeText.text = programStart.Serialize();
+                editorMode = mode;
+            }
+        }
+    }
+
     void DisableEditor()
     {
         foreach (EditorDraggableNode draggable in elementContainer.GetComponentsInChildren<EditorDraggableNode>())
@@ -81,6 +109,8 @@ public class EditorProgram : MonoBehaviour
 
     void EnableEditor()
     {
+        SwitchMode(EditorMode.FlowChart);
+
         foreach (EditorDraggableNode draggable in elementContainer.GetComponentsInChildren<EditorDraggableNode>())
         {
             draggable.enabled = true;
@@ -122,18 +152,22 @@ public class EditorProgram : MonoBehaviour
         }
         else if(linkingNodeMode == LinkingMode.FirstBodyNode)
         {
-            if ((NodeBase)(linkingNodesObjects[1].GetComponent<NodeBase>().prevNode) == linkingNodesObjects[1].GetComponent<LogicalBlock>())
+            NodeBase prevNode = (NodeBase)(linkingNodesObjects[1].GetComponent<NodeBase>().prevNode);
+            if (prevNode != null && prevNode == linkingNodesObjects[1].GetComponent<LogicalBlock>())
             {
                 linkingNodesObjects[0] = linkingNodesObjects[1] = null;
                 return;
             }
         }
 
-        // Cancel linking by linking the same node: removes nextNode from obj0
-        if(linkingNodesObjects[0] == linkingNodesObjects[1])
+        // Cancel linking by linking the same node: removes nextNode from obj0 (watch out for ProgramEnd as that won't have a NextNodeObject)
+        if(linkingNodesObjects[0] == linkingNodesObjects[1] && !linkingNodesObjects[0].GetComponent<ProgramEnd>())
         {
-            linkingNodesObjects[0].GetComponent<NodeBase>().NextNodeObject.GetComponent<NodeBase>().PrevNodeObject = null;
-            linkingNodesObjects[0].GetComponent<NodeBase>().NextNodeObject.GetComponent<NodeBase>().prevNode = null;
+            if (linkingNodesObjects[0].GetComponent<NodeBase>().NextNodeObject)
+            {
+                linkingNodesObjects[0].GetComponent<NodeBase>().NextNodeObject.GetComponent<NodeBase>().PrevNodeObject = null;
+                linkingNodesObjects[0].GetComponent<NodeBase>().NextNodeObject.GetComponent<NodeBase>().prevNode = null;
+            }
             linkingNodesObjects[0].GetComponent<NodeBase>().NextNodeObject = null;
             linkingNodesObjects[0].GetComponent<NodeBase>().nextNode = null;
             linkingNodesObjects[0] = linkingNodesObjects[1] = null;
@@ -287,7 +321,7 @@ public class EditorProgram : MonoBehaviour
             frameCounter++;
         }
 
-        if(Input.GetKeyUp(KeyCode.Tab) && EditorActive)
+        if(Input.GetKeyUp(KeyCode.Tab) && EditorActive && editorMode == EditorMode.FlowChart)
         {
             choosingNode = !choosingNode;
             choosingFunctionCall = choosingNode && choosingFunctionCall;
@@ -304,6 +338,14 @@ public class EditorProgram : MonoBehaviour
             {
                 editingNodeFinishedClb.DynamicInvoke(editedNodeValue);
                 editingNodeProperty = false;
+            }
+        }
+        else
+        {
+            // Toggle editor mode
+            if(Input.GetKeyDown(KeyCode.F1))
+            {
+                SwitchMode(1 - editorMode);
             }
         }
     }

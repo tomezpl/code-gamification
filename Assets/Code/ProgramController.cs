@@ -47,7 +47,7 @@ public class ProgramController : Interactable
     public string outputBuffer = "";
 
     // Returns true if there are any nodes other than Start and End present in the program editor
-    bool hasAnyNodes()
+    public bool HasAnyNodes()
     {
         List<NodeBase> nodes = new List<NodeBase>(program.elementContainer.GetComponentsInChildren<NodeBase>());
         return !(nodes.Count == 2 && nodes.Contains(program.programStart) && nodes.Contains(program.programEnd));
@@ -206,7 +206,7 @@ public class ProgramController : Interactable
                     currentNode = program.programStart;
 
                     // Make sure Start and End are linked if they're the only nodes in the program
-                    if(!hasAnyNodes())
+                    if(!HasAnyNodes())
                     {
                         program.programStart.NextNodeObject = program.programEnd.gameObject;
                         program.programStart.nextNode = program.programEnd;

@@ -89,11 +89,11 @@ public abstract class NodeBase : MonoBehaviour, IProgramNode
         }
         if (NextNodeObject == null)
         {
-            Debug.LogWarning($"NextNodeObject on {gameObject}::{this} is set to null! If this is intended (e.g. last node in a loop), this should be corrected on startup.");
+            Logger.LogWarning($"NextNodeObject on {gameObject}::{this} is set to null! If this is intended (e.g. last node in a loop), this should be corrected on startup.");
         }
         if (PrevNodeObject == null)
         {
-            Debug.LogWarning($"PrevNodeObject on {gameObject}::{this} is set to null! This is usually not intended.");
+            Logger.LogWarning($"PrevNodeObject on {gameObject}::{this} is set to null! This is usually not intended.");
         }
 
         // TODO: Perhaps search for ProgramEnd as nextNode fallback?
@@ -179,7 +179,7 @@ public abstract class NodeBase : MonoBehaviour, IProgramNode
             lineTabs += "\t";
         }
 
-        Debug.Log($"{this} returned {indentLevel} lineTabs.");
+        Logger.Log($"{this} returned {indentLevel} lineTabs.");
 
         return lineTabs;
     }

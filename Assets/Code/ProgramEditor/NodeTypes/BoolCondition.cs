@@ -34,7 +34,7 @@ public class BoolCondition
         // failsafe for missing/invalid values
         if (string.IsNullOrWhiteSpace(leftValue) || string.IsNullOrWhiteSpace(rightValue))
         {
-            Debug.LogWarning("BoolCondition.Evaluate: invalid values!");
+            Logger.LogWarning("BoolCondition.Evaluate: invalid values!");
             return false;
         }
 
@@ -76,7 +76,7 @@ public class BoolCondition
             }
         }
 
-        Debug.Log($"BoolCondition.Evaluate: Finished with result {ret.ToString().ToUpper()}. \nEvaluated '{leftHand.Value} {comparison} {rightHand.Value}' as '{leftValue} {comparison} {rightValue}'. \nNumerical: {numL} {comparison} {numR}");
+        Logger.Log($"BoolCondition.Evaluate: Finished with result {ret.ToString().ToUpper()}. \nEvaluated '{leftHand.Value} {comparison} {rightHand.Value}' as '{leftValue} {comparison} {rightValue}'. \nNumerical: {numL} {comparison} {numR}");
 
         return ret;
     }

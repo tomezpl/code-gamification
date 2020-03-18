@@ -191,7 +191,7 @@ public class EditorDraggableNode : MonoBehaviour
 
     public void FunctionNameEditingFinished(string finalName)
     {
-        Debug.Log($"Got back '{finalName}'.");
+        Logger.Log($"Got back '{finalName}'.");
         GetComponentInParent<FunctionCallBase>().functionName = finalName;
 
         // TODO: maybe this should be done in FunctionCallBase?
@@ -219,8 +219,8 @@ public class EditorDraggableNode : MonoBehaviour
         Rect nodeRect = new Rect(corners[0], corners[2] - corners[0]);
         Vector2 pointer = Input.mousePosition;
 
-        //Debug.Log("Pointer: " + pointer);
-        //Debug.Log("Node: " + nodeRect);
+        //Logger.Log("Pointer: " + pointer);
+        //Logger.Log("Node: " + nodeRect);
 
         // Drag if LMB held down and inside the node rectangle
         if (Input.GetKeyDown(KeyCode.Mouse0) && nodeRect.Contains(pointer) || isDragged)

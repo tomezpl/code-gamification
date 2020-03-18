@@ -16,7 +16,7 @@ public class DoorProgramController : ProgramController
 
     protected virtual void SetLock(string state)
     {
-        Debug.Log($"Called setLock({state})");
+        Logger.Log($"Called setLock({state})");
         bool bState = true;
         if(!bool.TryParse(state, out bState))
         {
@@ -66,7 +66,7 @@ public class DoorProgramController : ProgramController
                 }
                 catch(Exception)
                 {
-                    Debug.Log($"Unknown function {functionCall.functionName}.");
+                    Logger.Log($"Unknown function {functionCall.functionName}.");
                     return new ExecutionStatus { success = false, handover = false };
                 }
                 if (func != null)
@@ -88,7 +88,7 @@ public class DoorProgramController : ProgramController
                         }
                         else
                         {
-                            Debug.LogWarning($"Can't convert function parameter for function {functionCall.functionName}. ({gameObject.name}).");
+                            Logger.LogWarning($"Can't convert function parameter for function {functionCall.functionName}. ({gameObject.name}).");
                             return new ExecutionStatus { success = false, handover = false };
                         }
                     }

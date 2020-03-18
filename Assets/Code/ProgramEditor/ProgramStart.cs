@@ -12,7 +12,7 @@ public class ProgramStart : NodeBase
 
         if (Input.GetKeyUp(KeyCode.Space))
         {
-            //Debug.Log(Serialize());
+            //Logger.Log(Serialize());
         }
     }
 

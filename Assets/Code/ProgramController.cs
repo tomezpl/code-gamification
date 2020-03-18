@@ -96,7 +96,7 @@ public class ProgramController : Interactable
             }
         }
         outputBuffer += $"{text}";
-        Debug.Log(text);
+        Logger.Log(text);
     }
 
     Dictionary<string, Delegate> BaseControllerFunctions()
@@ -146,7 +146,7 @@ public class ProgramController : Interactable
         CombineControllerFunctions(ControllerFunctions());
 
         if (!editorUi)
-            Debug.LogWarning($"There is no EditorUI present in {gameObject.name}.{name}");
+            Logger.LogWarning($"There is no EditorUI present in {gameObject.name}.{name}");
         else
         {
             program = editorUi.GetComponent<EditorProgram>();
@@ -302,7 +302,7 @@ public class ProgramController : Interactable
                             currentNode = (NodeBase)currentNode.ownerLoop.nextNode;
                         }
                     }
-                    Debug.Log($"Continuing to next node: {currentNode.name}");
+                    Logger.Log($"Continuing to next node: {currentNode.name}");
                     return false;
                 }
             }
@@ -366,7 +366,7 @@ public class ProgramController : Interactable
             return NodeType.Continue;
 
         // If type can't be determined, return null
-        Debug.LogWarning("Couldn't determine type of node, returning null! Check if ProgramController.CheckNodeType has been updated correctly with new node types.");
+        Logger.LogWarning("Couldn't determine type of node, returning null! Check if ProgramController.CheckNodeType has been updated correctly with new node types.");
         return NodeType.Unknown;
     }
 
@@ -399,7 +399,7 @@ public class ProgramController : Interactable
         {
             // Handlers for different commands
             case NodeType.ProgramStart:
-                Debug.Log("Program starting!");
+                Logger.Log("Program starting!");
                 processingDone = true;
 
                 Debug.DebugBreak();
@@ -421,7 +421,7 @@ public class ProgramController : Interactable
                     symbolName = indexSplit[0];
                     indexName = indexSplit[1].Substring(0, indexSplit[1].Length - 1);
                     indexName = ArithmeticOperationBase.GetResult(indexName, ref symbolTable);
-                    Debug.Log($"\"{currentNode.Serialize()}\": index was {indexName}");
+                    Logger.Log($"\"{currentNode.Serialize()}\": index was {indexName}");
                 }
                 else
                 {
@@ -431,7 +431,7 @@ public class ProgramController : Interactable
                 bool isString = assignValue.leftHand.IsReference ? (symbolTable.ContainsKey(symbolVal) && symbolTable[symbolVal].Value.Trim().StartsWith("\"") && symbolTable[symbolVal].Value.Trim().EndsWith("\"")) : (symbolVal.Trim().StartsWith("\"") && symbolVal.Trim().EndsWith("\""));
                 bool isReference = assignValue.leftHand.IsReference ? true : !isString && symbolTable.ContainsKey(symbolVal);
 
-                Debug.Log($"indexName={indexName}");
+                Logger.Log($"indexName={indexName}");
                 if (!string.IsNullOrWhiteSpace(indexName))
                 {
                     if(symbolTable.ContainsKey(indexName))
@@ -444,7 +444,7 @@ public class ProgramController : Interactable
                     }
                 }
 
-                Debug.Log($"Assigning {symbolVal} to {symbolName}");
+                Logger.Log($"Assigning {symbolVal} to {symbolName}");
                 double tempNum = 0.0;
                 string assignedType = (isString ? "String" : (symbolVal.Trim() == "True" || symbolVal.Trim() == "False" ? "Boolean" : (double.TryParse(symbolVal.Trim(), out tempNum) ? "Number" : "")));
                 if (!symbolTable.ContainsKey(symbolName))
@@ -471,10 +471,10 @@ public class ProgramController : Interactable
                 {
                     // TODO: passing a copy of symbolTable here might consume too much memory. Make static?
                     functions[funcName].DynamicInvoke(node.GetComponent<FunctionCallBase>().GetRawParameters(symbolTable));
-                    Debug.Log($"Found base function {funcName}");
+                    Logger.Log($"Found base function {funcName}");
                     return new ExecutionStatus { success = true, handover = false };
                 }
-                Debug.Log($"Couldn't find base function {funcName}");
+                Logger.Log($"Couldn't find base function {funcName}");
                 break;
             case NodeType.LogicalBlock: case NodeType.WhileLoop:
                 if (node.GetComponent<LogicalBlock>().condition.Evaluate(ref symbolTable))
@@ -497,7 +497,7 @@ public class ProgramController : Interactable
                     int count = -1;
                     // Check if entered size was a valid >= 0 integer.
                     // TODO: unexpected behaviour when allocating with size == 0
-                    Debug.Log($"Allocating array with count {(string)node.GetComponent<AllocateArray>().GetRawParameters(symbolTable)[0]}");
+                    Logger.Log($"Allocating array with count {(string)node.GetComponent<AllocateArray>().GetRawParameters(symbolTable)[0]}");
                     if (int.TryParse((string)node.GetComponent<AllocateArray>().GetRawParameters(symbolTable)[0], out count))
                     {
                         string arrName = node.GetComponent<AllocateArray>().parameters[1].Value;
@@ -508,7 +508,7 @@ public class ProgramController : Interactable
                         }
                         for (int i = 0; i < count; i++)
                         {
-                            Debug.Log($"Adding array element \"{arrName}[{i}]\"");
+                            Logger.Log($"Adding array element \"{arrName}[{i}]\"");
                             symbolTable.Add($"{arrName}[{i}]", new FunctionParameter());
                         }
                         return new ExecutionStatus { success = true, handover = false };

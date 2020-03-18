@@ -30,7 +30,7 @@ public class ArithmeticOperationBase : FunctionCallBase
                 parameters = new List<FunctionParameter> { new FunctionParameter(), new FunctionParameter() };
             else
             {
-                Debug.LogWarning($"{this}: {functionName} has invalid param count!");
+                Logger.LogWarning($"{this}: {functionName} has invalid param count!");
             }
             paramCount = 2;
         }

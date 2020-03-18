@@ -224,7 +224,16 @@ public class FunctionCallBase : NodeBase
     public override string Serialize()
     {
         //Logger.Log(GetFunctionName());
-        return $"{GetFunctionName()}({GetParameterListString()})";
+        // Special case for printNewline. That function doesn't actually exist in Python but is here for convenience's sake. 
+        // We want it to be serialized to print("\n")
+        if (functionName != "printNewline")
+        {
+            return $"{GetFunctionName()}({GetParameterListString()})";
+        }   
+        else
+        {
+            return "print(\"\\n\")";
+        }
     }
 
     public object[] GetRawParameters(Dictionary<string, FunctionParameter> symbolTable)

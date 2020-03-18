@@ -61,4 +61,9 @@ public class LogicalBlock : CodeBlock
             ConditionalObject.transform.Find("RHReference").transform.Find("Text").GetComponent<Text>().text = condition.rightHand.Serialize();
         }
     }
+
+    public override string SerializeBlockHeader()
+    {
+        return $"if {condition.leftHand.Serialize()} {condition.comparison} {condition.rightHand.Serialize()}:";
+    }
 }

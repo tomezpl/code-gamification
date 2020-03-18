@@ -279,7 +279,7 @@ public class EditorDraggableNode : MonoBehaviour
             }
 
             // Other events: Deleting node
-            if (Input.GetKeyDown(KeyCode.Delete) && nodeRect.Contains(pointer) && GetComponent<NodeBase>())
+            if (Input.GetKeyDown(KeyCode.Delete) && nodeRect.Contains(pointer) && GetComponent<NodeBase>() && !owner.editingNodeProperty)
             {
                 GetComponent<NodeBase>().DeleteNode();
             }

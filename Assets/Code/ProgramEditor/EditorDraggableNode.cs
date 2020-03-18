@@ -283,6 +283,35 @@ public class EditorDraggableNode : MonoBehaviour
             {
                 GetComponent<NodeBase>().DeleteNode();
             }
+
+            if (GetComponent<NodeBase>())
+            {
+                if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl))
+                {
+                    // Other events: Copying a node
+                    if (Input.GetKeyDown(KeyCode.C) && !owner.editingNodeProperty && nodeRect.Contains(pointer))
+                    {
+                        owner.nodeClipboard = gameObject;
+                    }
+                    // Other events: Pasting a node
+                    else if (Input.GetKeyDown(KeyCode.V) && !owner.editingNodeProperty && owner.nodeClipboard == gameObject)
+                    {
+                        float xScale = Screen.width / owner.elementContainer.GetComponentInParent<CanvasScaler>().referenceResolution.x;
+                        Logger.Log($"{xScale}");
+                        Logger.Log($"({pointer.x}, {pointer.y})");
+                        GameObject copy = owner.AddNode(owner.nodeClipboard, (pointer.x), pointer.y);
+                        NodeBase copyNode = copy.GetComponent<NodeBase>();
+                        copyNode.NextNodeObject = null;
+                        copyNode.nextNode = null;
+                        copyNode.PrevNodeObject = null;
+                        copyNode.prevNode = null;
+                        copyNode.ownerLoop = null;
+                        int guidStartIndex = copy.name.IndexOf("-");
+                        copy.name = copy.name.Replace("(Clone)", "");
+                        copy.name = copy.name.Substring(0, guidStartIndex <= 0 ? copy.name.Length : guidStartIndex) + copy.GetInstanceID();
+                    }
+                }
+            }
         }
 
         // Double-click: usually this is editing a node

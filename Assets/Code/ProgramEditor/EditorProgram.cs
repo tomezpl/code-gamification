@@ -65,6 +65,8 @@ public class EditorProgram : MonoBehaviour
     public Rect editingNodeInPlaceRect = new Rect();
     public System.Action<string> editingNodeFinishedClb = null;
 
+    public GameObject nodeClipboard;
+
     public enum EditorMode { FlowChart, CodeViewer };
     public EditorMode editorMode = EditorMode.FlowChart;
 
@@ -128,11 +130,16 @@ public class EditorProgram : MonoBehaviour
         editorActive = true;
     }
 
-    GameObject AddNode(string type = "NodeBase", float x = 0.0f, float y = 0.0f)
+    public GameObject AddNode(string type = "NodeBase", float x = 0.0f, float y = 0.0f)
     {
-        GameObject nodeObject = Instantiate(nodePrefabs[type].Value, elementContainer.transform);
+        return AddNode(nodePrefabs[type].Value, x, y);
+    }
 
-        nodeObject.transform.localPosition = new Vector3(x, y, 0.0f);
+    public GameObject AddNode(GameObject copy, float x = 0.0f, float y = 0.0f)
+    {
+        GameObject nodeObject = Instantiate(copy, elementContainer.transform);
+
+        nodeObject.GetComponent<RectTransform>().SetPositionAndRotation(new Vector3(x, y, 0.0f), Quaternion.identity);
 
         return nodeObject;
     }
@@ -394,7 +401,7 @@ public class EditorProgram : MonoBehaviour
                             choosingNode = false;
                         }
                         // Fixes node link renderer
-                        addedNode.name = addedNode.name.Replace("(Clone)", $"{(addedNode.GetInstanceID())}");
+                        addedNode.name = addedNode.name.Replace("(Clone)", $"-{(addedNode.GetInstanceID())}");
 
                         // Special cases
                         if(nodeTypeStrings[i] == "CreateList")

@@ -13,6 +13,7 @@ public class ProgramController : Interactable
     protected double timeSinceTick = 0.0;
     protected EditorProgram program;
     public NodeBase currentNode;
+    public NodeBase specialNextNode;
 
     public string expectedOutput = "";
 
@@ -264,7 +265,7 @@ public class ProgramController : Interactable
                 if (!waitForNextTick)
                 {
                     ExecuteNode(currentNode);
-                    string currentLine = ((IProgramNode)currentNode).Serialize();
+                    string currentLine = currentNode.GetComponent<CodeBlock>() ? ((CodeBlock)currentNode).SerializeBlockHeader() : ((IProgramNode)currentNode).Serialize();
                     if (transform.Find("CurrentLine"))
                     {
                         if (!editorUi.GetComponent<EditorProgram>().EditorActive)
@@ -285,8 +286,13 @@ public class ProgramController : Interactable
                 firstTick = false;
                 if (processingDone)
                 {
+                    if(specialNextNode != null)
+                    {
+                        currentNode = specialNextNode;
+                        specialNextNode = null;
+                    }
                     // Regular flow
-                    if (currentNode.nextNode != null)
+                    else if (currentNode.nextNode != null)
                     {
                         currentNode = currentNode.NextNodeObject.GetComponent<NodeBase>();
                     }
@@ -477,18 +483,22 @@ public class ProgramController : Interactable
                 Logger.Log($"Couldn't find base function {funcName}");
                 break;
             case NodeType.LogicalBlock: case NodeType.WhileLoop:
+                GameObject.Find("OutputRenderer").transform.Find("Canvas").GetComponentInChildren<Text>().text = ((CodeBlock)currentNode).SerializeBlockHeader();
+                //new WaitForSeconds((float)tickTime);
                 if (node.GetComponent<LogicalBlock>().condition.Evaluate(ref symbolTable))
                 {
                     NodeBase nodeToFollow = (NodeBase)(node.GetComponent<LogicalBlock>().firstBodyNode);
                     if(nodeToFollow != null)
                     {
-                        currentNode = nodeToFollow;
+                        specialNextNode = nodeToFollow;
                     }
                     else
                     {
-                        currentNode = (NodeBase)currentNode.nextNode;
+                        specialNextNode = (NodeBase)currentNode.nextNode;
                     }
-                    return ExecuteNode(currentNode);
+                    //return ExecuteNode(currentNode);
+                    timeSinceTick = -tickTime;
+                    return new ExecutionStatus { success = true, handover = false };
                 }
                 break;
             case NodeType.AllocateArray:

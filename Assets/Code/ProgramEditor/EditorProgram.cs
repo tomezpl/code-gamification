@@ -68,6 +68,7 @@ public class EditorProgram : MonoBehaviour
     public bool editingNodeInPlace = false;
     public Rect editingNodeInPlaceRect = new Rect();
     public System.Action<string> editingNodeFinishedClb = null;
+    bool editedNodeFocused = false;
 
     public GameObject nodeClipboard;
 
@@ -344,7 +345,7 @@ public class EditorProgram : MonoBehaviour
 
         if (editingNodeProperty)
         {
-            if (Input.GetKeyDown(KeyCode.Escape))
+            /*if (Input.GetKeyDown(KeyCode.Escape))
             {
                 editingNodeFinishedClb.DynamicInvoke(editingNodeValue);
                 editingNodeProperty = false;
@@ -353,7 +354,7 @@ public class EditorProgram : MonoBehaviour
             {
                 editingNodeFinishedClb.DynamicInvoke(editedNodeValue);
                 editingNodeProperty = false;
-            }
+            }*/
         }
         else
         {
@@ -396,7 +397,7 @@ public class EditorProgram : MonoBehaviour
                 {
                     float buttonHeight = 0.05f;
                     float buttonWidth = 0.7f;
-                    bool pressed = GUI.Button(new Rect(ndcToScreen(0.5f - buttonWidth / 2.0f, 0.3f + buttonHeight * (float)i + 0.01f * (float)i), ndcToScreen(buttonWidth, buttonHeight)), nodePrefabs[nodeTypeStrings[i]].Key);
+                    bool pressed = GUI.Button(new Rect(ndcToScreen(0.5f - buttonWidth / 2.0f, 0.3f + buttonHeight * i + 0.01f * i), ndcToScreen(buttonWidth, buttonHeight)), nodePrefabs[nodeTypeStrings[i]].Key);
                     if (pressed)
                     {
                         addedNode = AddNode(nodeTypeStrings[i], newNodeInitPos.x, newNodeInitPos.y);
@@ -469,6 +470,7 @@ public class EditorProgram : MonoBehaviour
 
         if (editingNodeProperty)
         {
+            GUI.SetNextControlName("editedNodeValue");
             if (editingNodeInPlace)
             {
                 float x = editingNodeInPlaceRect.x;
@@ -476,11 +478,29 @@ public class EditorProgram : MonoBehaviour
                 float width = editingNodeInPlaceRect.width;
                 float height = editingNodeInPlaceRect.height;
                 float cvsHeight = elementContainer.GetComponentInParent<RectTransform>().rect.height;
-                editedNodeValue = GUI.TextField(new Rect(x, Screen.height - (y + height), width, height), editedNodeValue);
+                editedNodeValue = GUI.TextArea(new Rect(x, Screen.height - (y + height), width, height), editedNodeValue);
             }
             else
             {
-                editedNodeValue = GUI.TextField(new Rect(ndcToScreen(0.5f - 0.375f / 2.0f, 0.5f - 0.05f / 2.0f), ndcToScreen(0.375f, 0.05f)), editedNodeValue);
+                editedNodeValue = GUI.TextArea(new Rect(ndcToScreen(0.5f - 0.375f / 2.0f, 0.5f - 0.05f / 2.0f), ndcToScreen(0.375f, 0.05f)), editedNodeValue);
+            }
+
+            if (!editedNodeFocused)
+            {
+                GUI.FocusControl("editedNodeValue");
+                editedNodeFocused = true;
+            }
+            else if(string.IsNullOrWhiteSpace(GUI.GetNameOfFocusedControl()))
+            {
+                editingNodeProperty = false;
+                editedNodeFocused = false;
+            }
+
+            if(editedNodeValue.Contains("\n"))
+            {
+                editedNodeValue = editedNodeValue.Replace("\n", "");
+                editingNodeFinishedClb.DynamicInvoke(editedNodeValue);
+                editingNodeProperty = false;
             }
         }
     }

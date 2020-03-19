@@ -164,24 +164,38 @@ public class EditorProgram : MonoBehaviour
         }
         else if(linkingNodeMode == LinkingMode.FirstBodyNode)
         {
-            NodeBase prevNode = (NodeBase)(linkingNodesObjects[1].GetComponent<NodeBase>().prevNode);
+            /*NodeBase prevNode = (NodeBase)(linkingNodesObjects[1].GetComponent<NodeBase>().prevNode);
             if (prevNode != null && prevNode == linkingNodesObjects[1].GetComponent<LogicalBlock>())
             {
                 linkingNodesObjects[0] = linkingNodesObjects[1] = null;
                 return;
-            }
+            }*/
         }
 
         // Cancel linking by linking the same node: removes nextNode from obj0 (watch out for ProgramEnd as that won't have a NextNodeObject)
         if(linkingNodesObjects[0] == linkingNodesObjects[1] && !linkingNodesObjects[0].GetComponent<ProgramEnd>())
         {
-            if (linkingNodesObjects[0].GetComponent<NodeBase>().NextNodeObject)
+            if (linkingNodeMode == LinkingMode.NextNode)
             {
-                linkingNodesObjects[0].GetComponent<NodeBase>().NextNodeObject.GetComponent<NodeBase>().PrevNodeObject = null;
-                linkingNodesObjects[0].GetComponent<NodeBase>().NextNodeObject.GetComponent<NodeBase>().prevNode = null;
+                if (linkingNodesObjects[0].GetComponent<NodeBase>().NextNodeObject)
+                {
+                    linkingNodesObjects[0].GetComponent<NodeBase>().NextNodeObject.GetComponent<NodeBase>().PrevNodeObject = null;
+                    linkingNodesObjects[0].GetComponent<NodeBase>().NextNodeObject.GetComponent<NodeBase>().prevNode = null;
+                }
+                linkingNodesObjects[0].GetComponent<NodeBase>().NextNodeObject = null;
+                linkingNodesObjects[0].GetComponent<NodeBase>().nextNode = null;
             }
-            linkingNodesObjects[0].GetComponent<NodeBase>().NextNodeObject = null;
-            linkingNodesObjects[0].GetComponent<NodeBase>().nextNode = null;
+            else
+            {
+                if (linkingNodesObjects[0].GetComponent<CodeBlock>().FirstBodyNodeObject)
+                {
+                    linkingNodesObjects[0].GetComponent<CodeBlock>().FirstBodyNodeObject.GetComponent<NodeBase>().PrevNodeObject = null;
+                    linkingNodesObjects[0].GetComponent<CodeBlock>().FirstBodyNodeObject.GetComponent<NodeBase>().prevNode = null;
+                    linkingNodesObjects[0].GetComponent<CodeBlock>().FirstBodyNodeObject.GetComponent<NodeBase>().ownerLoop = null;
+                }
+                linkingNodesObjects[0].GetComponent<CodeBlock>().FirstBodyNodeObject = null;
+                linkingNodesObjects[0].GetComponent<CodeBlock>().firstBodyNode = null;
+            }
             linkingNodesObjects[0] = linkingNodesObjects[1] = null;
             return;
         }
@@ -320,6 +334,7 @@ public class EditorProgram : MonoBehaviour
         DrawNodeLinks();
 
         // Editor creation occurs at startup so we may need a couple of frames to disable it for good measure?
+        // (not sure how Unity's script execution order works in detail...)
         if (frameCounter < framesToDisable)
         {
             if (!enableEditorOnStartup)
@@ -661,21 +676,38 @@ public class EditorProgram : MonoBehaviour
             {
                 RectTransform prevTransform = linkDesc.prev.GetComponent<RectTransform>(), nextTransform = linkDesc.next.GetComponent<RectTransform>();
                 Rect prevRect = prevTransform.rect, nextRect = nextTransform.rect;
-                if(prevTransform.localPosition.x + prevRect.width + connectorPadding < nextTransform.localPosition.x)
+                bool isFirstBodyNodeLink = linkDesc.prev.GetComponent<CodeBlock>() && linkDesc.prev.GetComponent<CodeBlock>().FirstBodyNodeObject == linkDesc.next.gameObject;
+                if (prevTransform.localPosition.x + prevRect.width + connectorPadding < nextTransform.localPosition.x)
                 {
-                    line.positionCount = 4;
-                    line.SetPosition(1, new Vector2((nextTransform.localPosition.x - nextRect.width/2.0f) - connectorPadding, line.GetPosition(0).y));
-                    line.SetPosition(2, new Vector2((nextTransform.localPosition.x - nextRect.width/2.0f) - connectorPadding, finalPoint.y));
-                    line.SetPosition(3, new Vector2((nextTransform.localPosition.x - nextRect.width / 2.0f), finalPoint.y));
+                    line.positionCount = 4 - (isFirstBodyNodeLink ? 1 : 0);
+                    int i = 1;
+                    if (isFirstBodyNodeLink)
+                    {
+                        line.SetPosition(i++, new Vector2((prevTransform.localPosition.x), finalPoint.y));
+                    }
+                    else
+                    {
+                        line.SetPosition(i++, new Vector2((nextTransform.localPosition.x - nextRect.width / 2.0f) - connectorPadding, line.GetPosition(0).y));
+                        line.SetPosition(i++, new Vector2((nextTransform.localPosition.x - nextRect.width / 2.0f) - connectorPadding, finalPoint.y));
+                    }
+                    line.SetPosition(i++, new Vector2((nextTransform.localPosition.x - nextRect.width / 2.0f), finalPoint.y));
                 }
                 else
                 {
-                    line.positionCount = 6;
-                    line.SetPosition(1, new Vector2((prevTransform.localPosition.x + prevRect.width / 2.0f) + connectorPadding, line.GetPosition(0).y));
-                    line.SetPosition(2, new Vector2((prevTransform.localPosition.x + prevRect.width / 2.0f) + connectorPadding, (prevTransform.localPosition.y + nextTransform.localPosition.y) / 2.0f));
-                    line.SetPosition(3, new Vector2((nextTransform.localPosition.x - nextRect.width / 2.0f) - connectorPadding, (prevTransform.localPosition.y + nextTransform.localPosition.y) / 2.0f));
-                    line.SetPosition(4, new Vector2((nextTransform.localPosition.x - nextRect.width / 2.0f) - connectorPadding, finalPoint.y));
-                    line.SetPosition(5, new Vector2((nextTransform.localPosition.x - nextRect.width / 2.0f), finalPoint.y));
+                    line.positionCount = 6 - (isFirstBodyNodeLink ? 1 : 0);
+                    int i = 1;
+                    if (isFirstBodyNodeLink)
+                    {
+                        line.SetPosition(i++, new Vector2((prevTransform.localPosition.x), (prevTransform.localPosition.y + nextTransform.localPosition.y) / 2.0f));
+                    }
+                    else
+                    {
+                        line.SetPosition(i++, new Vector2((prevTransform.localPosition.x + prevRect.width / 2.0f) + connectorPadding, line.GetPosition(0).y));
+                        line.SetPosition(i++, new Vector2((prevTransform.localPosition.x + prevRect.width / 2.0f) + connectorPadding, (prevTransform.localPosition.y + nextTransform.localPosition.y) / 2.0f));
+                    }
+                    line.SetPosition(i++, new Vector2((nextTransform.localPosition.x - nextRect.width / 2.0f) - connectorPadding, (prevTransform.localPosition.y + nextTransform.localPosition.y) / 2.0f));
+                    line.SetPosition(i++, new Vector2((nextTransform.localPosition.x - nextRect.width / 2.0f) - connectorPadding, finalPoint.y));
+                    line.SetPosition(i++, new Vector2((nextTransform.localPosition.x - nextRect.width / 2.0f), finalPoint.y));
                 }
             }
         }

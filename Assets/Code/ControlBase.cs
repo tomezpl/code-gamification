@@ -48,6 +48,19 @@ abstract public class ControlBase : MonoBehaviour
                         case "restart":
                             SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
                             break;
+                        case "stopall":
+                            GameObject[] allObjects = FindObjectsOfType<GameObject>();
+                            foreach(GameObject obj in allObjects)
+                            {
+                                ProgramController computer = obj.GetComponent<ProgramController>();
+                                if(computer != null)
+                                {
+                                    computer.programRunning = false;
+                                    computer.processingDone = true;
+                                    computer.currentNode = computer.editorUi.GetComponent<EditorProgram>().elementContainer.GetComponentInChildren<ProgramStart>();
+                                }
+                            }
+                            break;
                     }
                     if (enteredCommand.ToLower().Contains("load "))
                     {

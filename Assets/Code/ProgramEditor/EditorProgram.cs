@@ -23,6 +23,10 @@ public class EditorProgram : MonoBehaviour
     protected static Dictionary<string, KeyValuePair<string, GameObject>> nodePrefabs = null;
 
     public GUISkin guiSkin;
+
+    // initial pose for the newly added node
+    // will be set to the mouse cursor's last position before pressing TAB
+    public Vector2 newNodeInitPos;
     
     public bool EditorActive {
         get { return editorActive; }
@@ -331,6 +335,10 @@ public class EditorProgram : MonoBehaviour
         if(Input.GetKeyUp(KeyCode.Tab) && EditorActive && editorMode == EditorMode.FlowChart)
         {
             choosingNode = !choosingNode;
+            if(choosingNode)
+            {
+                newNodeInitPos = Input.mousePosition;
+            }
             choosingFunctionCall = choosingNode && choosingFunctionCall;
         }
 
@@ -391,7 +399,7 @@ public class EditorProgram : MonoBehaviour
                     bool pressed = GUI.Button(new Rect(ndcToScreen(0.5f - buttonWidth / 2.0f, 0.3f + buttonHeight * (float)i + 0.01f * (float)i), ndcToScreen(buttonWidth, buttonHeight)), nodePrefabs[nodeTypeStrings[i]].Key);
                     if (pressed)
                     {
-                        addedNode = AddNode(nodeTypeStrings[i]);
+                        addedNode = AddNode(nodeTypeStrings[i], newNodeInitPos.x, newNodeInitPos.y);
                         if (nodeTypeStrings[i] == "FunctionCallBase")
                         {
                             choosingFunctionCall = true;

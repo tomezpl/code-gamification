@@ -35,6 +35,10 @@ abstract public class ControlBase : MonoBehaviour
             if(Input.GetKeyUp(KeyCode.BackQuote))
             {
                 consoleVisible = !consoleVisible;
+                if (consoleVisible)
+                    Cursor.lockState = CursorLockMode.None;
+                else if(allowMove)
+                    Cursor.lockState = CursorLockMode.Locked;
             }
             if(consoleVisible)
             {

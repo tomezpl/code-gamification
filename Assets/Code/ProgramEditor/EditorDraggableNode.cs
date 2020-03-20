@@ -296,9 +296,6 @@ public class EditorDraggableNode : MonoBehaviour
                     // Other events: Pasting a node
                     else if (Input.GetKeyDown(KeyCode.V) && !owner.editingNodeProperty && owner.nodeClipboard == gameObject)
                     {
-                        float xScale = Screen.width / owner.elementContainer.GetComponentInParent<CanvasScaler>().referenceResolution.x;
-                        Logger.Log($"{xScale}");
-                        Logger.Log($"({pointer.x}, {pointer.y})");
                         GameObject copy = owner.AddNode(owner.nodeClipboard, (pointer.x), pointer.y);
                         NodeBase copyNode = copy.GetComponent<NodeBase>();
                         copyNode.NextNodeObject = null;

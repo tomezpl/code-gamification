@@ -98,6 +98,8 @@ public class EditorProgram : MonoBehaviour
 
     void DisableEditor()
     {
+        Cursor.lockState = CursorLockMode.Locked;
+
         foreach (EditorDraggableNode draggable in elementContainer.GetComponentsInChildren<EditorDraggableNode>())
         {
             draggable.enabled = false;
@@ -117,6 +119,8 @@ public class EditorProgram : MonoBehaviour
     void EnableEditor()
     {
         SwitchMode(EditorMode.FlowChart);
+
+        Cursor.lockState = CursorLockMode.None;
 
         foreach (EditorDraggableNode draggable in elementContainer.GetComponentsInChildren<EditorDraggableNode>())
         {
@@ -509,6 +513,7 @@ public class EditorProgram : MonoBehaviour
             {
                 editingNodeProperty = false;
                 editedNodeFocused = false;
+                editingNodeInPlace = false;
             }
 
             if(editedNodeValue.Contains("\n"))
@@ -516,6 +521,8 @@ public class EditorProgram : MonoBehaviour
                 editedNodeValue = editedNodeValue.Replace("\n", "");
                 editingNodeFinishedClb.DynamicInvoke(editedNodeValue);
                 editingNodeProperty = false;
+                editingNodeInPlace = false;
+                editedNodeFocused = false;
             }
         }
     }

@@ -288,12 +288,14 @@ public class ProgramController : Interactable
                 {
                     if(specialNextNode != null)
                     {
+                        Logger.Log($"Passing speecialNextNode '{specialNextNode.name}'");
                         currentNode = specialNextNode;
                         specialNextNode = null;
                     }
                     // Regular flow
                     else if (currentNode.nextNode != null)
                     {
+                        Logger.Log($"Continuing from nextNode {((NodeBase)currentNode.nextNode).name}");
                         currentNode = currentNode.NextNodeObject.GetComponent<NodeBase>();
                     }
                     // Reached end of loop
@@ -301,18 +303,30 @@ public class ProgramController : Interactable
                     {
                         if (currentNode.ownerLoop.GetComponent<WhileLoop>())
                         {
+                            Logger.Log($"Continuing from WhileLoop {((WhileLoop)currentNode.ownerLoop).name}");
                             currentNode = currentNode.ownerLoop;
                         }
                         else if(currentNode.ownerLoop.GetComponent<LogicalBlock>())
                         {
-                            currentNode = (NodeBase)currentNode.ownerLoop.nextNode;
+                            LogicalBlock ownerIf = currentNode.ownerLoop;
+                            NodeBase nodeAfterIf = (NodeBase)ownerIf.nextNode;
+                            while(nodeAfterIf == null && ownerIf != null)
+                            {
+                                ownerIf = ownerIf.ownerLoop;
+                                if (ownerIf)
+                                {
+                                    nodeAfterIf = (NodeBase)ownerIf.nextNode;
+                                }
+                            }
+                            Logger.Log($"Continuing from IfStatement {(nodeAfterIf ? nodeAfterIf.name : "<null>")}");
+                            currentNode = nodeAfterIf;
                         }
                     }
-                    Logger.Log($"Continuing to next node: {currentNode.name}");
+                    Logger.Log($"Moving to next node: {(currentNode ? currentNode.name : "<null node>")}");
                     return false;
                 }
             }
-            else if(currentNode.gameObject.name == "ProgramEnd")
+            else if(currentNode != null && currentNode.gameObject.name == "ProgramEnd")
             {
                 ProgramEndCallback();
                 programRunning = false;

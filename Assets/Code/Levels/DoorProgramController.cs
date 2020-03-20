@@ -141,19 +141,16 @@ public class DoorProgramController : ProgramController
     private void Fizz()
     {
         OutPrint("fizz");
-        OutPrintNewline();
     }
 
     private void Buzz()
     {
         OutPrint("buzz");
-        OutPrintNewline();
     }
 
     private void FizzBuzz()
     {
         OutPrint("fizzbuzz");
-        OutPrintNewline();
     }
 
     // Start is called before the first frame update

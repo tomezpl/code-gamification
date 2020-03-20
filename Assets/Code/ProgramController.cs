@@ -175,12 +175,12 @@ public class ProgramController : Interactable
         {
             if (programRunning)
             {
+                outputBuffer = "";
                 currentNode = (NodeBase)currentNode.nextNode;
             }
             timeSinceTick = tickTime; // Skip the ProgramStart tick
             InitSymTable();
             // TODO: this doesn't actually reset the buffer?
-            outputBuffer = "";
         }
         if (programRunning)
         {
@@ -422,7 +422,6 @@ public class ProgramController : Interactable
                 Logger.Log("Program starting!");
                 processingDone = true;
 
-                Debug.DebugBreak();
                 InitSymTable();
                 // TODO: this doesn't actually reset the buffer?
                 outputBuffer = "";

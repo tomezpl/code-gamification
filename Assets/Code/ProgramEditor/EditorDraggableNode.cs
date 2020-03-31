@@ -233,43 +233,64 @@ public class EditorDraggableNode : MonoBehaviour
             nodeAlreadyDragged = false;
         }
 
-        // Check if this Draggable isn't part of another node.
-        if (transform.parent == owner.elementContainer.transform)
+        // Have previewNode follow the mouse
+        if(name == "previewNode")
+        {
+            rectTransform.SetPositionAndRotation(pointer, Quaternion.identity);
+        }
+
+        // Check if this Draggable isn't part of another node and isn't the previewNode.
+        if (transform.parent == owner.elementContainer.transform && name != "previewNode")
         {
             // Linking nodes
             if (Input.GetKeyUp(KeyCode.Mouse1) && nodeRect.Contains(pointer))
             {
                 if (!owner.linkingNodes)
                 {
-                    // Deteremining the right LinkingMode for CodeBlocks
-                    if (GetComponent<CodeBlock>() != null)
+                    // Make sure we're not trying to link FROM ProgramEnd
+                    if (GetComponent<ProgramEnd>() == null)
                     {
-                        // coords of the point needed to be right-clicked in order to select a firstBodyNode
-                        Vector2 firstBodyHook = new Vector2(nodeRect.xMin + nodeRect.width / 2.0f, nodeRect.yMax);
-                        Vector2 nextHook = new Vector2(nodeRect.xMax, nodeRect.yMin + nodeRect.height / 2.0f);
-
-                        // Check if it's node A and not node B
-                        if (owner.linkingNodesObjects[0] == null)
+                        // Deteremining the right LinkingMode for CodeBlocks
+                        if (GetComponent<CodeBlock>() != null)
                         {
-                            if (Vector2.Distance(pointer, firstBodyHook) < Vector2.Distance(pointer, nextHook))
+                            // coords of the point needed to be right-clicked in order to select a firstBodyNode
+                            Vector2 firstBodyHook = new Vector2(nodeRect.xMin + nodeRect.width / 2.0f, nodeRect.yMax);
+                            Vector2 nextHook = new Vector2(nodeRect.xMax, nodeRect.yMin + nodeRect.height / 2.0f);
+
+                            // Check if it's node A and not node B
+                            if (owner.linkingNodesObjects[0] == null)
                             {
-                                owner.linkingNodeMode = EditorProgram.LinkingMode.FirstBodyNode;
-                            }
-                            else
-                            {
-                                owner.linkingNodeMode = EditorProgram.LinkingMode.NextNode;
+                                if (Vector2.Distance(pointer, firstBodyHook) < Vector2.Distance(pointer, nextHook))
+                                {
+                                    owner.linkingNodeMode = EditorProgram.LinkingMode.FirstBodyNode;
+                                }
+                                else
+                                {
+                                    owner.linkingNodeMode = EditorProgram.LinkingMode.NextNode;
+                                }
                             }
                         }
-                    }
-                    // By default, non-CodeBlocks have NextNode linkingmode
-                    else
-                    {
-                        owner.linkingNodeMode = EditorProgram.LinkingMode.NextNode;
-                    }
+                        // By default, non-CodeBlocks have NextNode linkingmode
+                        else
+                        {
+                            owner.linkingNodeMode = EditorProgram.LinkingMode.NextNode;
+                        }
 
+                        owner.linkingPreviewLine = new GameObject(
+                            $"{(owner.linkingNodeMode == EditorProgram.LinkingMode.NextNode ? "nextNode" : "firstBody")}:{gameObject.name}->previewNode",
+                            new Type[] { typeof(LineRenderer), typeof(LinkDescriptor) }
+                        );
+                        owner.linkingPreviewLine.transform.SetParent(owner.lineCanvas.transform, false);
+                        LinkDescriptor linkDesc = owner.linkingPreviewLine.GetComponent<LinkDescriptor>();
+                        linkDesc.prev = gameObject;
+                        linkDesc.next = owner.linkingPreviewNode;
+                        LineRenderer lineRenderer = owner.linkingPreviewLine.GetComponent<LineRenderer>();
+                        lineRenderer.material = EditorProgram.lineMaterial;
+                        lineRenderer.useWorldSpace = false;
 
-                    owner.linkingNodes = true;
-                    owner.linkingNodesObjects[0] = gameObject;
+                        owner.linkingNodes = true;
+                        owner.linkingNodesObjects[0] = gameObject;
+                    }
                 }
                 else
                 {

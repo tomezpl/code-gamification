@@ -1,12 +1,13 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class EditorProgram : MonoBehaviour
 {
-    private Canvas lineCanvas;
-    private static Material lineMaterial = null;
+    public Canvas lineCanvas;
+    public static Material lineMaterial = null;
 
     public GameObject elementContainer;
 
@@ -62,6 +63,8 @@ public class EditorProgram : MonoBehaviour
     public bool linkingNodes = false;
     public LinkingMode linkingNodeMode = LinkingMode.NextNode;
     public GameObject[] linkingNodesObjects = new GameObject[2];
+    public GameObject linkingPreviewLine;
+    public GameObject linkingPreviewNode;
     public bool editingNodeProperty = false;
     public string editingNodeValue = ""; // original value of the string that is edited - this will be returned if Esc is pressed
     public string editedNodeValue = ""; // final edited value to return if Enter is pressed
@@ -72,13 +75,15 @@ public class EditorProgram : MonoBehaviour
 
     public GameObject nodeClipboard;
 
+    // FlowChart: the default node editor
+    // CodeViewer: the screen with generated Python-syntax code representation of our flowchart
     public enum EditorMode { FlowChart, CodeViewer };
     public EditorMode editorMode = EditorMode.FlowChart;
 
     void SwitchMode(EditorMode mode)
     {
 
-        if(mode == EditorMode.FlowChart)
+        if (mode == EditorMode.FlowChart)
         {
             elementContainer.SetActive(true);
             generatedCodeContainer.SetActive(false);
@@ -86,6 +91,17 @@ public class EditorProgram : MonoBehaviour
         }
         else
         {
+            if (editorMode == EditorMode.FlowChart)
+            {
+                linkingNodes = false;
+                linkingNodesObjects[0] = linkingNodesObjects[1] = null;
+                // Delete the linking preview line
+                if (linkingPreviewLine != null)
+                {
+                    Destroy(linkingPreviewLine);
+                }
+            }
+
             if (!string.IsNullOrWhiteSpace(programStart.Serialize()))
             {
                 elementContainer.SetActive(false);
@@ -114,6 +130,14 @@ public class EditorProgram : MonoBehaviour
             GameObject.Find("Player").GetComponentInChildren<Camera>().enabled = true;
         transform.Find("Canvas").GetComponent<Canvas>().enabled = false;
         editorActive = false;
+
+        linkingNodes = false;
+        linkingNodesObjects[0] = linkingNodesObjects[1] = null;
+        // Delete the linking preview line
+        if (linkingPreviewLine != null)
+        {
+            Destroy(linkingPreviewLine);
+        }
     }
 
     void EnableEditor()
@@ -300,7 +324,7 @@ public class EditorProgram : MonoBehaviour
             nodePrefabs.Add("FunctionCallBase", new KeyValuePair<string, GameObject>("Function call: Triggers the specified function. Can pass parameters.", Resources.Load("Prefabs/ProgramEditor/Nodes/Operations/FunctionCall") as GameObject));
 
             // ArithmeticOperationBase uses ArithmeticAdd as a default.
-            nodePrefabs.Add("ArithmeticOperationBase", new KeyValuePair<string, GameObject>("Arithmetic: Performs arithmetic math operations.", Resources.Load("Prefabs/ProgramEditor/Nodes/Operations/ArithmeticAdd") as GameObject));
+            //nodePrefabs.Add("ArithmeticOperationBase", new KeyValuePair<string, GameObject>("Arithmetic: Performs arithmetic math operations.", Resources.Load("Prefabs/ProgramEditor/Nodes/Operations/ArithmeticAdd") as GameObject));
 
             nodePrefabs.Add("LogicalBlock", new KeyValuePair<string, GameObject>("If Statement: Runs a block of code if a condition is met.", Resources.Load("Prefabs/ProgramEditor/Nodes/IfStatement") as GameObject));
             nodePrefabs.Add("WhileLoop", new KeyValuePair<string, GameObject>("While loop: Repeats a block of code as long as condition is met.", Resources.Load("Prefabs/ProgramEditor/Nodes/WhileLoop") as GameObject));
@@ -319,6 +343,11 @@ public class EditorProgram : MonoBehaviour
 
         if (!programEnd)
             programEnd = elementContainer.GetComponentInChildren<ProgramEnd>();
+
+        linkingPreviewNode = new GameObject("previewNode", new Type[] { typeof(RectTransform), typeof(EditorDraggableNode) });
+        linkingPreviewNode.transform.parent = elementContainer.transform;
+        linkingPreviewNode.GetComponent<EditorDraggableNode>().allowDrag = false;
+        linkingPreviewNode.GetComponent<EditorDraggableNode>().isArithmeticOperator = false;
 
         if (!enableEditorOnStartup)
         {
@@ -382,6 +411,12 @@ public class EditorProgram : MonoBehaviour
             {
                 SwitchMode(1 - editorMode);
             }
+        }
+
+        // Delete the linking preview line if we're not in linking mode
+        if (linkingPreviewLine != null && !linkingNodes)
+        {
+            Destroy(linkingPreviewLine);
         }
     }
 
@@ -559,22 +594,28 @@ public class EditorProgram : MonoBehaviour
         foreach (GameObject element in elements)
         {
             NodeBase potentialNode = element.GetComponent<NodeBase>();
-            if (potentialNode && potentialNode.NextNodeObject)
+            GameObject potentialNextNodeObj = potentialNode ? potentialNode.NextNodeObject : null;
+            if (linkingNodes && linkingNodeMode == LinkingMode.NextNode && element.name == linkingNodesObjects[0].name)
+            {
+                potentialNextNodeObj = linkingPreviewNode;
+                //Logger.Log("Found preview node");
+            }
+            if (potentialNode && potentialNextNodeObj)
             {
                 GameObject currentLink = null;
                 LineRenderer currentRenderer = null;
-                Transform cachedLinkTransform = lineCanvas.transform.Find($"nextNode:{potentialNode.name}->{potentialNode.NextNodeObject.name}");
-                if (cachedLinkTransform)
+                Transform linkTransform = lineCanvas.transform.Find($"nextNode:{potentialNode.name}->{potentialNextNodeObj.name}");
+                if (linkTransform)
                 {
-                    currentLink = cachedLinkTransform.gameObject;
+                    currentLink = linkTransform.gameObject;
                     currentRenderer = currentLink.GetComponent<LineRenderer>();
 
                     currentLink.GetComponent<LinkDescriptor>().prev = potentialNode.gameObject;
-                    currentLink.GetComponent<LinkDescriptor>().next = potentialNode.NextNodeObject;
+                    currentLink.GetComponent<LinkDescriptor>().next = potentialNextNodeObj;
                 }
                 else
                 {
-                    currentLink = new GameObject($"nextNode:{potentialNode.name}->{potentialNode.NextNodeObject.name}");
+                    currentLink = new GameObject($"nextNode:{potentialNode.name}->{potentialNextNodeObj.name}");
                     currentLink.transform.SetParent(lineCanvas.transform, false);
                     currentRenderer = currentLink.AddComponent<LineRenderer>();
                     currentRenderer.material = lineMaterial;
@@ -582,19 +623,27 @@ public class EditorProgram : MonoBehaviour
 
                     currentLink.AddComponent<LinkDescriptor>();
                     currentLink.GetComponent<LinkDescriptor>().prev = potentialNode.gameObject;
-                    currentLink.GetComponent<LinkDescriptor>().next = potentialNode.NextNodeObject;
+                    currentLink.GetComponent<LinkDescriptor>().next = potentialNextNodeObj;
                 }
                 // This is to prevent culling from other 3D elements in the scene
                 currentRenderer.gameObject.layer = LayerMask.NameToLayer("CodeEditor");
                 Rect    thisRect = potentialNode.GetComponent<RectTransform>().rect,
-                        nextRect = potentialNode.NextNodeObject.GetComponent<RectTransform>().rect;
+                        nextRect = potentialNextNodeObj.GetComponent<RectTransform>().rect;
                 Vector2 thisPos = new Vector2(potentialNode.GetComponent<RectTransform>().localPosition.x + thisRect.width / 2, potentialNode.GetComponent<RectTransform>().localPosition.y);
-                Vector2 nextPos = new Vector2(potentialNode.NextNodeObject.GetComponent<RectTransform>().localPosition.x - nextRect.width / 2, potentialNode.NextNodeObject.GetComponent<RectTransform>().localPosition.y);
+                Vector2 nextPos = new Vector2(potentialNextNodeObj.GetComponent<RectTransform>().localPosition.x - nextRect.width / 2, potentialNextNodeObj.GetComponent<RectTransform>().localPosition.y);
+
+                // If we're rendering link preview, make it point to the rect center so that it aligns with the cursor
+                if (potentialNextNodeObj.name == "previewNode")
+                {
+                    nextPos.x += nextRect.width / 2.0f;
+                }
+
                 currentRenderer.positionCount = 2;
                 currentRenderer.SetPositions(new Vector3[] {
                     thisPos,
                     nextPos
                 });
+
                 validLinks.Add(currentLink.name);
             }
         }
@@ -603,22 +652,27 @@ public class EditorProgram : MonoBehaviour
         foreach (GameObject element in elements)
         {
             CodeBlock potentialCodeBlock = element.GetComponent<CodeBlock>();
-            if (potentialCodeBlock && potentialCodeBlock.FirstBodyNodeObject)
+            GameObject potentialFirstBodyObj = potentialCodeBlock ? potentialCodeBlock.FirstBodyNodeObject : null;
+            if (linkingNodes && linkingNodeMode == LinkingMode.FirstBodyNode && element.name == linkingNodesObjects[0].name)
+            {
+                potentialFirstBodyObj = linkingPreviewNode;
+            }
+            if (potentialCodeBlock && potentialFirstBodyObj)
             {
                 GameObject currentLink = null;
                 LineRenderer currentRenderer = null;
-                Transform cachedLinkTransform = lineCanvas.transform.Find($"firstBody:{potentialCodeBlock.name}->{potentialCodeBlock.FirstBodyNodeObject.name}");
-                if (cachedLinkTransform)
+                Transform linkTransform = lineCanvas.transform.Find($"firstBody:{potentialCodeBlock.name}->{potentialFirstBodyObj.name}");
+                if (linkTransform)
                 {
-                    currentLink = cachedLinkTransform.gameObject;
+                    currentLink = linkTransform.gameObject;
                     currentRenderer = currentLink.GetComponent<LineRenderer>();
 
                     currentLink.GetComponent<LinkDescriptor>().prev = potentialCodeBlock.gameObject;
-                    currentLink.GetComponent<LinkDescriptor>().next = potentialCodeBlock.FirstBodyNodeObject;
+                    currentLink.GetComponent<LinkDescriptor>().next = potentialFirstBodyObj;
                 }
                 else
                 {
-                    currentLink = new GameObject($"firstBody:{potentialCodeBlock.name}->{potentialCodeBlock.FirstBodyNodeObject.name}");
+                    currentLink = new GameObject($"firstBody:{potentialCodeBlock.name}->{potentialFirstBodyObj.name}");
                     currentLink.transform.SetParent(lineCanvas.transform, false);
                     currentRenderer = currentLink.AddComponent<LineRenderer>();
                     currentRenderer.material = lineMaterial;
@@ -626,14 +680,21 @@ public class EditorProgram : MonoBehaviour
 
                     currentLink.AddComponent<LinkDescriptor>();
                     currentLink.GetComponent<LinkDescriptor>().prev = potentialCodeBlock.gameObject;
-                    currentLink.GetComponent<LinkDescriptor>().next = potentialCodeBlock.FirstBodyNodeObject;
+                    currentLink.GetComponent<LinkDescriptor>().next = potentialFirstBodyObj;
                 }
 
                 currentRenderer.positionCount = 2;
                 currentRenderer.SetPositions(new Vector3[] {
                     potentialCodeBlock.GetComponent<RectTransform>().localPosition + new Vector3(.0f, potentialCodeBlock.GetComponent<RectTransform>().rect.height / -2.0f),
-                    potentialCodeBlock.FirstBodyNodeObject.GetComponent<RectTransform>().localPosition + new Vector3(potentialCodeBlock.FirstBodyNodeObject.GetComponent<RectTransform>().rect.width / -2.0f, 0.0f)
+                    potentialFirstBodyObj.GetComponent<RectTransform>().localPosition + new Vector3(potentialFirstBodyObj.GetComponent<RectTransform>().rect.width / -2.0f, 0.0f)
                 });
+
+                // If we're rendering link preview, make it point to the rect center so that it aligns with the cursor
+                if (potentialFirstBodyObj.name == "previewNode")
+                {
+                    currentRenderer.SetPosition(1, potentialFirstBodyObj.GetComponent<RectTransform>().localPosition);
+                }
+
                 // This is to prevent culling from other 3D elements in the scene
                 currentRenderer.gameObject.layer = LayerMask.NameToLayer("CodeEditor");
                 validLinks.Add(currentLink.name);
@@ -656,7 +717,7 @@ public class EditorProgram : MonoBehaviour
         Transform[] allLines = lineCanvas.GetComponentsInChildren<Transform>();
         foreach (Transform line in allLines)
         {
-            if(!validLinks.Contains(line.name) && line.name != "LineCanvas")
+            if(!validLinks.Contains(line.name) && line.name != "LineCanvas" && !line.name.Contains("previewNode"))
             {
                 Destroy(line.gameObject);
             }
@@ -683,7 +744,7 @@ public class EditorProgram : MonoBehaviour
             {
                 RectTransform prevTransform = linkDesc.prev.GetComponent<RectTransform>(), nextTransform = linkDesc.next.GetComponent<RectTransform>();
                 Rect prevRect = prevTransform.rect, nextRect = nextTransform.rect;
-                bool isFirstBodyNodeLink = linkDesc.prev.GetComponent<CodeBlock>() && linkDesc.prev.GetComponent<CodeBlock>().FirstBodyNodeObject == linkDesc.next.gameObject;
+                bool isFirstBodyNodeLink = (linkDesc.prev.GetComponent<CodeBlock>() && linkDesc.prev.GetComponent<CodeBlock>().FirstBodyNodeObject == linkDesc.next.gameObject) || (linkingNodes && linkingNodeMode == LinkingMode.FirstBodyNode && prevTransform.gameObject == linkingNodesObjects[0]);
                 if (prevTransform.localPosition.x + prevRect.width + connectorPadding < nextTransform.localPosition.x)
                 {
                     line.positionCount = 4 - (isFirstBodyNodeLink ? 1 : 0);
@@ -697,7 +758,16 @@ public class EditorProgram : MonoBehaviour
                         line.SetPosition(i++, new Vector2((nextTransform.localPosition.x - nextRect.width / 2.0f) - connectorPadding, line.GetPosition(0).y));
                         line.SetPosition(i++, new Vector2((nextTransform.localPosition.x - nextRect.width / 2.0f) - connectorPadding, finalPoint.y));
                     }
-                    line.SetPosition(i++, new Vector2((nextTransform.localPosition.x - nextRect.width / 2.0f), finalPoint.y));
+
+                    // If we're rendering link preview, make it point to the rect center so that it aligns with the cursor
+                    if (nextTransform.name == "previewNode")
+                    {
+                        line.SetPosition(i++, new Vector2(nextTransform.localPosition.x, finalPoint.y));
+                    }
+                    else
+                    {
+                        line.SetPosition(i++, new Vector2((nextTransform.localPosition.x - nextRect.width / 2.0f), finalPoint.y));
+                    }
                 }
                 else
                 {
@@ -714,7 +784,16 @@ public class EditorProgram : MonoBehaviour
                     }
                     line.SetPosition(i++, new Vector2((nextTransform.localPosition.x - nextRect.width / 2.0f) - connectorPadding, (prevTransform.localPosition.y + nextTransform.localPosition.y) / 2.0f));
                     line.SetPosition(i++, new Vector2((nextTransform.localPosition.x - nextRect.width / 2.0f) - connectorPadding, finalPoint.y));
-                    line.SetPosition(i++, new Vector2((nextTransform.localPosition.x - nextRect.width / 2.0f), finalPoint.y));
+
+                    // If we're rendering link preview, make it point to the rect center so that it aligns with the cursor
+                    if (nextTransform.name == "previewNode")
+                    {
+                        line.SetPosition(i++, new Vector2(nextTransform.localPosition.x, finalPoint.y));
+                    }
+                    else
+                    {
+                        line.SetPosition(i++, new Vector2((nextTransform.localPosition.x - nextRect.width / 2.0f), finalPoint.y));
+                    }
                 }
             }
         }

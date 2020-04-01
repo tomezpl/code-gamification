@@ -47,6 +47,8 @@ public class ProgramController : Interactable
 
     public string outputBuffer = "";
 
+    private ClueHUD clueHud;
+
     // Returns true if there are any nodes other than Start and End present in the program editor
     public bool HasAnyNodes()
     {
@@ -141,6 +143,8 @@ public class ProgramController : Interactable
     // Start is called before the first frame update
     protected virtual void Start()
     {
+        clueHud = GameObject.Find("ClueHUD").GetComponent<ClueHUD>();
+
         functions = new Dictionary<string, System.Delegate>();
         InitSymTable();
 
@@ -198,6 +202,12 @@ public class ProgramController : Interactable
         {
             if (DistanceCheck())
             {
+                // Show controls on HUD
+                if(clueHud.currentPromptSet == null)
+                {
+                    clueHud.SetCurrentPrompt(clueHud.FPPTerminalPrompts, gameObject);
+                }
+
                 if (Input.GetKeyUp(KeyCode.E))
                     program.EditorActive = !program.EditorActive;
                 if (Input.GetKeyUp(KeyCode.Space) && !programRunning)
@@ -239,6 +249,14 @@ public class ProgramController : Interactable
                     }
                 }
             }
+            // If we're outside the distance, make sure the ClueHUD is updated so it no longer displays the "Open Editor" control clue
+            else
+            {
+                if(clueHud.currentPromptSet == clueHud.FPPTerminalPrompts && clueHud.currentPromptCaller == gameObject)
+                {
+                    clueHud.SetCurrentPrompt(null, null);
+                }
+            }
         }
 
         if(transform.Find("CurrentLine") && editorUi.GetComponent<EditorProgram>().EditorActive)
@@ -249,6 +267,14 @@ public class ProgramController : Interactable
         if (transform.Find("CurrentLine") && !editorUi.GetComponent<EditorProgram>().EditorActive && programRunning)
         {
             transform.Find("CurrentLine").gameObject.SetActive(true);
+        }
+
+        if(editorUi.GetComponent<EditorProgram>().EditorActive)
+        {
+            if (clueHud.currentPromptSet == clueHud.FPPTerminalPrompts && clueHud.currentPromptCaller == gameObject)
+            {
+                clueHud.SetCurrentPrompt(null, null);
+            }
         }
     }
 

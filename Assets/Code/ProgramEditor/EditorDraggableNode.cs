@@ -28,6 +28,8 @@ public class EditorDraggableNode : MonoBehaviour
 
     public static bool nodeAlreadyDragged = false;
 
+    private ClueHUD clueHud;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -39,6 +41,8 @@ public class EditorDraggableNode : MonoBehaviour
         {
             ownerTransform = ownerTransform.parent;
         }
+
+        clueHud = GameObject.Find("ClueHUD").GetComponent<ClueHUD>();
     }
 
     public void Drag(Vector2 input)
@@ -161,6 +165,8 @@ public class EditorDraggableNode : MonoBehaviour
         owner.editingNodeInPlace = true;
         owner.editingNodeFinishedClb = finishedCallback;
         owner.editingNodeProperty = true;
+
+        clueHud.SetCurrentPrompt(clueHud.EditingParamHoveredPrompt, gameObject);
     }
 
     public void ReferenceEditingFinished(string finalValue)
@@ -218,6 +224,8 @@ public class EditorDraggableNode : MonoBehaviour
         rectTransform.GetWorldCorners(corners);
         Rect nodeRect = new Rect(corners[0], corners[2] - corners[0]);
         Vector2 pointer = Input.mousePosition;
+
+        UpdateHUD(pointer, nodeRect);
 
         //Logger.Log("Pointer: " + pointer);
         //Logger.Log("Node: " + nodeRect);
@@ -302,17 +310,71 @@ public class EditorDraggableNode : MonoBehaviour
             // Other events: Deleting node
             if (Input.GetKeyDown(KeyCode.Delete) && nodeRect.Contains(pointer) && GetComponent<NodeBase>() && !owner.editingNodeProperty)
             {
+                clueHud.SetCurrentPrompt(null, null);
                 GetComponent<NodeBase>().DeleteNode();
             }
 
             if (GetComponent<NodeBase>())
             {
+                if(!owner.editingNodeProperty && owner.EditorActive)
+                {
+                    if(nodeRect.Contains(pointer))
+                    {
+                        if (owner.nodeClipboard)
+                        {
+                            clueHud.CopyPasteNodePrompt.SetActive(true);
+                            clueHud.CopyNodePrompt.SetActive(false);
+                            clueHud.PasteNodePrompt.SetActive(false);
+                        }
+                        else
+                        {
+                            clueHud.CopyPasteNodePrompt.SetActive(false);
+                            clueHud.CopyNodePrompt.SetActive(true);
+                            clueHud.PasteNodePrompt.SetActive(false);
+                        }
+                    }
+                    else if(clueHud.hoveredNode == gameObject)
+                    {
+                        if (owner.nodeClipboard)
+                        {
+                            clueHud.CopyPasteNodePrompt.SetActive(false);
+                            clueHud.CopyNodePrompt.SetActive(false);
+                            clueHud.PasteNodePrompt.SetActive(true);
+                        }
+                        else
+                        {
+                            clueHud.CopyPasteNodePrompt.SetActive(false);
+                            clueHud.CopyNodePrompt.SetActive(false);
+                            clueHud.PasteNodePrompt.SetActive(false);
+                        }
+                    }
+                    else if(clueHud.hoveredNode == null)
+                    {
+                        if (owner.nodeClipboard)
+                        {
+                            clueHud.CopyPasteNodePrompt.SetActive(false);
+                            clueHud.CopyNodePrompt.SetActive(false);
+                            clueHud.PasteNodePrompt.SetActive(true);
+                        }
+                        else
+                        {
+                            clueHud.CopyPasteNodePrompt.SetActive(false);
+                            clueHud.CopyNodePrompt.SetActive(false);
+                            clueHud.PasteNodePrompt.SetActive(false);
+                        }
+                    }
+                }
+
                 if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl))
                 {
                     // Other events: Copying a node
                     if (Input.GetKeyDown(KeyCode.C) && !owner.editingNodeProperty && nodeRect.Contains(pointer))
                     {
                         owner.nodeClipboard = gameObject;
+
+                        clueHud.CopyPasteNodePrompt.SetActive(true);
+                        clueHud.CopyNodePrompt.SetActive(false);
+                        clueHud.PasteNodePrompt.SetActive(false);
                     }
                     // Other events: Pasting a node
                     else if (Input.GetKeyDown(KeyCode.V) && !owner.editingNodeProperty && owner.nodeClipboard == gameObject)
@@ -354,5 +416,57 @@ public class EditorDraggableNode : MonoBehaviour
         timeSinceClick += Time.deltaTime;
 
         lastFramePointer = pointer;
+    }
+
+    void UpdateHUD(Vector2 pointer, Rect nodeRect)
+    {
+        if (nodeRect.Contains(pointer) && owner.EditorActive)
+        {
+            if (name != "previewNode")
+            {
+                clueHud.hoveredNode = gameObject;
+            }
+
+            if (!owner.editingNodeProperty && !owner.linkingNodes)
+            {
+                if (GetComponent<NodeBase>())
+                {
+                    if (!GetComponent<ProgramStart>() && !GetComponent<ProgramEnd>())
+                    {
+                        clueHud.SetCurrentPrompt(clueHud.HoveredOverNodePrompt, gameObject);
+                    }
+                }
+                else if(name != "previewNode" && transform.parent != owner && name != "FuncName")
+                {
+                    clueHud.SetCurrentPrompt(clueHud.HoveredOverParamPrompt, gameObject);
+                }
+            }
+        }
+        else if (owner.editingNodeProperty && owner.editingNodeInPlaceRect != null && owner.editingNodeInPlaceRect.Contains(pointer))
+        {
+            if (clueHud.currentPromptCaller == gameObject)
+            {
+                clueHud.SetCurrentPrompt(clueHud.EditingParamHoveredPrompt, gameObject);
+            }
+        }
+        else if (owner.editingNodeProperty && owner.editingNodeInPlaceRect != null && !owner.editingNodeInPlaceRect.Contains(pointer))
+        {
+            if(clueHud.currentPromptCaller == gameObject)
+            {
+                clueHud.SetCurrentPrompt(clueHud.EditingParamUnhoveredPrompt, gameObject);
+            }
+        }
+        else if ((!nodeRect.Contains(pointer) && owner.EditorActive) || (!owner.EditorActive))
+        {
+            if (clueHud.currentPromptCaller == gameObject && (clueHud.currentPromptSet == clueHud.HoveredOverNodePrompt || clueHud.currentPromptSet == clueHud.HoveredOverParamPrompt))
+            {
+                clueHud.SetCurrentPrompt(null, null);
+            }
+
+            if (clueHud.hoveredNode == gameObject)
+            {
+                clueHud.hoveredNode = null;
+            }
+        }
     }
 }

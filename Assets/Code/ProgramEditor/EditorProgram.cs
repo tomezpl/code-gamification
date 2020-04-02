@@ -28,6 +28,8 @@ public class EditorProgram : MonoBehaviour
     // initial pose for the newly added node
     // will be set to the mouse cursor's last position before pressing TAB
     public Vector2 newNodeInitPos;
+
+    private ClueHUD clueHud;
     
     public bool EditorActive {
         get { return editorActive; }
@@ -57,8 +59,8 @@ public class EditorProgram : MonoBehaviour
 
     // Editor state
     public enum LinkingMode { NextNode, FirstBodyNode }
-    private bool choosingNode = false;
-    private bool choosingFunctionCall = false;
+    public bool choosingNode = false;
+    public bool choosingFunctionCall = false;
     GameObject addedNode = null;
     public bool linkingNodes = false;
     public LinkingMode linkingNodeMode = LinkingMode.NextNode;
@@ -100,6 +102,8 @@ public class EditorProgram : MonoBehaviour
                 {
                     Destroy(linkingPreviewLine);
                 }
+
+                clueHud.SetCurrentPrompt(null, null);
             }
 
             if (!string.IsNullOrWhiteSpace(programStart.Serialize()))
@@ -138,6 +142,8 @@ public class EditorProgram : MonoBehaviour
         {
             Destroy(linkingPreviewLine);
         }
+
+        nodeClipboard = null;
     }
 
     void EnableEditor()
@@ -315,6 +321,8 @@ public class EditorProgram : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        clueHud = GameObject.Find("ClueHUD").GetComponent<ClueHUD>();
+
         // Load editor node prefabs from Resources
         if(nodePrefabs == null)
         {
@@ -387,6 +395,7 @@ public class EditorProgram : MonoBehaviour
             if(choosingNode)
             {
                 newNodeInitPos = Input.mousePosition;
+                clueHud.SetCurrentPrompt(null, null);
             }
             choosingFunctionCall = choosingNode && choosingFunctionCall;
         }
@@ -549,6 +558,8 @@ public class EditorProgram : MonoBehaviour
                 editingNodeProperty = false;
                 editedNodeFocused = false;
                 editingNodeInPlace = false;
+
+                clueHud.SetCurrentPrompt(null, null);
             }
 
             if(editedNodeValue.Contains("\n"))
@@ -558,6 +569,8 @@ public class EditorProgram : MonoBehaviour
                 editingNodeProperty = false;
                 editingNodeInPlace = false;
                 editedNodeFocused = false;
+
+                clueHud.SetCurrentPrompt(null, null);
             }
         }
     }

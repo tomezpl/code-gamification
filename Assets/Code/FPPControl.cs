@@ -10,6 +10,8 @@ public class FPPControl : ControlBase
     public float walkSpeed = 5.0f;
     public float sprintSpeed = 7.5f;
 
+    private ClueHUD clueHud;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -20,6 +22,18 @@ public class FPPControl : ControlBase
         GameObject parentObj = transform.parent.gameObject;
         transform.parent = null;
         GameObject.Destroy(parentObj);
+
+        clueHud = GameObject.Find("ClueHUD").GetComponent<ClueHUD>();
+    }
+
+    protected override void Update()
+    {
+        base.Update();
+
+        if (clueHud.currentPromptCaller != null && clueHud.currentPromptCaller.GetComponent<EditorDraggableNode>() && !clueHud.currentPromptCaller.GetComponent<EditorDraggableNode>().enabled)
+        {
+            clueHud.SetCurrentPrompt(null, null);
+        }
     }
 
     // Process character movement input

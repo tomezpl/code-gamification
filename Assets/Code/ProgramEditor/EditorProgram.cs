@@ -568,7 +568,7 @@ public class EditorProgram : MonoBehaviour
                 clueHud.SetCurrentPrompt(null, null);
             }
 
-            if(editedNodeValue.Contains("\n"))
+            if(editedNodeValue != null && editedNodeValue.Contains("\n"))
             {
                 editedNodeValue = editedNodeValue.Replace("\n", "");
                 editingNodeFinishedClb.DynamicInvoke(editedNodeValue);

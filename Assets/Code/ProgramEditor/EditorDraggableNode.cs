@@ -329,7 +329,7 @@ public class EditorDraggableNode : MonoBehaviour
 
             if (GetComponent<NodeBase>())
             {
-                if(!owner.editingNodeProperty && owner.EditorActive && !GetComponent<ProgramStart>() && !GetComponent<ProgramEnd>())
+                if(!owner.editingNodeProperty && owner.EditorActive && !GetComponent<ProgramStart>() && !GetComponent<ProgramEnd>() && !owner.choosingFunctionCall && !owner.choosingNode)
                 {
                     if(nodeRect.Contains(pointer))
                     {

@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class ClueHUD : MonoBehaviour
 {
@@ -15,6 +16,10 @@ public class ClueHUD : MonoBehaviour
     public GameObject CopyPasteNodePrompt;
     public GameObject PasteNodePrompt;
 
+    // Node linking prompts
+    public GameObject LinkNodePrompt;
+    public Text LinkNodeCaption;
+
     public GameObject currentPromptSet = null;
     public GameObject currentPromptCaller = null;
 
@@ -26,6 +31,7 @@ public class ClueHUD : MonoBehaviour
 
     private EditorProgram[] editors;
     public GameObject hoveredNode;
+    public EditorProgram.LinkingMode potentialLinkingMode;
 
     // Start is called before the first frame update
     void Start()
@@ -81,7 +87,7 @@ public class ClueHUD : MonoBehaviour
             }
         }
 
-        if (currentEditor && currentEditor.EditorActive && !currentEditor.editingNodeProperty)
+        if (currentEditor && currentEditor.EditorActive && !currentEditor.editingNodeProperty && !currentEditor.linkingNodes)
         {
             if (CopyPasteNodePrompt.activeInHierarchy || CopyNodePrompt.activeInHierarchy || PasteNodePrompt.activeInHierarchy)
             {
@@ -96,6 +102,58 @@ public class ClueHUD : MonoBehaviour
             PasteNodePrompt.SetActive(false);
         }
 
+        if(currentEditor && currentEditor.EditorActive && currentEditor.linkingNodes && hoveredNode)
+        {
+            if(currentEditor.linkingNodeMode == EditorProgram.LinkingMode.NextNode)
+            {
+                if(!hoveredNode.GetComponent<ProgramStart>())
+                {
+                    LinkNodeCaption.text = "Set as next node";
+                    LinkNodePrompt.SetActive(true);
+                }
+
+                if(hoveredNode == currentEditor.linkingNodesObjects[0])
+                {
+                    LinkNodeCaption.text = "Remove link";
+                    LinkNodePrompt.SetActive(true);
+                }
+            }
+            else
+            {
+                if (!hoveredNode.GetComponent<ProgramStart>())
+                {
+                    LinkNodeCaption.text = "Set as first node";
+                    LinkNodePrompt.SetActive(true);
+                }
+
+                if (hoveredNode == currentEditor.linkingNodesObjects[0])
+                {
+                    LinkNodeCaption.text = "Remove link";
+                    LinkNodePrompt.SetActive(true);
+                }
+            }
+        }
+        else if(currentEditor && currentEditor.EditorActive && !currentEditor.linkingNodes && hoveredNode)
+        {
+            if (!hoveredNode.GetComponent<ProgramEnd>())
+            {
+                if (potentialLinkingMode == EditorProgram.LinkingMode.FirstBodyNode && hoveredNode.GetComponent<LogicalBlock>())
+                {
+                    LinkNodeCaption.text = hoveredNode.GetComponent<WhileLoop>() ? "Start loop" : "Start\nIf statement";
+                    LinkNodePrompt.SetActive(true);
+                }
+                else
+                {
+                    LinkNodeCaption.text = "Connect to\nnext node";
+                    LinkNodePrompt.SetActive(true);
+                }
+            }
+        }
+        else
+        {
+            LinkNodePrompt.SetActive(false);
+        }
+
         foreach (GameObject promptSet in promptSets)
         {
             if (currentPromptSet != promptSet)
@@ -104,7 +162,7 @@ public class ClueHUD : MonoBehaviour
             }
             else
             {
-                if (currentEditor != null && (!currentEditor.choosingNode && !currentEditor.choosingFunctionCall))
+                if (currentEditor == null || (currentEditor != null && (!currentEditor.choosingNode && !currentEditor.choosingFunctionCall)))
                 {
                     promptSet.SetActive(true);
                 }

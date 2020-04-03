@@ -133,7 +133,7 @@ public class ClueHUD : MonoBehaviour
                 }
             }
         }
-        else if(currentEditor && currentEditor.EditorActive && !currentEditor.linkingNodes && hoveredNode)
+        else if(currentEditor && currentEditor.EditorActive && !currentEditor.linkingNodes && hoveredNode && !currentEditor.editingNodeProperty && !currentEditor.choosingNode && !currentEditor.choosingFunctionCall)
         {
             if (!hoveredNode.GetComponent<ProgramEnd>())
             {

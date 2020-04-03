@@ -329,7 +329,7 @@ public class EditorDraggableNode : MonoBehaviour
 
             if (GetComponent<NodeBase>())
             {
-                if(!owner.editingNodeProperty && owner.EditorActive)
+                if(!owner.editingNodeProperty && owner.EditorActive && !GetComponent<ProgramStart>() && !GetComponent<ProgramEnd>())
                 {
                     if(nodeRect.Contains(pointer))
                     {
@@ -381,7 +381,7 @@ public class EditorDraggableNode : MonoBehaviour
                 if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl))
                 {
                     // Other events: Copying a node
-                    if (Input.GetKeyDown(KeyCode.C) && !owner.editingNodeProperty && nodeRect.Contains(pointer))
+                    if (Input.GetKeyDown(KeyCode.C) && !owner.editingNodeProperty && nodeRect.Contains(pointer) && !GetComponent<ProgramStart>() && !GetComponent<ProgramEnd>())
                     {
                         owner.nodeClipboard = gameObject;
 
@@ -435,7 +435,7 @@ public class EditorDraggableNode : MonoBehaviour
     {
         if (nodeRect.Contains(pointer) && owner.EditorActive)
         {
-            if (name != "previewNode" && GetComponent<NodeBase>())
+            if (name != "previewNode" && (GetComponent<NodeBase>() || owner.editingNodeProperty))
             {
                 clueHud.hoveredNode = gameObject;
             }

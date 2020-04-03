@@ -95,6 +95,9 @@ public class EditorProgram : MonoBehaviour
         {
             if (editorMode == EditorMode.FlowChart)
             {
+                choosingNode = false;
+                choosingFunctionCall = false;
+
                 linkingNodes = false;
                 linkingNodesObjects[0] = linkingNodesObjects[1] = null;
                 // Delete the linking preview line
@@ -144,6 +147,9 @@ public class EditorProgram : MonoBehaviour
         }
 
         nodeClipboard = null;
+
+        choosingNode = false;
+        choosingFunctionCall = false;
     }
 
     void EnableEditor()

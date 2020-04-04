@@ -43,6 +43,21 @@ public class LogicalBlock : CodeBlock
         UpdateUI();
     }
 
+    // Assign itself as ownerLoop to the entire block body
+    public virtual void PropagateOwnership()
+    {
+        if(firstBodyNode != null)
+        {
+            NodeBase currentNode = (NodeBase)firstBodyNode;
+            while(currentNode != null)
+            {
+                currentNode.ownerLoop = this;
+
+                currentNode = (NodeBase)currentNode.nextNode;
+            }
+        }
+    }
+
     // Similar to FunctionCallBase.UpdateFunctionParameters
     public virtual void UpdateUI()
     {

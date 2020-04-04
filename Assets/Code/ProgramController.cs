@@ -223,6 +223,8 @@ public class ProgramController : Interactable
                     programRunning = true;
                     currentNode = program.programStart;
 
+                    editorUi.GetComponent<EditorProgram>().errorNode = null;
+
                     // Make sure Start and End are linked if they're the only nodes in the program
                     if(!HasAnyNodes())
                     {
@@ -297,8 +299,29 @@ public class ProgramController : Interactable
             {
                 if (!waitForNextTick)
                 {
-                    ExecuteNode(currentNode);
-                    string currentLine = currentNode.GetComponent<CodeBlock>() ? ((CodeBlock)currentNode).SerializeBlockHeader() : ((IProgramNode)currentNode).Serialize();
+                    string currentLine = "";
+                    bool errorOut = false;
+                    try
+                    {
+                        ExecuteNode(currentNode);
+                        currentLine = currentNode.GetComponent<CodeBlock>() ? ((CodeBlock)currentNode).SerializeBlockHeader() : ((IProgramNode)currentNode).Serialize();
+                    }
+                    catch (Exception ex)
+                    {
+                        if(ex is FormatException || ex is KeyNotFoundException)
+                        {
+                            // TODO: Notify user of error. Probably something to do with input value or variable.
+                        }
+
+                        currentLine = "ERROR!";
+
+                        editorUi.GetComponent<EditorProgram>().errorNode = currentNode.gameObject;
+
+                        programRunning = false;
+                        currentNode = program.programStart;
+
+                        errorOut = true;
+                    }
                     if (transform.Find("CurrentLine"))
                     {
                         if (!editorUi.GetComponent<EditorProgram>().EditorActive)
@@ -311,6 +334,11 @@ public class ProgramController : Interactable
                         }
                     }
                     GameObject.Find("OutputRenderer").transform.Find("Canvas").GetComponentInChildren<Text>().text = currentLine;
+
+                    if(errorOut)
+                    {
+                        return false;
+                    }
                 }
                 else
                 {
@@ -321,7 +349,7 @@ public class ProgramController : Interactable
                 {
                     if(specialNextNode != null)
                     {
-                        Logger.Log($"Passing speecialNextNode '{specialNextNode.name}'");
+                        Logger.Log($"Passing specialNextNode '{specialNextNode.name}'");
                         currentNode = specialNextNode;
                         specialNextNode = null;
                     }
@@ -374,10 +402,10 @@ public class ProgramController : Interactable
             {
                 programRunning = false;
                 currentNode = program.programStart;
-                GameObject.Find("OutputRenderer").transform.Find("Canvas").GetComponentInChildren<Text>().text = "";
+                GameObject.Find("OutputRenderer").transform.Find("Canvas").GetComponentInChildren<Text>().text = "ERROR!";
                 if (transform.Find("CurrentLine"))
                 {
-                    transform.Find("CurrentLine").gameObject.SetActive(false);
+                    transform.Find("CurrentLine").gameObject.SetActive(true);
                 }
                 return false;
             }
@@ -537,6 +565,9 @@ public class ProgramController : Interactable
                 Logger.Log($"Couldn't find base function {funcName}");
                 break;
             case NodeType.LogicalBlock: case NodeType.WhileLoop:
+                // Make sure all nodes in the block body have their ownerLoop assigned
+                node.GetComponent<LogicalBlock>().PropagateOwnership();
+
                 GameObject.Find("OutputRenderer").transform.Find("Canvas").GetComponentInChildren<Text>().text = ((CodeBlock)currentNode).SerializeBlockHeader();
                 //new WaitForSeconds((float)tickTime);
                 if (node.GetComponent<LogicalBlock>().condition.Evaluate(ref symbolTable))

@@ -75,6 +75,8 @@ public class EditorProgram : MonoBehaviour
     public System.Action<string> editingNodeFinishedClb = null;
     bool editedNodeFocused = false;
 
+    public GameObject errorNode;
+
     public GameObject nodeClipboard;
 
     // FlowChart: the default node editor
@@ -432,6 +434,24 @@ public class EditorProgram : MonoBehaviour
         if (linkingPreviewLine != null && !linkingNodes)
         {
             Destroy(linkingPreviewLine);
+        }
+
+        // Mark error node in red
+        foreach(Image nodeImg in GetComponentsInChildren<Image>())
+        {
+            EditorDraggableNode draggableNode = nodeImg.GetComponent<EditorDraggableNode>();
+            if (draggableNode && draggableNode.color != null && draggableNode.color.Length == 4)
+            {
+                if (nodeImg.gameObject == errorNode)
+                {
+                    nodeImg.color = Color.red;
+                }
+                else
+                {
+                    float[] defaultCol = draggableNode.color;
+                    nodeImg.color = new Color(defaultCol[0], defaultCol[1], defaultCol[2], defaultCol[3]);
+                }
+            }
         }
     }
 

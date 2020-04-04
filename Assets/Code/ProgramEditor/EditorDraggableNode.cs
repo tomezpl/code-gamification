@@ -30,6 +30,8 @@ public class EditorDraggableNode : MonoBehaviour
 
     private ClueHUD clueHud;
 
+    public float[] color = null;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -43,6 +45,12 @@ public class EditorDraggableNode : MonoBehaviour
         }
 
         clueHud = GameObject.Find("ClueHUD").GetComponent<ClueHUD>();
+
+        Image image = GetComponent<Image>();
+        if (image)
+        {
+            color = new float[4] { image.color.r, image.color.g, image.color.b, image.color.a };
+        }
     }
 
     public void Drag(Vector2 input)

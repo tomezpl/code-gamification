@@ -415,6 +415,13 @@ public class EditorDraggableNode : MonoBehaviour
                         copyNode.PrevNodeObject = null;
                         copyNode.prevNode = null;
                         copyNode.ownerLoop = null;
+
+                        if(copyNode.GetComponent<LogicalBlock>())
+                        {
+                            copyNode.GetComponent<LogicalBlock>().firstBodyNode = null;
+                            copyNode.GetComponent<LogicalBlock>().FirstBodyNodeObject = null;
+                        }
+
                         int guidStartIndex = copy.name.IndexOf("-");
                         copy.name = copy.name.Replace("(Clone)", "");
                         copy.name = copy.name.Substring(0, guidStartIndex <= 0 ? copy.name.Length : guidStartIndex) + copy.GetInstanceID();

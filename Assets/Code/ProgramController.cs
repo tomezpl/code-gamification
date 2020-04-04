@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using System.Linq;
 
 // Implement this base class to add function calls that can execute in ExecuteFrame()
 public class ProgramController : Interactable
@@ -35,6 +36,9 @@ public class ProgramController : Interactable
 
     // Variables, constants etc. that are present in this program
     public Dictionary<string, FunctionParameter> symbolTable;
+
+    public List<string> SymbolNames;
+    public List<string> SymbolValues;
 
     public Dictionary<string, System.Delegate> functions;
     public List<string> hiddenFunctions = new List<string> { "create list" };
@@ -174,6 +178,9 @@ public class ProgramController : Interactable
     // Update is called once per frame
     void Update()
     {
+        SymbolNames = new List<string>(symbolTable.Keys);
+        SymbolValues = new List<string>(symbolTable.Values.Select(v => v.Value));
+
         timeSinceTick += Time.deltaTime;
         if(currentNode == program.programStart && currentNode.NextNodeObject != null)
         {
@@ -429,6 +436,57 @@ public class ProgramController : Interactable
         return null;
     }
 
+    // Assigns a value to a symbol name
+    private void SetSymbol(FunctionParameter leftHand, FunctionParameter rightHand)
+    {
+        string symbolVal = ArithmeticOperationBase.GetResult(rightHand.Value, ref symbolTable);
+        string symbolName = "";
+
+        // Is it an array index?
+        string indexName = "";
+        string[] indexSplit = leftHand.Value.Split('[');
+        if (indexSplit != null && indexSplit.Length == 2)
+        {
+            symbolName = indexSplit[0];
+            indexName = indexSplit[1].Substring(0, indexSplit[1].Length - 1);
+            indexName = ArithmeticOperationBase.GetResult(indexName, ref symbolTable);
+            Logger.Log($"\"{currentNode.Serialize()}\": index was {indexName}");
+        }
+        else
+        {
+            symbolName = leftHand.Value;
+        }
+
+        bool isString = leftHand.IsReference ? (symbolTable.ContainsKey(symbolVal) && symbolTable[symbolVal].Value.Trim().StartsWith("\"") && symbolTable[symbolVal].Value.Trim().EndsWith("\"")) : (symbolVal.Trim().StartsWith("\"") && symbolVal.Trim().EndsWith("\""));
+        bool isReference = leftHand.IsReference ? true : !isString && symbolTable.ContainsKey(symbolVal);
+
+        Logger.Log($"indexName={indexName}");
+        if (!string.IsNullOrWhiteSpace(indexName))
+        {
+            if (symbolTable.ContainsKey(indexName))
+            {
+                symbolName += $"[{symbolTable[indexName].Value}]";
+            }
+            else
+            {
+                symbolName += $"[{indexName}]";
+            }
+        }
+
+        Logger.Log($"Assigning {symbolVal} to {symbolName}");
+        double tempNum = 0.0;
+        string assignedType = (isString ? "String" : (symbolVal.Trim() == "True" || symbolVal.Trim() == "False" ? "Boolean" : (double.TryParse(symbolVal.Trim(), out tempNum) ? "Number" : "")));
+        if (!symbolTable.ContainsKey(symbolName))
+        {
+            // TODO: Type = "Int" won't always work, we need a generic type like Number, however Reflection.ParameterInfo needs to be converted in that case
+            symbolTable.Add(symbolName, new FunctionParameter { Name = rightHand.Name, Type = isReference ? symbolTable[symbolVal].Type : assignedType, Value = isReference ? symbolTable[symbolVal].Value : symbolVal }); ;
+        }
+        else
+        {
+            symbolTable[symbolName] = new FunctionParameter { Name = rightHand.Name, Type = isReference ? symbolTable[symbolVal].Type : assignedType, Value = isReference ? symbolTable[symbolVal].Value : symbolVal };
+        }
+    }
+
     // Performs actions defined by the Node
     // TODO: add some core functionality e.g. assigning, arithmetic etc? Then return bool to indicate if anything was invoked from the base method.
     // If not, only then continue to the derived implementations of this.
@@ -455,52 +513,9 @@ public class ProgramController : Interactable
                 return new ExecutionStatus { success = true, handover = false };
             case NodeType.AssignValue:
                 AssignValue assignValue = node.GetComponent<AssignValue>();
-                string symbolVal = ArithmeticOperationBase.GetResult(assignValue.rightHand.Value, ref symbolTable);
-                string symbolName = "";
 
-                // Is it an array index?
-                string indexName = "";
-                string[] indexSplit = assignValue.leftHand.Value.Split('[');
-                if (indexSplit != null && indexSplit.Length == 2)
-                {
-                    symbolName = indexSplit[0];
-                    indexName = indexSplit[1].Substring(0, indexSplit[1].Length - 1);
-                    indexName = ArithmeticOperationBase.GetResult(indexName, ref symbolTable);
-                    Logger.Log($"\"{currentNode.Serialize()}\": index was {indexName}");
-                }
-                else
-                {
-                    symbolName = assignValue.leftHand.Value;
-                }
+                SetSymbol(assignValue.leftHand, assignValue.rightHand);
 
-                bool isString = assignValue.leftHand.IsReference ? (symbolTable.ContainsKey(symbolVal) && symbolTable[symbolVal].Value.Trim().StartsWith("\"") && symbolTable[symbolVal].Value.Trim().EndsWith("\"")) : (symbolVal.Trim().StartsWith("\"") && symbolVal.Trim().EndsWith("\""));
-                bool isReference = assignValue.leftHand.IsReference ? true : !isString && symbolTable.ContainsKey(symbolVal);
-
-                Logger.Log($"indexName={indexName}");
-                if (!string.IsNullOrWhiteSpace(indexName))
-                {
-                    if(symbolTable.ContainsKey(indexName))
-                    {
-                        symbolName += $"[{symbolTable[indexName].Value}]";
-                    }
-                    else
-                    {
-                        symbolName += $"[{indexName}]";
-                    }
-                }
-
-                Logger.Log($"Assigning {symbolVal} to {symbolName}");
-                double tempNum = 0.0;
-                string assignedType = (isString ? "String" : (symbolVal.Trim() == "True" || symbolVal.Trim() == "False" ? "Boolean" : (double.TryParse(symbolVal.Trim(), out tempNum) ? "Number" : "")));
-                if (!symbolTable.ContainsKey(symbolName))
-                {
-                    // TODO: Type = "Int" won't always work, we need a generic type like Number, however Reflection.ParameterInfo needs to be converted in that case
-                    symbolTable.Add(symbolName, new FunctionParameter { Name = assignValue.rightHand.Name, Type = isReference ? symbolTable[symbolVal].Type : assignedType, Value = isReference ? symbolTable[symbolVal].Value : symbolVal }); ;
-                }
-                else
-                {
-                    symbolTable[symbolName] = new FunctionParameter { Name = assignValue.rightHand.Name, Type = isReference ? symbolTable[symbolVal].Type : assignedType, Value = isReference ? symbolTable[symbolVal].Value : symbolVal };
-                }
                 return new ExecutionStatus { success = true, handover = false };
             case NodeType.ArithmeticOperationBase:
                 // Arithmetic only takes a tick when it gets executed
@@ -559,6 +574,11 @@ public class ProgramController : Interactable
                         {
                             Logger.Log($"Adding array element \"{arrName}[{i}]\"");
                             symbolTable.Add($"{arrName}[{i}]", new FunctionParameter());
+                        }
+                        for(int i = 2; i < 2 + count; i++)
+                        {
+                            FunctionParameter listElement = node.GetComponent<AllocateArray>().parameters[i];
+                            SetSymbol(new FunctionParameter { Value = listElement.Name }, new FunctionParameter { Value = listElement.Value }); 
                         }
                         return new ExecutionStatus { success = true, handover = false };
                     }

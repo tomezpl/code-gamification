@@ -90,16 +90,19 @@ public class ArithmeticOperationBase : FunctionCallBase
             return "";
         }
 
-        if (!(expr.Contains("+") || expr.Contains("-") || expr.Contains("%") || expr.Contains("/") || expr.Contains("*")))
-            return expr;
-
-        foreach(string symbol in symbolTable.Keys)
+        // Look up symbol value if expr is a name
+        foreach (string symbol in symbolTable.Keys)
         {
-            if(expr.Contains(symbol))
+            List<string> exprSplit = new List<string>(expr.Split(new char[] { ' ', '+', '-', '%', '/', '*' }));
+            if (exprSplit != null && exprSplit.Contains(symbol))
             {
                 expr = expr.Replace(symbol, symbolTable[symbol].Value);
             }
         }
+
+        // If no arithmetic needs to be done, just return the value
+        if (!(expr.Contains("+") || expr.Contains("-") || expr.Contains("%") || expr.Contains("/") || expr.Contains("*")))
+            return expr;
 
         try
         {

@@ -7282,6 +7282,8 @@ MonoBehaviour:
   expectedOutput: 
   programRunning: 0
   processingDone: 1
+  SymbolNames: []
+  SymbolValues: []
   hiddenFunctions:
   - create list
   outputBuffer: 
@@ -12111,7 +12113,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 0}
   m_AnchorMax: {x: 1, y: 0}
-  m_AnchoredPosition: {x: -608.3, y: 76.1}
+  m_AnchoredPosition: {x: -608.3, y: 76.1001}
   m_SizeDelta: {x: 1216.5, y: 152.1}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &1180826129
@@ -12796,6 +12798,8 @@ MonoBehaviour:
   expectedOutput: 
   programRunning: 0
   processingDone: 1
+  SymbolNames: []
+  SymbolValues: []
   hiddenFunctions:
   - create list
   outputBuffer: 
@@ -14381,6 +14385,8 @@ MonoBehaviour:
   expectedOutput: 
   programRunning: 0
   processingDone: 1
+  SymbolNames: []
+  SymbolValues: []
   hiddenFunctions:
   - create list
   outputBuffer: 
@@ -16971,6 +16977,8 @@ MonoBehaviour:
   expectedOutput: 
   programRunning: 0
   processingDone: 1
+  SymbolNames: []
+  SymbolValues: []
   hiddenFunctions:
   - create list
   outputBuffer: 
@@ -17495,6 +17503,8 @@ MonoBehaviour:
   expectedOutput: 
   programRunning: 0
   processingDone: 1
+  SymbolNames: []
+  SymbolValues: []
   hiddenFunctions:
   - create list
   outputBuffer: 
@@ -17978,6 +17988,8 @@ MonoBehaviour:
   expectedOutput: 
   programRunning: 0
   processingDone: 1
+  SymbolNames: []
+  SymbolValues: []
   hiddenFunctions:
   - create list
   outputBuffer: 

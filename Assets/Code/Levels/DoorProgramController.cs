@@ -77,6 +77,8 @@ public class DoorProgramController : ProgramController
 
                         string val = (string)functionCall.GetRawParameters(symbolTable)[0];
 
+                        Logger.Log($"Calling door function with {val}");
+
                         // Check literal & symbol table
                         // TODO: make symbol lookup more robust/universal? A template function maybe?
                         if (bool.TryParse(val, out state) || bool.TryParse(symbolTable[val].Value, out state))

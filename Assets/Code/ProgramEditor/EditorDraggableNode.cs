@@ -93,6 +93,10 @@ public class EditorDraggableNode : MonoBehaviour
             if (transform.name.Contains("Parameter") && name != "Parameter")
             {
                 paramIndex = System.Convert.ToInt32(transform.name.Substring("Parameter".Length)) - 1;
+                /*if (GetComponentInParent<FunctionCallBase>())
+                {
+                    paramIndex = (GetComponentInParent<FunctionCallBase>().parameters.Count - 1) - paramIndex;
+                }*/
             }
             // FunctionCallBase
             if (paramIndex >= 0)
@@ -181,6 +185,10 @@ public class EditorDraggableNode : MonoBehaviour
         if (transform.name.Contains("Parameter") && name != "Parameter")
         {
             paramIndex = System.Convert.ToInt32(transform.name.Substring("Parameter".Length)) - 1;
+            /*if(GetComponentInParent<FunctionCallBase>())
+            {
+                paramIndex = (GetComponentInParent<FunctionCallBase>().parameters.Count-1) - paramIndex;
+            }*/
         }
         if (paramIndex >= 0)
         {

@@ -294,6 +294,28 @@ public class EditorProgram : MonoBehaviour
             }
             else
             {
+                GameObject nextObj = linkingNodesObjects[0].GetComponent<NodeBase>().NextNodeObject;
+                NodeBase nextObjNode = null;
+                if (nextObj != null)
+                    nextObjNode = nextObj.GetComponent<NodeBase>();
+
+                // obj0 is no longer its former nextNode's prevNode
+                if (nextObjNode != null && nextObjNode.PrevNodeObject != null && nextObjNode.PrevNodeObject == linkingNodesObjects[0])
+                {
+                    nextObjNode.PrevNodeObject.GetComponent<NodeBase>().NextNodeObject = null;
+                    nextObjNode.PrevNodeObject.GetComponent<NodeBase>().nextNode = null;
+                    nextObjNode.PrevNodeObject = null;
+                }
+                nextObj = linkingNodesObjects[1];
+                nextObjNode = nextObj.GetComponent<NodeBase>();
+                // assign obj0 as obj1's prevNode, unassigning obj1's former prevNode
+                if (nextObjNode != null && nextObjNode.PrevNodeObject != null && nextObjNode.PrevNodeObject != linkingNodesObjects[0])
+                {
+                    nextObjNode.PrevNodeObject.GetComponent<NodeBase>().NextNodeObject = null;
+                    nextObjNode.PrevNodeObject.GetComponent<NodeBase>().nextNode = null;
+                    nextObjNode.PrevNodeObject = linkingNodesObjects[0];
+                }
+
                 linkingNodesObjects[0].GetComponent<CodeBlock>().FirstBodyNodeObject = linkingNodesObjects[1];
                 linkingNodesObjects[1].GetComponent<NodeBase>().PrevNodeObject = linkingNodesObjects[0];
             }
@@ -783,7 +805,7 @@ public class EditorProgram : MonoBehaviour
             {
                 RectTransform prevTransform = linkDesc.prev.GetComponent<RectTransform>(), nextTransform = linkDesc.next.GetComponent<RectTransform>();
                 Rect prevRect = prevTransform.rect, nextRect = nextTransform.rect;
-                bool isFirstBodyNodeLink = (linkDesc.prev.GetComponent<CodeBlock>() && linkDesc.prev.GetComponent<CodeBlock>().FirstBodyNodeObject == linkDesc.next.gameObject) || (linkingNodes && linkingNodeMode == LinkingMode.FirstBodyNode && prevTransform.gameObject == linkingNodesObjects[0]);
+                bool isFirstBodyNodeLink = (linkDesc.prev.GetComponent<CodeBlock>() && linkDesc.prev.GetComponent<CodeBlock>().FirstBodyNodeObject == linkDesc.next.gameObject) || (linkingNodes && linkingNodeMode == LinkingMode.FirstBodyNode && prevTransform.gameObject == linkingNodesObjects[0] && nextTransform.name == "previewNode");
                 if (prevTransform.localPosition.x + prevRect.width + connectorPadding < nextTransform.localPosition.x)
                 {
                     line.positionCount = 4 - (isFirstBodyNodeLink ? 1 : 0);

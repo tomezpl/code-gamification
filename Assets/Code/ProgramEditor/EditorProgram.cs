@@ -30,6 +30,9 @@ public class EditorProgram : MonoBehaviour
     public Vector2 newNodeInitPos;
 
     private ClueHUD clueHud;
+
+    public double referenceFontSize = 24.0;
+    public Vector2 referenceScreenSize = new Vector2(1000, 1);
     
     public bool EditorActive {
         get { return editorActive; }
@@ -365,8 +368,11 @@ public class EditorProgram : MonoBehaviour
             //nodePrefabs.Add("ArithmeticOperationBase", new KeyValuePair<string, GameObject>("Arithmetic: Performs arithmetic math operations.", Resources.Load("Prefabs/ProgramEditor/Nodes/Operations/ArithmeticAdd") as GameObject));
 
             nodePrefabs.Add("LogicalBlock", new KeyValuePair<string, GameObject>("If Statement: Runs a block of code if a condition is met.", Resources.Load("Prefabs/ProgramEditor/Nodes/IfStatement") as GameObject));
+            nodePrefabs.Add("ElseBlock", new KeyValuePair<string, GameObject>("Else: Runs a block of code if its linked If Statement condition is not met. Must appear after an If Statement.", Resources.Load("Prefabs/ProgramEditor/Nodes/ElseBlock") as GameObject));
+
             nodePrefabs.Add("WhileLoop", new KeyValuePair<string, GameObject>("While loop: Repeats a block of code as long as condition is met.", Resources.Load("Prefabs/ProgramEditor/Nodes/WhileLoop") as GameObject));
 
+            nodePrefabs.Add("Break", new KeyValuePair<string, GameObject>("Break: Terminates execution of the loop early and moves to the node after it.", Resources.Load("Prefabs/ProgramEditor/Nodes/Break") as GameObject));
             nodePrefabs.Add("Continue", new KeyValuePair<string, GameObject>("Continue: Moves to the next iteration of the loop without waiting for the current one to finish.", Resources.Load("Prefabs/ProgramEditor/Nodes/Continue") as GameObject));
         }
 
@@ -495,9 +501,19 @@ public class EditorProgram : MonoBehaviour
     {
         GUI.skin = guiSkin;
 
+        // Set font size according to screen width
+        if ((int)Screen.width > 0)
+        {
+            double fontScaleFactor = (referenceScreenSize.x / Screen.width);
+            int fontSize = (int)(referenceFontSize / Math.Max(fontScaleFactor, 0.01));
+            GUI.skin.button.fontSize = fontSize;
+            GUI.skin.box.fontSize = fontSize;
+        }
+
         if (choosingNode)
         {
-            GUI.Box(new Rect(ndcToScreen(0.5f - 0.75f / 2.0f, 0.25f), ndcToScreen(0.75f, 0.5f)), !choosingFunctionCall ? "Choose a node type to add:" : "Choose function to call");
+            Vector2 boxSize = new Vector2(0.75f, 0.625f);
+            GUI.Box(new Rect(ndcToScreen(0.5f - boxSize.x / 2.0f, 0.5f - boxSize.y / 2.0f), ndcToScreen(boxSize)), !choosingFunctionCall ? "Choose a node type to add:" : "Choose function to call");
 
             if (!choosingFunctionCall)
             {
@@ -557,7 +573,6 @@ public class EditorProgram : MonoBehaviour
                     }
                     functionNames.Add($"{functionName}({paramList})");
                 }
-                functionNames.Add("Other: type function name manually.");
 
                 for (int i = 0; i < functionNames.Count; i++)
                 {
@@ -566,15 +581,7 @@ public class EditorProgram : MonoBehaviour
                     bool pressed = GUI.Button(new Rect(ndcToScreen(0.5f - buttonWidth / 2.0f, 0.3f + buttonHeight * (float)i + 0.01f * (float)i), ndcToScreen(buttonWidth, buttonHeight)), functionNames[i]);
                     if (pressed)
                     {
-                        // Last functionName is always the manually typed function
-                        if (i != functionNames.Count - 1)
-                        {
-                            addedNode.GetComponent<EditorDraggableNode>().FunctionNameEditingFinished(functionNames[i].Substring(0, functionNames[i].IndexOf('(')));
-                        }
-                        else
-                        {
-                            addedNode.GetComponent<EditorDraggableNode>().FunctionNameEditingFinished("");
-                        }
+                        addedNode.GetComponent<EditorDraggableNode>().FunctionNameEditingFinished(functionNames[i].Substring(0, functionNames[i].IndexOf('(')));
                         choosingNode = false;
                         choosingFunctionCall = false;
                         break;

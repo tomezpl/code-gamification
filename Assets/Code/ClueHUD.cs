@@ -139,7 +139,7 @@ public class ClueHUD : MonoBehaviour
             {
                 if (potentialLinkingMode == EditorProgram.LinkingMode.FirstBodyNode && hoveredNode.GetComponent<LogicalBlock>())
                 {
-                    LinkNodeCaption.text = hoveredNode.GetComponent<WhileLoop>() ? "Start loop" : "Start\nIf statement";
+                    LinkNodeCaption.text = hoveredNode.GetComponent<WhileLoop>() ? "Start loop" : (hoveredNode.GetComponent<ElseBlock>() ? "Start\nElse Block" : "Start\nIf statement");
                     LinkNodePrompt.SetActive(true);
                 }
                 else

@@ -234,7 +234,16 @@ public class FunctionCallBase : NodeBase
         if (functionName != "printNewline")
         {
             return $"{GetFunctionName()}({GetParameterListString()})";
-        }   
+        }
+        else if(functionName == "sleep")
+        {
+            double tickTime = 1.0;
+            if(computer != null)
+            {
+                tickTime = computer.tickTime;
+            }
+            return $"time.sleep({tickTime})";
+        }
         else
         {
             return "print(\"\\n\")";

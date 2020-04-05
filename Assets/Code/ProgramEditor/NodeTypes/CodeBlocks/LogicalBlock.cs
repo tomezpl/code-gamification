@@ -10,6 +10,8 @@ public class LogicalBlock : CodeBlock
 
     public GameObject ConditionalObject;
 
+    public bool evaluatedResult = false;
+
     public override void InitialiseNode()
     {
         base.InitialiseNode();

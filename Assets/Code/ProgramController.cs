@@ -47,7 +47,7 @@ public class ProgramController : Interactable
     public const string HiddenSymbolPrefix = "_INTERNAL_GAME:";
 
     // This is used by CheckNodeType
-    public enum NodeType { Unknown, FunctionCallBase, ProgramStart, ArithmeticOperationBase, CodeBlock, AssignValue, ProgramEnd, LogicalBlock, WhileLoop, AllocateArray, Continue };
+    public enum NodeType { Unknown, FunctionCallBase, ProgramStart, ArithmeticOperationBase, CodeBlock, AssignValue, ProgramEnd, LogicalBlock, WhileLoop, AllocateArray, Continue, Break, ElseBlock };
 
     public string outputBuffer = "";
 
@@ -110,7 +110,7 @@ public class ProgramController : Interactable
     {
         Dictionary<string, Delegate> ret = new Dictionary<string, Delegate>();
 
-        ret.Add("wait", new Action(Wait));
+        ret.Add("sleep", new Action(Wait));
         ret.Add("print", new System.Action<string>(OutPrint));
         ret.Add("printNewline", new Action(OutPrintNewline));
         ret.Add("create list", new Action<string, string>(CreateList));
@@ -438,11 +438,15 @@ public class ProgramController : Interactable
 
         if (node.gameObject.GetComponent<WhileLoop>())
             return NodeType.WhileLoop;
+        if (node.gameObject.GetComponent<ElseBlock>())
+            return NodeType.ElseBlock;
         if (node.gameObject.GetComponent<LogicalBlock>())
             return NodeType.LogicalBlock;
         if (node.gameObject.GetComponent<CodeBlock>())
             return NodeType.CodeBlock;
 
+        if (node.gameObject.GetComponent<Break>())
+            return NodeType.Break;
         if (node.gameObject.GetComponent<Continue>())
             return NodeType.Continue;
 
@@ -564,13 +568,29 @@ public class ProgramController : Interactable
                 }
                 Logger.Log($"Couldn't find base function {funcName}");
                 break;
-            case NodeType.LogicalBlock: case NodeType.WhileLoop:
+            case NodeType.LogicalBlock: case NodeType.WhileLoop: case NodeType.ElseBlock:
                 // Make sure all nodes in the block body have their ownerLoop assigned
                 node.GetComponent<LogicalBlock>().PropagateOwnership();
 
                 GameObject.Find("OutputRenderer").transform.Find("Canvas").GetComponentInChildren<Text>().text = ((CodeBlock)currentNode).SerializeBlockHeader();
-                //new WaitForSeconds((float)tickTime);
-                if (node.GetComponent<LogicalBlock>().condition.Evaluate(ref symbolTable))
+                //new WaitForSeconds((float)tickTime
+
+                bool evaluatedResult = false;
+                // ElseBlocks should activate when its associated LogicalBlocks evaluate as false.
+                if (node.GetComponent<ElseBlock>())
+                {
+                    if (node.PrevNodeObject.GetComponent<LogicalBlock>() && !node.PrevNodeObject.GetComponent<ElseBlock>() && !node.PrevNodeObject.GetComponent<WhileLoop>())
+                    {
+                        evaluatedResult = !node.PrevNodeObject.GetComponent<LogicalBlock>().evaluatedResult;
+                    }
+                }
+                else
+                {
+                    evaluatedResult = node.GetComponent<LogicalBlock>().condition.Evaluate(ref symbolTable);
+                }
+
+                node.GetComponent<LogicalBlock>().evaluatedResult = evaluatedResult;
+                if (evaluatedResult && ((!node.GetComponent<WhileLoop>()) || (node.GetComponent<WhileLoop>() && !node.GetComponent<WhileLoop>().breakNow)))
                 {
                     NodeBase nodeToFollow = (NodeBase)(node.GetComponent<LogicalBlock>().firstBodyNode);
                     if(nodeToFollow != null)
@@ -634,6 +654,31 @@ public class ProgramController : Interactable
                         }
                     }
                     if(owner == null)
+                    {
+                        return new ExecutionStatus { success = false, handover = false };
+                    }
+                }
+                break;
+            case NodeType.Break:
+                if(node.GetComponent<Break>())
+                {
+                    // Find the while loop
+                    LogicalBlock owner = node.ownerLoop;
+                    while(owner != null)
+                    {
+                        WhileLoop loop = owner.GetComponent<WhileLoop>();
+                        if (loop != null)
+                        {
+                            loop.breakNow = true;
+                            currentNode = loop;
+                            return ExecuteNode(currentNode);
+                        }
+                        else
+                        {
+                            owner = owner.ownerLoop;
+                        }
+                    }
+                    if (owner == null)
                     {
                         return new ExecutionStatus { success = false, handover = false };
                     }

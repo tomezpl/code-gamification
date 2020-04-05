@@ -468,6 +468,10 @@ public class EditorProgram : MonoBehaviour
                 {
                     nodeImg.color = Color.red;
                 }
+                else if(programController.currentNode != null && nodeImg.gameObject == programController.currentNode.gameObject)
+                {
+                    nodeImg.color = Color.white;
+                }
                 else
                 {
                     float[] defaultCol = draggableNode.color;

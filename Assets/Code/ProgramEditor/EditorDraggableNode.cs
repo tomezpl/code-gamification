@@ -337,7 +337,7 @@ public class EditorDraggableNode : MonoBehaviour
             }
 
             // Other events: Deleting node
-            if (Input.GetKeyDown(KeyCode.Delete) && nodeRect.Contains(pointer) && GetComponent<NodeBase>() && !owner.editingNodeProperty)
+            if (Input.GetKeyDown(KeyCode.Delete) && nodeRect.Contains(pointer) && GetComponent<NodeBase>() && !owner.editingNodeProperty && !GetComponent<ProgramEnd>() && !GetComponent<ProgramStart>())
             {
                 clueHud.SetCurrentPrompt(null, null);
                 GetComponent<NodeBase>().DeleteNode();

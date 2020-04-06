@@ -166,6 +166,11 @@ public class FunctionCallBase : NodeBase
 
                 paramObject.name = $"Parameter{paramIdx+1}";
 
+                if(paramObject.GetComponent<EditorDraggableNode>())
+                {
+                    paramObject.GetComponent<EditorDraggableNode>().enabled = true;
+                }
+
                 param = paramObject.transform;
 
                 if (computer != null && computer.symbolTable != null)

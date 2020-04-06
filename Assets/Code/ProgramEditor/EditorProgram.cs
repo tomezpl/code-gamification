@@ -124,6 +124,16 @@ public class EditorProgram : MonoBehaviour
         }
     }
 
+    void ToggleLineRendering(bool state)
+    {
+        lineCanvas.worldCamera.enabled = state;
+        lineCanvas.GetComponent<Canvas>().enabled = state;
+        foreach (LineRenderer line in lineCanvas.GetComponentsInChildren<LineRenderer>())
+        {
+            line.enabled = state;
+        }
+    }
+
     void DisableEditor()
     {
         Cursor.lockState = CursorLockMode.Locked;
@@ -132,12 +142,7 @@ public class EditorProgram : MonoBehaviour
         {
             draggable.enabled = false;
         }
-        lineCanvas.worldCamera.enabled = false;
-        lineCanvas.GetComponent<Canvas>().enabled = false;
-        foreach (LineRenderer line in lineCanvas.GetComponentsInChildren<LineRenderer>())
-        {
-            line.enabled = false;
-        }
+        ToggleLineRendering(false);
         if (GameObject.Find("Player"))
             GameObject.Find("Player").GetComponentInChildren<Camera>().enabled = true;
         transform.Find("Canvas").GetComponent<Canvas>().enabled = false;
@@ -167,12 +172,7 @@ public class EditorProgram : MonoBehaviour
         {
             draggable.enabled = true;
         }
-        lineCanvas.worldCamera.enabled = true;
-        lineCanvas.GetComponent<Canvas>().enabled = true;
-        foreach(LineRenderer line in lineCanvas.GetComponentsInChildren<LineRenderer>())
-        {
-            line.enabled = true;
-        }
+        ToggleLineRendering(true);
         if (GameObject.Find("Player"))
             GameObject.Find("Player").GetComponentInChildren<Camera>().enabled = false;
         transform.Find("Canvas").GetComponent<Canvas>().enabled = true;
@@ -409,6 +409,7 @@ public class EditorProgram : MonoBehaviour
         }
 
         DrawNodeLinks();
+        ToggleLineRendering(editorActive && editorMode == EditorMode.FlowChart);
 
         // Editor creation occurs at startup so we may need a couple of frames to disable it for good measure?
         // (not sure how Unity's script execution order works in detail...)

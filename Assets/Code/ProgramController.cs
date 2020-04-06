@@ -358,7 +358,10 @@ public class ProgramController : Interactable
                             transform.Find("CurrentLine").gameObject.SetActive(false);
                         }
                     }
-                    GameObject.Find("OutputRenderer").transform.Find("Canvas").GetComponentInChildren<Text>().text = currentLine;
+                    if (DistanceCheck())
+                    {
+                        GameObject.Find("OutputRenderer").transform.Find("Canvas").GetComponentInChildren<Text>().text = currentLine;
+                    }
 
                     if(errorOut)
                     {
@@ -597,7 +600,10 @@ public class ProgramController : Interactable
                 // Make sure all nodes in the block body have their ownerLoop assigned
                 node.GetComponent<LogicalBlock>().PropagateOwnership();
 
-                GameObject.Find("OutputRenderer").transform.Find("Canvas").GetComponentInChildren<Text>().text = ((CodeBlock)currentNode).SerializeBlockHeader();
+                if (DistanceCheck())
+                {
+                    GameObject.Find("OutputRenderer").transform.Find("Canvas").GetComponentInChildren<Text>().text = ((CodeBlock)currentNode).SerializeBlockHeader();
+                }
                 //new WaitForSeconds((float)tickTime
 
                 bool evaluatedResult = false;

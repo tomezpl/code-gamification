@@ -16,7 +16,35 @@ public class AllocateArray : FunctionCallBase
 
     public override string Serialize()
     {
-        return $"{parameters[1].Value} = [None] * {parameters[0].Value}";
+        int count = -1;
+        if (int.TryParse(parameters[0].Value, out count) && count > 0)
+        {
+            string csv = "";
+            for(int i = 0; i < count && i+2 < parameters.Count; i++)
+            {
+                if(string.IsNullOrWhiteSpace(parameters[2+i].Value))
+                {
+                    csv += "None";
+                }
+                else
+                {
+                    csv += parameters[2 + i].Value;
+                }
+                if(i != count - 1)
+                {
+                    csv += ", ";
+                }
+            }
+            return $"{parameters[1].Value} = [{csv}]";
+        }
+        else if(!string.IsNullOrWhiteSpace(parameters[0].Value) && count < 0)
+        {
+            return $"{parameters[1].Value} = [None] * {parameters[0].Value}";
+        }
+        else
+        {
+            return $"{parameters[1].Value} = []";
+        }
     }
 
     public override void UpdateFunctionProperties()

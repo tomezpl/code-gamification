@@ -68,7 +68,7 @@ abstract public class ControlBase : MonoBehaviour
             {
                 if(Input.GetKeyUp(KeyCode.Return) || enteredCommand.Contains("\n"))
                 {
-                    switch (enteredCommand.ToLower())
+                    switch (enteredCommand.Replace("\n", "").ToLower())
                     {
                         case "quit":
                             Application.Quit();

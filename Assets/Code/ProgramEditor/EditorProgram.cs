@@ -31,7 +31,7 @@ public class EditorProgram : MonoBehaviour
 
     private ClueHUD clueHud;
 
-    public double referenceFontSize = 24.0;
+    public const double referenceFontSize = 14.0;
     public Vector2 referenceScreenSize = new Vector2(1000, 1);
     
     public bool EditorActive {

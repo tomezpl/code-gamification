@@ -168,6 +168,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   owner: {fileID: 0}
   allowDrag: 1
+  isArithmeticOperator: 0
 --- !u!114 &994355781891477064
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -181,14 +182,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   NextNodeObject: {fileID: 0}
+  PrevNodeObject: {fileID: 0}
   indentLevel: 0
   isInitialised: 0
   inLoop: 0
+  computer: {fileID: 0}
+  ownerLoop: {fileID: 0}
   functionName: 
   functionNamePrefix: 
   paramCount: 0
   parameters: []
   functionNameText: {fileID: 2970369056163860132}
+  prevArithmetic: {fileID: 0}
+  needResize: 1
 --- !u!1 &2970369057206680702
 GameObject:
   m_ObjectHideFlags: 0
@@ -278,6 +284,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   owner: {fileID: 0}
   allowDrag: 0
+  isArithmeticOperator: 0
 --- !u!1001 &2002748894992747383
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -353,7 +360,7 @@ PrefabInstance:
     - target: {fileID: 5936924678671734443, guid: 9718b13a946224747ba22d801aeefce2,
         type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -10.9
+      value: -46.9
       objectReference: {fileID: 0}
     - target: {fileID: 5936924678671734443, guid: 9718b13a946224747ba22d801aeefce2,
         type: 3}
@@ -373,7 +380,7 @@ PrefabInstance:
     - target: {fileID: 5936924678671734443, guid: 9718b13a946224747ba22d801aeefce2,
         type: 3}
       propertyPath: m_AnchorMin.y
-      value: 0.5
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5936924678671734443, guid: 9718b13a946224747ba22d801aeefce2,
         type: 3}
@@ -383,7 +390,7 @@ PrefabInstance:
     - target: {fileID: 5936924678671734443, guid: 9718b13a946224747ba22d801aeefce2,
         type: 3}
       propertyPath: m_AnchorMax.y
-      value: 0.5
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5936924678671734443, guid: 9718b13a946224747ba22d801aeefce2,
         type: 3}

@@ -57,7 +57,7 @@ public class FunctionCallBase : NodeBase
                 GetComponent<RectTransform>().SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, GetComponent<RectTransform>().rect.height - firstParamRect.height);
                 initHeight = GetComponent<RectTransform>().rect.height;
             }
-            //Debug.Log($"{name}.initHeight : {initHeight}");
+            //Logger.Log($"{name}.initHeight : {initHeight}");
         }
 
         if (parameters == null)
@@ -128,8 +128,9 @@ public class FunctionCallBase : NodeBase
                 paramsToDestroy.Add(child);
             }
         }
-        if (parameters.Count < paramsToDestroy.Count)
-        {
+
+        //if (parameters.Count < paramsToDestroy.Count)
+        //{
             foreach (Transform param in paramsToDestroy)
             {
                 if (Convert.ToInt32(param.name.Replace("Parameter", "")) > parameters.Count)
@@ -138,7 +139,7 @@ public class FunctionCallBase : NodeBase
                     GetComponent<RectTransform>().SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, (initHeight == 0.0f ? GetComponent<RectTransform>().rect.height : initHeight) - firstParamHeight * (parameters.Count > 2 ? (float)parameters.Count : 1.5f) - margin);
                 }
             }
-        }
+        //}
         /*if (needResize)
         {*/
             GetComponent<RectTransform>().SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, (initHeight == 0.0f ? GetComponent<RectTransform>().rect.height : initHeight) + firstParamHeight * (parameters.Count > 2 ? (float)parameters.Count : 1.5f) + margin);
@@ -147,8 +148,11 @@ public class FunctionCallBase : NodeBase
 
         for (ushort i = 0; i < paramCount && parameters != null && i < parameters.Count; i++)
         {
+            int paramIdx = (parameters.Count - 1) - i;
+
             // TODO: type checking, pointing references to scene objects, etc.
-            Transform param = transform.Find($"Parameter{i + 1}");
+            Transform param = transform.Find($"Parameter{paramIdx + 1}");
+
             if (param == null)
             {
                 GameObject paramObject = Instantiate(ParameterTemplate, transform);
@@ -160,19 +164,25 @@ public class FunctionCallBase : NodeBase
                 float origin = parameters.Count > 0 ? ((parameters.Count / 2.0f - parameters.Count) + i) * height : 0.0f;
                 paramObject.transform.localPosition = new Vector3(0.0f, origin);
 
-                paramObject.name = $"Parameter{i+1}";
+                paramObject.name = $"Parameter{paramIdx+1}";
+
+                if(paramObject.GetComponent<EditorDraggableNode>())
+                {
+                    paramObject.GetComponent<EditorDraggableNode>().enabled = true;
+                }
 
                 param = paramObject.transform;
 
                 if (computer != null && computer.symbolTable != null)
                 {
                     ref Dictionary<string, FunctionParameter> symTable = ref computer.symbolTable;
-                    string resultStr = ArithmeticOperationBase.GetResult(parameters[i].Value, ref symTable);
+                    string resultStr = ArithmeticOperationBase.GetResult(parameters[paramIdx].Value, ref symTable);
                     //double result = string.IsNullOrWhiteSpace(resultStr) ? 0 : double.Parse(resultStr);
                 }
             }
+
             // Name is the parameter name as defined by the function. Not a variable name. If we haven't defined the parameter name, don't show the = character.
-            param.GetComponentInChildren<Text>().text = $"{parameters[i].Name}{(!string.IsNullOrWhiteSpace(parameters[i].Name) ? "=" : "")}{(string.IsNullOrWhiteSpace(parameters[i].Expression) ? parameters[i].Value : parameters[i].Expression)}";
+            param.GetComponentInChildren<Text>().text = $"{parameters[paramIdx].Name}{(!string.IsNullOrWhiteSpace(parameters[paramIdx].Name) ? "=" : "")}{(string.IsNullOrWhiteSpace(parameters[paramIdx].Expression) ? parameters[paramIdx].Value : parameters[paramIdx].Expression)}";
         }
     }
 
@@ -196,7 +206,7 @@ public class FunctionCallBase : NodeBase
         }
         else
         {
-            Debug.LogError("Missing function name!");
+            Logger.LogError("Missing function name!");
             return "";
         }
     }
@@ -223,8 +233,26 @@ public class FunctionCallBase : NodeBase
 
     public override string Serialize()
     {
-        Debug.Log(GetFunctionName());
-        return $"{GetFunctionName()}({GetParameterListString()})";
+        //Logger.Log(GetFunctionName());
+        // Special case for printNewline. That function doesn't actually exist in Python but is here for convenience's sake. 
+        // We want it to be serialized to print("\n")
+        if (functionName != "printNewline")
+        {
+            return $"{GetFunctionName()}({GetParameterListString()})";
+        }
+        else if(functionName == "sleep")
+        {
+            double tickTime = 1.0;
+            if(computer != null)
+            {
+                tickTime = computer.tickTime;
+            }
+            return $"time.sleep({tickTime})";
+        }
+        else
+        {
+            return "print(\"\\n\")";
+        }
     }
 
     public object[] GetRawParameters(Dictionary<string, FunctionParameter> symbolTable)
@@ -246,6 +274,7 @@ public class FunctionCallBase : NodeBase
                 indexName = indexSplit[1].Substring(0, indexSplit[1].Length - 1);
                 indexName = ArithmeticOperationBase.GetResult(indexName, ref symbolTable);
             }
+            Logger.Log($"indexName = {indexName}");
 
             if (!string.IsNullOrWhiteSpace(indexName))
                 value += $"[{indexName}]";
@@ -253,11 +282,15 @@ public class FunctionCallBase : NodeBase
             bool isString = parameter.IsReference ? (symbolTable.ContainsKey(value) && symbolTable[value].Value.Trim().StartsWith("\"") && symbolTable[value].Value.Trim().EndsWith("\"")) : (value.Trim().StartsWith("\"") && value.Trim().EndsWith("\""));
             bool isReference = parameter.IsReference ? true : !isString && symbolTable.ContainsKey(value);
 
-            Debug.Log($"{functionName}.GetRawParameters: {parameter.Value}");
+            Logger.Log($"isString = {isString}");
+            Logger.Log($"isReference = {isReference}");
+
+            Logger.Log($"{functionName}.GetRawParameters: {parameter.Value}");
 
             string mathResult = ArithmeticOperationBase.GetResult(value, ref symbolTable);
-            Debug.Log($"mathResult: {mathResult}, paramVal: {value}");
+            Logger.Log($"mathResult: {mathResult}, paramVal: {value}");
             bool isMath = mathResult != value;
+            Logger.Log($"isMath = {isMath}");
 
             // Types are usually declared on literals...
             /*if (type.Contains("num") || type.Contains("int") || type.Contains("double"))
@@ -272,21 +305,21 @@ public class FunctionCallBase : NodeBase
             {
                 ret.Add(Convert.ToBoolean(parameter.Value.ToLower()));
             }*/
-            if(isString)
+            if (isString)
             {
-                Debug.Log("Passing string!");
+                Logger.Log("Passing string!");
                 ret.Add(isReference ? symbolTable[value].Value : value.Trim().Substring(1, value.Trim().Length - 2));
             }
             else if(isMath)
             {
-                Debug.Log("Passing arithmetic expression!");
+                Logger.Log("Passing arithmetic expression!");
                 ret.Add(ArithmeticOperationBase.GetResult(value, ref symbolTable));
             }
             else
             {
                 if(isReference)
                 {
-                    Debug.Log("Passing variable!");
+                    Logger.Log("Passing variable!");
                     if (value.Trim() == "None")
                     {
                         ret.Add(null);
@@ -306,7 +339,7 @@ public class FunctionCallBase : NodeBase
                 }
                 else
                 {
-                    Debug.Log("Passing bool/number literal!");
+                    Logger.Log("Passing bool/number literal!");
                     double number = 0.0;
                     if(value.Trim() == "True" || value.Trim() == "False")
                     {
@@ -322,7 +355,7 @@ public class FunctionCallBase : NodeBase
                     }
                 }
             }
-            Debug.Log($"Passed {(ret.Count > 0 ? ret[ret.Count - 1] : "nothing")}");
+            Logger.Log($"Passed {(ret.Count > 0 ? ret[ret.Count - 1] : "nothing")}");
         }
 
         return ret.ToArray();

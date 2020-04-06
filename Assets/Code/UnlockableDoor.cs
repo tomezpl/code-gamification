@@ -31,8 +31,8 @@ public class UnlockableDoor : Unlockable
                 transformR = t;
             }
         }
-        //Debug.Log("LDoor original: " + originalPosL);
-        //Debug.Log("RDoor original: " + originalPosR);
+        //Logger.Log("LDoor original: " + originalPosL);
+        //Logger.Log("RDoor original: " + originalPosR);
 
         playerTransform = GameObject.Find("Player").transform;
     }
@@ -49,16 +49,16 @@ public class UnlockableDoor : Unlockable
         {
             if (isUnlocked)
             {
-                //Debug.Log("Locking!");
+                //Logger.Log("Locking!");
                 timeToLock = doorOpeningTime;
             }
             Lock();
         }
         if (CanUnlock() && !isUnlocked)
         {
-            //Debug.Log("Unlocking!");
+            //Logger.Log("Unlocking!");
             timeToLock = doorOpenDuration + doorOpeningTime;
-            //Debug.Log("ttl: " + timeToLock);
+            //Logger.Log("ttl: " + timeToLock);
             Unlock();
         }
         else if(!CanUnlock() && isUnlocked)
@@ -80,9 +80,9 @@ public class UnlockableDoor : Unlockable
     public override void Unlock()
     {
         float t = doorOpeningTime - (timeToLock - doorOpenDuration);
-        //Debug.Log("t=" + t);
+        //Logger.Log("t=" + t);
         t /= doorOpeningTime;
-        //Debug.Log("Step is " + t.ToString());
+        //Logger.Log("Step is " + t.ToString());
         isUnlocked = true;
         transformL.localPosition = Vector3.Lerp(transformL.localPosition, new Vector3(originalPosL.x - doorOpening, originalPosL.y, originalPosL.z), t);
         transformR.localPosition = Vector3.Lerp(transformR.localPosition, new Vector3(originalPosR.x + doorOpening, originalPosR.y, originalPosR.z), t);
@@ -91,9 +91,9 @@ public class UnlockableDoor : Unlockable
     public override void Lock()
     {
         float t = doorOpeningTime - timeToLock;
-        //Debug.Log("t=" + t);
+        //Logger.Log("t=" + t);
         t /= doorOpeningTime;
-        //Debug.Log("Step is " + t.ToString());
+        //Logger.Log("Step is " + t.ToString());
         isUnlocked = false;
         transformL.localPosition = Vector3.Lerp(transformL.localPosition, originalPosL, t);
         transformR.localPosition = Vector3.Lerp(transformR.localPosition, originalPosR, t);

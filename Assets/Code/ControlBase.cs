@@ -26,6 +26,24 @@ abstract public class ControlBase : MonoBehaviour
             MouseLook();
         }
         DebugControls();
+
+        foreach(GameObject obj in FindObjectsOfType<GameObject>())
+        {
+            if(obj.GetComponent<EditorProgram>())
+            {
+                if(obj.GetComponent<EditorProgram>().EditorActive)
+                {
+                    Cursor.lockState = CursorLockMode.None;
+                    Cursor.visible = true;
+                    break;
+                }
+                else
+                {
+                    Cursor.lockState = CursorLockMode.Locked;
+                    Cursor.visible = false;
+                }
+            }
+        }
     }
 
     protected void DebugControls()
@@ -35,18 +53,41 @@ abstract public class ControlBase : MonoBehaviour
             if(Input.GetKeyUp(KeyCode.BackQuote))
             {
                 consoleVisible = !consoleVisible;
+                if (consoleVisible)
+                {
+                    Cursor.lockState = CursorLockMode.None;
+                    Cursor.visible = true;
+                }
+                else if (allowMove)
+                {
+                    Cursor.lockState = CursorLockMode.Locked;
+                    Cursor.visible = false;
+                }
             }
             if(consoleVisible)
             {
-                if(Input.GetKeyUp(KeyCode.Return))
+                if(Input.GetKeyUp(KeyCode.Return) || enteredCommand.Contains("\n"))
                 {
-                    switch (enteredCommand.ToLower())
+                    switch (enteredCommand.Replace("\n", "").ToLower())
                     {
                         case "quit":
                             Application.Quit();
                             break;
                         case "restart":
                             SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+                            break;
+                        case "stopall":
+                            GameObject[] allObjects = FindObjectsOfType<GameObject>();
+                            foreach(GameObject obj in allObjects)
+                            {
+                                ProgramController computer = obj.GetComponent<ProgramController>();
+                                if(computer != null)
+                                {
+                                    computer.programRunning = false;
+                                    computer.processingDone = true;
+                                    computer.currentNode = computer.editorUi.GetComponent<EditorProgram>().elementContainer.GetComponentInChildren<ProgramStart>();
+                                }
+                            }
                             break;
                     }
                     if (enteredCommand.ToLower().Contains("load "))
@@ -59,6 +100,7 @@ abstract public class ControlBase : MonoBehaviour
                         int sectionIndex = Convert.ToInt32(enteredCommand.Trim().Substring("section ".Length));
                         transform.position = GameObject.Find($"Section{sectionIndex}").transform.position;
                     }
+                    enteredCommand = "";
                     consoleVisible = false;
                 }
             }
@@ -69,7 +111,16 @@ abstract public class ControlBase : MonoBehaviour
     {
         if(consoleVisible)
         {
-            enteredCommand = GUI.TextField(new Rect(0, 0, Screen.width, 20.0f), enteredCommand);
+            GUI.SetNextControlName("debugconsole");
+            enteredCommand = GUI.TextArea(new Rect(0, 0, Screen.width, 20.0f), enteredCommand);
+            GUI.FocusControl("debugconsole");
+            if(GUI.GetNameOfFocusedControl() != "debugconsole" || enteredCommand.Contains("`"))
+            {
+                consoleVisible = false;
+                Cursor.lockState = CursorLockMode.Locked;
+                Cursor.visible = false;
+                enteredCommand = "";
+            }
         }
     }
 

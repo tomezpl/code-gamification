@@ -10,6 +10,8 @@ public class LogicalBlock : CodeBlock
 
     public GameObject ConditionalObject;
 
+    public bool evaluatedResult = false;
+
     public override void InitialiseNode()
     {
         base.InitialiseNode();
@@ -43,6 +45,21 @@ public class LogicalBlock : CodeBlock
         UpdateUI();
     }
 
+    // Assign itself as ownerLoop to the entire block body
+    public virtual void PropagateOwnership()
+    {
+        if(firstBodyNode != null)
+        {
+            NodeBase currentNode = (NodeBase)firstBodyNode;
+            while(currentNode != null)
+            {
+                currentNode.ownerLoop = this;
+
+                currentNode = (NodeBase)currentNode.nextNode;
+            }
+        }
+    }
+
     // Similar to FunctionCallBase.UpdateFunctionParameters
     public virtual void UpdateUI()
     {
@@ -60,5 +77,10 @@ public class LogicalBlock : CodeBlock
             ConditionalObject.transform.Find("Comparison").transform.Find("Text").GetComponent<Text>().text = condition.comparison;
             ConditionalObject.transform.Find("RHReference").transform.Find("Text").GetComponent<Text>().text = condition.rightHand.Serialize();
         }
+    }
+
+    public override string SerializeBlockHeader()
+    {
+        return $"if {condition.leftHand.Serialize()} {condition.comparison} {condition.rightHand.Serialize()}:";
     }
 }

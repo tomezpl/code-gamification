@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using System.Linq;
 
 // Implement this base class to add function calls that can execute in ExecuteFrame()
 public class ProgramController : Interactable
@@ -13,6 +14,7 @@ public class ProgramController : Interactable
     protected double timeSinceTick = 0.0;
     protected EditorProgram program;
     public NodeBase currentNode;
+    public NodeBase specialNextNode;
 
     public string expectedOutput = "";
 
@@ -35,6 +37,9 @@ public class ProgramController : Interactable
     // Variables, constants etc. that are present in this program
     public Dictionary<string, FunctionParameter> symbolTable;
 
+    public List<string> SymbolNames;
+    public List<string> SymbolValues;
+
     public Dictionary<string, System.Delegate> functions;
     public List<string> hiddenFunctions = new List<string> { "create list" };
 
@@ -42,9 +47,18 @@ public class ProgramController : Interactable
     public const string HiddenSymbolPrefix = "_INTERNAL_GAME:";
 
     // This is used by CheckNodeType
-    public enum NodeType { Unknown, FunctionCallBase, ProgramStart, ArithmeticOperationBase, CodeBlock, AssignValue, ProgramEnd, LogicalBlock, WhileLoop, AllocateArray, Continue };
+    public enum NodeType { Unknown, FunctionCallBase, ProgramStart, ArithmeticOperationBase, CodeBlock, AssignValue, ProgramEnd, LogicalBlock, WhileLoop, AllocateArray, Continue, Break, ElseBlock };
 
     public string outputBuffer = "";
+
+    private ClueHUD clueHud;
+
+    // Returns true if there are any nodes other than Start and End present in the program editor
+    public bool HasAnyNodes()
+    {
+        List<NodeBase> nodes = new List<NodeBase>(program.elementContainer.GetComponentsInChildren<NodeBase>());
+        return !(nodes.Count == 2 && nodes.Contains(program.programStart) && nodes.Contains(program.programEnd));
+    }
 
     // Initialises a symbol table
     public void InitSymTable()
@@ -52,7 +66,8 @@ public class ProgramController : Interactable
         symbolTable = new Dictionary<string, FunctionParameter> {
             { "True", new FunctionParameter { Value = "True", Type = "Boolean" } },
             { "False", new FunctionParameter { Value = "False", Type = "Boolean" } },
-            { "None", new FunctionParameter() } };
+            { "None", new FunctionParameter { Value = "None", Type = "NoneType" } }
+        };
     }
 
     protected void OutPrintNewline()
@@ -89,14 +104,14 @@ public class ProgramController : Interactable
             }
         }
         outputBuffer += $"{text}";
-        Debug.Log(text);
+        Logger.Log(text);
     }
 
     Dictionary<string, Delegate> BaseControllerFunctions()
     {
         Dictionary<string, Delegate> ret = new Dictionary<string, Delegate>();
 
-        ret.Add("wait", new Action(Wait));
+        ret.Add("sleep", new Action(Wait));
         ret.Add("print", new System.Action<string>(OutPrint));
         ret.Add("printNewline", new Action(OutPrintNewline));
         ret.Add("create list", new Action<string, string>(CreateList));
@@ -133,13 +148,15 @@ public class ProgramController : Interactable
     // Start is called before the first frame update
     protected virtual void Start()
     {
+        clueHud = GameObject.Find("ClueHUD").GetComponent<ClueHUD>();
+
         functions = new Dictionary<string, System.Delegate>();
         InitSymTable();
 
         CombineControllerFunctions(ControllerFunctions());
 
         if (!editorUi)
-            Debug.LogWarning($"There is no EditorUI present in {gameObject.name}.{name}");
+            Logger.LogWarning($"There is no EditorUI present in {gameObject.name}.{name}");
         else
         {
             program = editorUi.GetComponent<EditorProgram>();
@@ -162,17 +179,20 @@ public class ProgramController : Interactable
     // Update is called once per frame
     void Update()
     {
+        SymbolNames = new List<string>(symbolTable.Keys);
+        SymbolValues = new List<string>(symbolTable.Values.Select(v => v.Value));
+
         timeSinceTick += Time.deltaTime;
         if(currentNode == program.programStart && currentNode.NextNodeObject != null)
         {
             if (programRunning)
             {
+                outputBuffer = "";
                 currentNode = (NodeBase)currentNode.nextNode;
             }
             timeSinceTick = tickTime; // Skip the ProgramStart tick
             InitSymTable();
             // TODO: this doesn't actually reset the buffer?
-            outputBuffer = "";
         }
         if (programRunning)
         {
@@ -190,6 +210,12 @@ public class ProgramController : Interactable
         {
             if (DistanceCheck())
             {
+                // Show controls on HUD
+                if(clueHud.currentPromptSet == null)
+                {
+                    clueHud.SetCurrentPrompt(clueHud.FPPTerminalPrompts, gameObject);
+                }
+
                 if (Input.GetKeyUp(KeyCode.E))
                     program.EditorActive = !program.EditorActive;
                 if (Input.GetKeyUp(KeyCode.Space) && !programRunning)
@@ -197,6 +223,48 @@ public class ProgramController : Interactable
                     processingDone = true;
                     programRunning = true;
                     currentNode = program.programStart;
+
+                    editorUi.GetComponent<EditorProgram>().errorNode = null;
+
+                    // Make sure Start and End are linked if they're the only nodes in the program
+                    if(!HasAnyNodes())
+                    {
+                        program.programStart.NextNodeObject = program.programEnd.gameObject;
+                        program.programStart.nextNode = program.programEnd;
+
+                        program.programEnd.PrevNodeObject = program.programStart.gameObject;
+                        program.programEnd.prevNode = program.programStart;
+                    }
+                    // Otherwise, check if the End node is linked to by anything. 
+                    // If not, choose the node that isn't in a loop and doesn't have a nextNode yet.
+                    else
+                    {
+                        if(program.programEnd.PrevNodeObject == null)
+                        {
+                            NodeBase[] nodes = program.elementContainer.GetComponentsInChildren<NodeBase>();
+                            foreach(NodeBase node in nodes)
+                            {
+                                if(node.ownerLoop == null && node.NextNodeObject == null && node.PrevNodeObject != null)
+                                {
+                                    node.NextNodeObject = program.programEnd.gameObject;
+                                    node.nextNode = program.programEnd;
+
+                                    program.programEnd.PrevNodeObject = node.gameObject;
+                                    program.programEnd.prevNode = node;
+
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            // If we're outside the distance, make sure the ClueHUD is updated so it no longer displays the "Open Editor" control clue
+            else
+            {
+                if(clueHud.currentPromptSet == clueHud.FPPTerminalPrompts && clueHud.currentPromptCaller == gameObject)
+                {
+                    clueHud.SetCurrentPrompt(null, null);
                 }
             }
         }
@@ -209,6 +277,14 @@ public class ProgramController : Interactable
         if (transform.Find("CurrentLine") && !editorUi.GetComponent<EditorProgram>().EditorActive && programRunning)
         {
             transform.Find("CurrentLine").gameObject.SetActive(true);
+        }
+
+        if(editorUi.GetComponent<EditorProgram>().EditorActive)
+        {
+            if (clueHud.currentPromptSet == clueHud.FPPTerminalPrompts && clueHud.currentPromptCaller == gameObject)
+            {
+                clueHud.SetCurrentPrompt(null, null);
+            }
         }
     }
 
@@ -224,8 +300,53 @@ public class ProgramController : Interactable
             {
                 if (!waitForNextTick)
                 {
-                    ExecuteNode(currentNode);
-                    string currentLine = ((IProgramNode)currentNode).Serialize();
+                    string currentLine = "";
+                    bool errorOut = false;
+                    try
+                    {
+                        ExecuteNode(currentNode);
+                        currentLine = currentNode.GetComponent<CodeBlock>() ? ((CodeBlock)currentNode).SerializeBlockHeader() : ((IProgramNode)currentNode).Serialize();
+                    }
+                    catch (Exception ex)
+                    {
+                        if(ex is FormatException || ex is KeyNotFoundException)
+                        {
+                            // TODO: Notify user of error. Probably something to do with input value or variable.
+                            if (currentNode != null && currentNode.Serialize() != null)
+                            {
+                                Logger.LogError($"CODE '{currentNode.Serialize()}' contains invalid symbol or value.");
+                            }
+                            else
+                            {
+                                Logger.LogError($"Invalid use of symbol or value caused an error in the code.");
+                            }
+                        }
+
+                        if (currentNode != null)
+                        {
+                            Logger.LogError($"{currentNode.name} caused an error!");
+                            if(currentNode.Serialize() != null)
+                            {
+                                Logger.LogError($"{currentNode.name} code: {currentNode.Serialize()}");
+                            }
+                        }
+                        else
+                        {
+                            Logger.LogError("currentNode caused an error!");
+                        }
+
+                        Logger.LogError($"Exception was: {ex.Message}");
+                        Logger.LogError($"Exception stack trace: {ex.StackTrace}");
+
+                        currentLine = "ERROR!";
+
+                        editorUi.GetComponent<EditorProgram>().errorNode = currentNode.gameObject;
+
+                        programRunning = false;
+                        currentNode = program.programStart;
+
+                        errorOut = true;
+                    }
                     if (transform.Find("CurrentLine"))
                     {
                         if (!editorUi.GetComponent<EditorProgram>().EditorActive)
@@ -237,7 +358,15 @@ public class ProgramController : Interactable
                             transform.Find("CurrentLine").gameObject.SetActive(false);
                         }
                     }
-                    GameObject.Find("OutputRenderer").transform.Find("Canvas").GetComponentInChildren<Text>().text = currentLine;
+                    if (DistanceCheck())
+                    {
+                        GameObject.Find("OutputRenderer").transform.Find("Canvas").GetComponentInChildren<Text>().text = currentLine;
+                    }
+
+                    if(errorOut)
+                    {
+                        return false;
+                    }
                 }
                 else
                 {
@@ -246,9 +375,16 @@ public class ProgramController : Interactable
                 firstTick = false;
                 if (processingDone)
                 {
-                    // Regular flow
-                    if (currentNode.nextNode != null)
+                    if(specialNextNode != null)
                     {
+                        Logger.Log($"Passing specialNextNode '{specialNextNode.name}'");
+                        currentNode = specialNextNode;
+                        specialNextNode = null;
+                    }
+                    // Regular flow
+                    else if (currentNode.nextNode != null)
+                    {
+                        Logger.Log($"Continuing from nextNode {((NodeBase)currentNode.nextNode).name}");
                         currentNode = currentNode.NextNodeObject.GetComponent<NodeBase>();
                     }
                     // Reached end of loop
@@ -256,18 +392,30 @@ public class ProgramController : Interactable
                     {
                         if (currentNode.ownerLoop.GetComponent<WhileLoop>())
                         {
+                            Logger.Log($"Continuing from WhileLoop {((WhileLoop)currentNode.ownerLoop).name}");
                             currentNode = currentNode.ownerLoop;
                         }
                         else if(currentNode.ownerLoop.GetComponent<LogicalBlock>())
                         {
-                            currentNode = (NodeBase)currentNode.ownerLoop.nextNode;
+                            LogicalBlock ownerIf = currentNode.ownerLoop;
+                            NodeBase nodeAfterIf = (NodeBase)ownerIf.nextNode;
+                            while(nodeAfterIf == null && ownerIf != null)
+                            {
+                                ownerIf = ownerIf.ownerLoop;
+                                if (ownerIf)
+                                {
+                                    nodeAfterIf = (NodeBase)ownerIf.nextNode;
+                                }
+                            }
+                            Logger.Log($"Continuing from IfStatement {(nodeAfterIf ? nodeAfterIf.name : "<null>")}");
+                            currentNode = nodeAfterIf;
                         }
                     }
-                    Debug.Log($"Continuing to next node: {currentNode.name}");
+                    Logger.Log($"Moving to next node: {(currentNode ? currentNode.name : "<null node>")}");
                     return false;
                 }
             }
-            else if(currentNode.gameObject.name == "ProgramEnd")
+            else if(currentNode != null && currentNode.gameObject.name == "ProgramEnd")
             {
                 ProgramEndCallback();
                 programRunning = false;
@@ -282,10 +430,10 @@ public class ProgramController : Interactable
             {
                 programRunning = false;
                 currentNode = program.programStart;
-                GameObject.Find("OutputRenderer").transform.Find("Canvas").GetComponentInChildren<Text>().text = "";
+                GameObject.Find("OutputRenderer").transform.Find("Canvas").GetComponentInChildren<Text>().text = "ERROR!";
                 if (transform.Find("CurrentLine"))
                 {
-                    transform.Find("CurrentLine").gameObject.SetActive(false);
+                    transform.Find("CurrentLine").gameObject.SetActive(true);
                 }
                 return false;
             }
@@ -318,16 +466,20 @@ public class ProgramController : Interactable
 
         if (node.gameObject.GetComponent<WhileLoop>())
             return NodeType.WhileLoop;
+        if (node.gameObject.GetComponent<ElseBlock>())
+            return NodeType.ElseBlock;
         if (node.gameObject.GetComponent<LogicalBlock>())
             return NodeType.LogicalBlock;
         if (node.gameObject.GetComponent<CodeBlock>())
             return NodeType.CodeBlock;
 
+        if (node.gameObject.GetComponent<Break>())
+            return NodeType.Break;
         if (node.gameObject.GetComponent<Continue>())
             return NodeType.Continue;
 
         // If type can't be determined, return null
-        Debug.LogWarning("Couldn't determine type of node, returning null! Check if ProgramController.CheckNodeType has been updated correctly with new node types.");
+        Logger.LogWarning("Couldn't determine type of node, returning null! Check if ProgramController.CheckNodeType has been updated correctly with new node types.");
         return NodeType.Unknown;
     }
 
@@ -342,6 +494,57 @@ public class ProgramController : Interactable
             }
         }
         return null;
+    }
+
+    // Assigns a value to a symbol name
+    private void SetSymbol(FunctionParameter leftHand, FunctionParameter rightHand)
+    {
+        string symbolVal = ArithmeticOperationBase.GetResult(rightHand.Value, ref symbolTable);
+        string symbolName = "";
+
+        // Is it an array index?
+        string indexName = "";
+        string[] indexSplit = leftHand.Value.Split('[');
+        if (indexSplit != null && indexSplit.Length == 2)
+        {
+            symbolName = indexSplit[0];
+            indexName = indexSplit[1].Substring(0, indexSplit[1].Length - 1);
+            indexName = ArithmeticOperationBase.GetResult(indexName, ref symbolTable);
+            Logger.Log($"\"{currentNode.Serialize()}\": index was {indexName}");
+        }
+        else
+        {
+            symbolName = leftHand.Value;
+        }
+
+        bool isString = leftHand.IsReference ? (symbolTable.ContainsKey(symbolVal) && symbolTable[symbolVal].Value.Trim().StartsWith("\"") && symbolTable[symbolVal].Value.Trim().EndsWith("\"")) : (symbolVal.Trim().StartsWith("\"") && symbolVal.Trim().EndsWith("\""));
+        bool isReference = leftHand.IsReference ? true : !isString && symbolTable.ContainsKey(symbolVal);
+
+        Logger.Log($"indexName={indexName}");
+        if (!string.IsNullOrWhiteSpace(indexName))
+        {
+            if (symbolTable.ContainsKey(indexName))
+            {
+                symbolName += $"[{symbolTable[indexName].Value}]";
+            }
+            else
+            {
+                symbolName += $"[{indexName}]";
+            }
+        }
+
+        Logger.Log($"Assigning {symbolVal} to {symbolName}");
+        double tempNum = 0.0;
+        string assignedType = (isString ? "String" : (symbolVal.Trim() == "True" || symbolVal.Trim() == "False" ? "Boolean" : (double.TryParse(symbolVal.Trim(), out tempNum) ? "Number" : "")));
+        if (!symbolTable.ContainsKey(symbolName))
+        {
+            // TODO: Type = "Int" won't always work, we need a generic type like Number, however Reflection.ParameterInfo needs to be converted in that case
+            symbolTable.Add(symbolName, new FunctionParameter { Name = rightHand.Name, Type = isReference ? symbolTable[symbolVal].Type : assignedType, Value = isReference ? symbolTable[symbolVal].Value : symbolVal }); ;
+        }
+        else
+        {
+            symbolTable[symbolName] = new FunctionParameter { Name = rightHand.Name, Type = isReference ? symbolTable[symbolVal].Type : assignedType, Value = isReference ? symbolTable[symbolVal].Value : symbolVal };
+        }
     }
 
     // Performs actions defined by the Node
@@ -360,10 +563,9 @@ public class ProgramController : Interactable
         {
             // Handlers for different commands
             case NodeType.ProgramStart:
-                Debug.Log("Program starting!");
+                Logger.Log("Program starting!");
                 processingDone = true;
 
-                Debug.DebugBreak();
                 InitSymTable();
                 // TODO: this doesn't actually reset the buffer?
                 outputBuffer = "";
@@ -371,52 +573,9 @@ public class ProgramController : Interactable
                 return new ExecutionStatus { success = true, handover = false };
             case NodeType.AssignValue:
                 AssignValue assignValue = node.GetComponent<AssignValue>();
-                string symbolVal = ArithmeticOperationBase.GetResult(assignValue.rightHand.Value, ref symbolTable);
-                string symbolName = "";
 
-                // Is it an array index?
-                string indexName = "";
-                string[] indexSplit = assignValue.leftHand.Value.Split('[');
-                if (indexSplit != null && indexSplit.Length == 2)
-                {
-                    symbolName = indexSplit[0];
-                    indexName = indexSplit[1].Substring(0, indexSplit[1].Length - 1);
-                    indexName = ArithmeticOperationBase.GetResult(indexName, ref symbolTable);
-                    Debug.Log($"\"{currentNode.Serialize()}\": index was {indexName}");
-                }
-                else
-                {
-                    symbolName = assignValue.leftHand.Value;
-                }
+                SetSymbol(assignValue.leftHand, assignValue.rightHand);
 
-                bool isString = assignValue.leftHand.IsReference ? (symbolTable.ContainsKey(symbolVal) && symbolTable[symbolVal].Value.Trim().StartsWith("\"") && symbolTable[symbolVal].Value.Trim().EndsWith("\"")) : (symbolVal.Trim().StartsWith("\"") && symbolVal.Trim().EndsWith("\""));
-                bool isReference = assignValue.leftHand.IsReference ? true : !isString && symbolTable.ContainsKey(symbolVal);
-
-                Debug.Log($"indexName={indexName}");
-                if (!string.IsNullOrWhiteSpace(indexName))
-                {
-                    if(symbolTable.ContainsKey(indexName))
-                    {
-                        symbolName += $"[{symbolTable[indexName].Value}]";
-                    }
-                    else
-                    {
-                        symbolName += $"[{indexName}]";
-                    }
-                }
-
-                Debug.Log($"Assigning {symbolVal} to {symbolName}");
-                double tempNum = 0.0;
-                string assignedType = (isString ? "String" : (symbolVal.Trim() == "True" || symbolVal.Trim() == "False" ? "Boolean" : (double.TryParse(symbolVal.Trim(), out tempNum) ? "Number" : "")));
-                if (!symbolTable.ContainsKey(symbolName))
-                {
-                    // TODO: Type = "Int" won't always work, we need a generic type like Number, however Reflection.ParameterInfo needs to be converted in that case
-                    symbolTable.Add(symbolName, new FunctionParameter { Name = assignValue.rightHand.Name, Type = isReference ? symbolTable[symbolVal].Type : assignedType, Value = isReference ? symbolTable[symbolVal].Value : symbolVal }); ;
-                }
-                else
-                {
-                    symbolTable[symbolName] = new FunctionParameter { Name = assignValue.rightHand.Name, Type = isReference ? symbolTable[symbolVal].Type : assignedType, Value = isReference ? symbolTable[symbolVal].Value : symbolVal };
-                }
                 return new ExecutionStatus { success = true, handover = false };
             case NodeType.ArithmeticOperationBase:
                 // Arithmetic only takes a tick when it gets executed
@@ -432,24 +591,50 @@ public class ProgramController : Interactable
                 {
                     // TODO: passing a copy of symbolTable here might consume too much memory. Make static?
                     functions[funcName].DynamicInvoke(node.GetComponent<FunctionCallBase>().GetRawParameters(symbolTable));
-                    Debug.Log($"Found base function {funcName}");
+                    Logger.Log($"Found base function {funcName}");
                     return new ExecutionStatus { success = true, handover = false };
                 }
-                Debug.Log($"Couldn't find base function {funcName}");
+                Logger.Log($"Couldn't find base function {funcName}");
                 break;
-            case NodeType.LogicalBlock: case NodeType.WhileLoop:
-                if (node.GetComponent<LogicalBlock>().condition.Evaluate(ref symbolTable))
+            case NodeType.LogicalBlock: case NodeType.WhileLoop: case NodeType.ElseBlock:
+                // Make sure all nodes in the block body have their ownerLoop assigned
+                node.GetComponent<LogicalBlock>().PropagateOwnership();
+
+                if (DistanceCheck())
+                {
+                    GameObject.Find("OutputRenderer").transform.Find("Canvas").GetComponentInChildren<Text>().text = ((CodeBlock)currentNode).SerializeBlockHeader();
+                }
+                //new WaitForSeconds((float)tickTime
+
+                bool evaluatedResult = false;
+                // ElseBlocks should activate when its associated LogicalBlocks evaluate as false.
+                if (node.GetComponent<ElseBlock>())
+                {
+                    if (node.PrevNodeObject.GetComponent<LogicalBlock>() && !node.PrevNodeObject.GetComponent<ElseBlock>() && !node.PrevNodeObject.GetComponent<WhileLoop>())
+                    {
+                        evaluatedResult = !node.PrevNodeObject.GetComponent<LogicalBlock>().evaluatedResult;
+                    }
+                }
+                else
+                {
+                    evaluatedResult = node.GetComponent<LogicalBlock>().condition.Evaluate(ref symbolTable);
+                }
+
+                node.GetComponent<LogicalBlock>().evaluatedResult = evaluatedResult;
+                if (evaluatedResult && ((!node.GetComponent<WhileLoop>()) || (node.GetComponent<WhileLoop>() && !node.GetComponent<WhileLoop>().breakNow)))
                 {
                     NodeBase nodeToFollow = (NodeBase)(node.GetComponent<LogicalBlock>().firstBodyNode);
                     if(nodeToFollow != null)
                     {
-                        currentNode = nodeToFollow;
+                        specialNextNode = nodeToFollow;
                     }
                     else
                     {
-                        currentNode = (NodeBase)currentNode.nextNode;
+                        specialNextNode = (NodeBase)currentNode.nextNode;
                     }
-                    return ExecuteNode(currentNode);
+                    //return ExecuteNode(currentNode);
+                    timeSinceTick = -tickTime;
+                    return new ExecutionStatus { success = true, handover = false };
                 }
                 break;
             case NodeType.AllocateArray:
@@ -458,7 +643,7 @@ public class ProgramController : Interactable
                     int count = -1;
                     // Check if entered size was a valid >= 0 integer.
                     // TODO: unexpected behaviour when allocating with size == 0
-                    Debug.Log($"Allocating array with count {(string)node.GetComponent<AllocateArray>().GetRawParameters(symbolTable)[0]}");
+                    Logger.Log($"Allocating array with count {(string)node.GetComponent<AllocateArray>().GetRawParameters(symbolTable)[0]}");
                     if (int.TryParse((string)node.GetComponent<AllocateArray>().GetRawParameters(symbolTable)[0], out count))
                     {
                         string arrName = node.GetComponent<AllocateArray>().parameters[1].Value;
@@ -469,8 +654,17 @@ public class ProgramController : Interactable
                         }
                         for (int i = 0; i < count; i++)
                         {
-                            Debug.Log($"Adding array element \"{arrName}[{i}]\"");
-                            symbolTable.Add($"{arrName}[{i}]", new FunctionParameter());
+                            Logger.Log($"Adding array element \"{arrName}[{i}]\"");
+                            symbolTable.Add($"{arrName}[{i}]", new FunctionParameter { Value = "None" });
+                        }
+                        // Only initialise elements in the symbol table if size was provided as a literal
+                        if (int.TryParse(node.GetComponent<AllocateArray>().parameters[0].Value, out count))
+                        {
+                            for (int i = 2; i < 2 + count; i++)
+                            {
+                                FunctionParameter listElement = node.GetComponent<AllocateArray>().parameters[i];
+                                SetSymbol(new FunctionParameter { Value = listElement.Name }, new FunctionParameter { Value = string.IsNullOrWhiteSpace(listElement.Value) ? "None" : listElement.Value });
+                            }
                         }
                         return new ExecutionStatus { success = true, handover = false };
                     }
@@ -495,6 +689,31 @@ public class ProgramController : Interactable
                         }
                     }
                     if(owner == null)
+                    {
+                        return new ExecutionStatus { success = false, handover = false };
+                    }
+                }
+                break;
+            case NodeType.Break:
+                if(node.GetComponent<Break>())
+                {
+                    // Find the while loop
+                    LogicalBlock owner = node.ownerLoop;
+                    while(owner != null)
+                    {
+                        WhileLoop loop = owner.GetComponent<WhileLoop>();
+                        if (loop != null)
+                        {
+                            loop.breakNow = true;
+                            currentNode = loop;
+                            return ExecuteNode(currentNode);
+                        }
+                        else
+                        {
+                            owner = owner.ownerLoop;
+                        }
+                    }
+                    if (owner == null)
                     {
                         return new ExecutionStatus { success = false, handover = false };
                     }

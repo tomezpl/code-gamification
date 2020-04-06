@@ -19,8 +19,37 @@ public class BoolCondition
     {
         bool ret = false;
 
-        string lh = ArithmeticOperationBase.GetResult(leftHand.Value, ref symbolTable);
-        string rh = ArithmeticOperationBase.GetResult(rightHand.Value, ref symbolTable);
+
+        string lhVal = leftHand.Value;
+        // Is lefthand an array index?
+        string lhIndexName = "";
+        string[] lhIndexSplit = leftHand.Value.Split('[');
+        if (lhIndexSplit != null && lhIndexSplit.Length == 2)
+        {
+            lhVal = lhIndexSplit[0];
+            lhIndexName = lhIndexSplit[1].Substring(0, lhIndexSplit[1].Length - 1);
+            lhIndexName = ArithmeticOperationBase.GetResult(lhIndexName, ref symbolTable);
+
+            if (!string.IsNullOrWhiteSpace(lhIndexName))
+                lhVal += $"[{lhIndexName}]";
+        }
+        string rhVal = rightHand.Value;
+        // Is righthand an array index?
+        string rhIndexName = "";
+        string[] rhIndexSplit = rightHand.Value.Split('[');
+        if (rhIndexSplit != null && rhIndexSplit.Length == 2)
+        {
+            rhVal = rhIndexSplit[0];
+            rhIndexName = rhIndexSplit[1].Substring(0, rhIndexSplit[1].Length - 1);
+            rhIndexName = ArithmeticOperationBase.GetResult(rhIndexName, ref symbolTable);
+
+            if (!string.IsNullOrWhiteSpace(rhIndexName))
+                rhVal += $"[{rhIndexName}]";
+        }
+        Logger.Log($"lhIndexName = {lhIndexName}");
+        Logger.Log($"rhIndexName = {rhIndexName}");
+        string lh = ArithmeticOperationBase.GetResult(lhVal, ref symbolTable);
+        string rh = ArithmeticOperationBase.GetResult(rhVal, ref symbolTable);
 
         bool isLeftString = leftHand.IsReference ? (symbolTable.ContainsKey(rh) && symbolTable[lh].Value.Trim().StartsWith("\"") && symbolTable[lh].Value.Trim().EndsWith("\"")) : (lh.Trim().StartsWith("\"") && lh.Trim().EndsWith("\""));
         bool isLeftReference = leftHand.IsReference ? true : !isLeftString && symbolTable.ContainsKey(lh);
@@ -34,7 +63,7 @@ public class BoolCondition
         // failsafe for missing/invalid values
         if (string.IsNullOrWhiteSpace(leftValue) || string.IsNullOrWhiteSpace(rightValue))
         {
-            Debug.LogWarning("BoolCondition.Evaluate: invalid values!");
+            Logger.LogWarning("BoolCondition.Evaluate: invalid values!");
             return false;
         }
 
@@ -76,7 +105,7 @@ public class BoolCondition
             }
         }
 
-        Debug.Log($"BoolCondition.Evaluate: Finished with result {ret.ToString().ToUpper()}. \nEvaluated '{leftHand.Value} {comparison} {rightHand.Value}' as '{leftValue} {comparison} {rightValue}'. \nNumerical: {numL} {comparison} {numR}");
+        Logger.Log($"BoolCondition.Evaluate: Finished with result {ret.ToString().ToUpper()}. \nEvaluated '{leftHand.Value} {comparison} {rightHand.Value}' as '{leftValue} {comparison} {rightValue}'. \nNumerical: {numL} {comparison} {numR}");
 
         return ret;
     }

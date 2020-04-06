@@ -140,6 +140,7 @@ MonoBehaviour:
   owner: {fileID: 0}
   allowDrag: 1
   isArithmeticOperator: 0
+  color: []
 --- !u!114 &-6034141507081223059
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -153,6 +154,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   NextNodeObject: {fileID: 0}
+  PrevNodeObject: {fileID: 0}
   indentLevel: 0
   isInitialised: 0
   inLoop: 0
@@ -216,7 +218,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 0.7490196}
   m_RaycastTarget: 1
   m_OnCullStateChanged:
     m_PersistentCalls:

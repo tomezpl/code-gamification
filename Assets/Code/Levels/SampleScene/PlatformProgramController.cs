@@ -67,12 +67,12 @@ public class PlatformProgramController : ProgramController
         if (!baseStatus.handover)
             return baseStatus;
 
-        Debug.Log(CheckNodeType(node));
+        Logger.Log(CheckNodeType(node).ToString());
         switch(CheckNodeType(node))
         {
             // Handlers for different commands
             case NodeType.FunctionCallBase:
-                Debug.Log($"Handling function {node.GetComponent<FunctionCallBase>().functionName}.");
+                Logger.Log($"Handling function {node.GetComponent<FunctionCallBase>().functionName}.");
 
                 // If this node is going to alter the platform positions (e.g. by raising them), 
                 // it's going to need their positions before calling this function node as a reference point, 
@@ -108,7 +108,7 @@ public class PlatformProgramController : ProgramController
                 }
                 break;
             default:
-                Debug.Log("Unidentified node.");
+                Logger.Log("Unidentified node.");
                 break;
         }
 
@@ -133,31 +133,31 @@ public class PlatformProgramController : ProgramController
                     {
                         if (index >= 0)
                         {
-                            //Debug.Log($"Calling {functionCall.functionName}({index})");
+                            //Logger.Log($"Calling {functionCall.functionName}({index})");
                             functions[functionCall.functionName].DynamicInvoke(index.ToString());
                             // Increment the raising timer so that we know when we can set the processingDone flag
                             currentRaiseTime += Time.deltaTime;
                         }
                         else
                         {
-                            Debug.LogWarning("Invalid platform index");
+                            Logger.LogWarning("Invalid platform index");
                         }
                     }
                     else
                     {
-                        Debug.LogWarning($"Can't convert platform index to integer ({gameObject.name}).");
+                        Logger.LogWarning($"Can't convert platform index to integer ({gameObject.name}).");
                     }
                 }
                 else
                 {
-                    Debug.Log($"Unknown function {functionCall.functionName}.");
+                    Logger.Log($"Unknown function {functionCall.functionName}.");
                 }
             }
 
             // Finally, check if the timer overran raisingTime - if yes, mark processingDone as true.
             if(currentRaiseTime >= raisingTime)
             {
-                Debug.Log("Platform raised!");
+                Logger.Log("Platform raised!");
                 processingDone = true;
             }
         }
@@ -170,7 +170,7 @@ public class PlatformProgramController : ProgramController
         int nIndex = -1;
         if(!int.TryParse(index, out nIndex))
         {
-            Debug.Log("Invalid platform index, defaulting to 0.");
+            Logger.Log("Invalid platform index, defaulting to 0.");
         }
 
         Programmable platform = GetChildProgrammable(PlatformContainer, nIndex).GetComponent<Programmable>();
@@ -181,7 +181,7 @@ public class PlatformProgramController : ProgramController
         int nIndex = -1;
         if (!int.TryParse(index, out nIndex))
         {
-            Debug.Log("Invalid platform index, defaulting to 0.");
+            Logger.Log("Invalid platform index, defaulting to 0.");
         }
 
         Programmable platform = GetChildProgrammable(PlatformContainer, nIndex).GetComponent<Programmable>();

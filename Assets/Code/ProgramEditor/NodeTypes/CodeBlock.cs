@@ -58,6 +58,6 @@ public abstract class CodeBlock : NodeBase
             fullCode += $"{bodyLineTabs}{line}\n";
         }
 
-        return fullCode;
+        return fullCode.Substring(0, fullCode.Length-1);
     }
 }

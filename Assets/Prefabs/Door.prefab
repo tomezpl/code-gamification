@@ -27,7 +27,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5909095972323264267}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.25, y: 0, z: 0}
+  m_LocalPosition: {x: 0.256, y: 0, z: 0}
   m_LocalScale: {x: 0.5, y: 1, z: 0.024999999}
   m_Children: []
   m_Father: {fileID: 5909095973459045841}
@@ -119,7 +119,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5909095973132149422}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.25, y: 0, z: 0}
+  m_LocalPosition: {x: -0.256, y: 0, z: 0}
   m_LocalScale: {x: 0.5, y: 1, z: 0.025}
   m_Children: []
   m_Father: {fileID: 5909095973459045841}
@@ -229,6 +229,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: af3f1a34e3ef86246b4f0cea8a2ae151, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  interactionRadiusLock: 1
+  interactionRadius: 2.5
+  isUnlocked: 0
   doorOpening: 0.25
   doorOpeningTime: 1
   doorOpenDuration: 5

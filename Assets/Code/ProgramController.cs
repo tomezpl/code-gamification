@@ -311,7 +311,30 @@ public class ProgramController : Interactable
                         if(ex is FormatException || ex is KeyNotFoundException)
                         {
                             // TODO: Notify user of error. Probably something to do with input value or variable.
+                            if (currentNode != null && currentNode.Serialize() != null)
+                            {
+                                Logger.LogError($"CODE '{currentNode.Serialize()}' contains invalid symbol or value.");
+                            }
+                            else
+                            {
+                                Logger.LogError($"Invalid use of symbol or value caused an error in the code.");
+                            }
                         }
+
+                        if (currentNode != null)
+                        {
+                            Logger.LogError($"{currentNode.name} caused an error!");
+                            if(currentNode.Serialize() != null)
+                            {
+                                Logger.LogError($"{currentNode.name} code: {currentNode.Serialize()}");
+                            }
+                        }
+                        else
+                        {
+                            Logger.LogError("currentNode caused an error!");
+                        }
+
+                        Logger.LogError($"Exception was: {ex.Message}");
 
                         currentLine = "ERROR!";
 
@@ -626,10 +649,14 @@ public class ProgramController : Interactable
                             Logger.Log($"Adding array element \"{arrName}[{i}]\"");
                             symbolTable.Add($"{arrName}[{i}]", new FunctionParameter());
                         }
-                        for(int i = 2; i < 2 + count; i++)
+                        // Only initialise elements in the symbol table if size was provided as a literal
+                        if (int.TryParse(node.GetComponent<AllocateArray>().parameters[0].Value, out count))
                         {
-                            FunctionParameter listElement = node.GetComponent<AllocateArray>().parameters[i];
-                            SetSymbol(new FunctionParameter { Value = listElement.Name }, new FunctionParameter { Value = listElement.Value }); 
+                            for (int i = 2; i < 2 + count; i++)
+                            {
+                                FunctionParameter listElement = node.GetComponent<AllocateArray>().parameters[i];
+                                SetSymbol(new FunctionParameter { Value = listElement.Name }, new FunctionParameter { Value = listElement.Value });
+                            }
                         }
                         return new ExecutionStatus { success = true, handover = false };
                     }

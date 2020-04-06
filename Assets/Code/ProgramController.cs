@@ -66,7 +66,8 @@ public class ProgramController : Interactable
         symbolTable = new Dictionary<string, FunctionParameter> {
             { "True", new FunctionParameter { Value = "True", Type = "Boolean" } },
             { "False", new FunctionParameter { Value = "False", Type = "Boolean" } },
-            { "None", new FunctionParameter() } };
+            { "None", new FunctionParameter { Value = "None", Type = "NoneType" } }
+        };
     }
 
     protected void OutPrintNewline()
@@ -335,6 +336,7 @@ public class ProgramController : Interactable
                         }
 
                         Logger.LogError($"Exception was: {ex.Message}");
+                        Logger.LogError($"Exception stack trace: {ex.StackTrace}");
 
                         currentLine = "ERROR!";
 
@@ -647,7 +649,7 @@ public class ProgramController : Interactable
                         for (int i = 0; i < count; i++)
                         {
                             Logger.Log($"Adding array element \"{arrName}[{i}]\"");
-                            symbolTable.Add($"{arrName}[{i}]", new FunctionParameter());
+                            symbolTable.Add($"{arrName}[{i}]", new FunctionParameter { Value = "None" });
                         }
                         // Only initialise elements in the symbol table if size was provided as a literal
                         if (int.TryParse(node.GetComponent<AllocateArray>().parameters[0].Value, out count))
@@ -655,7 +657,7 @@ public class ProgramController : Interactable
                             for (int i = 2; i < 2 + count; i++)
                             {
                                 FunctionParameter listElement = node.GetComponent<AllocateArray>().parameters[i];
-                                SetSymbol(new FunctionParameter { Value = listElement.Name }, new FunctionParameter { Value = listElement.Value });
+                                SetSymbol(new FunctionParameter { Value = listElement.Name }, new FunctionParameter { Value = string.IsNullOrWhiteSpace(listElement.Value) ? "None" : listElement.Value });
                             }
                         }
                         return new ExecutionStatus { success = true, handover = false };

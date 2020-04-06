@@ -402,9 +402,9 @@ public class EditorProgram : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        // Lock player movement if in editor
         if (GameObject.Find("Player"))
         {
+            // Lock player movement if in editor
             GameObject.Find("Player").GetComponent<FPPControl>().allowMove = !EditorActive;
         }
 

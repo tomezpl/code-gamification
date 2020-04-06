@@ -10,7 +10,7 @@ public class Logger : MonoBehaviour
 {
     private static bool initialised = false;
     private static string logBuf = "";
-    private const int logChLimit = 1024; // approximate character limit for the log buffer. At this point, we would write it to disk (as opposed to writing on every log)
+    private const int logChLimit = 1024 * 16; // approximate character limit for the log buffer. At this point, we would write it to disk (as opposed to writing on every log)
     private static string logFn = "";
 
     private static void init()

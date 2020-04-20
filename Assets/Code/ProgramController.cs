@@ -548,8 +548,8 @@ public class ProgramController : Interactable
     }
 
     // Performs actions defined by the Node
-    // TODO: add some core functionality e.g. assigning, arithmetic etc? Then return bool to indicate if anything was invoked from the base method.
-    // If not, only then continue to the derived implementations of this.
+    // If the Node is part of core functionality of the language, e.g. assigning to variables, performing arithmetic, etc. then handle it here.
+    // Otherwise, continue to child implementations of this method.
     public virtual ExecutionStatus ExecuteNode(NodeBase node)
     {
         if (node == null)

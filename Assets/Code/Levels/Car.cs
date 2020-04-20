@@ -19,12 +19,12 @@ public class Car : Programmable
     // Update is called once per frame
     void Update()
     {
-        if (Input.GetKeyUp(KeyCode.UpArrow))
+        /*if (Input.GetKeyUp(KeyCode.UpArrow))
             Move();
         else if (Input.GetKeyUp(KeyCode.LeftArrow))
             TurnLeft();
         else if (Input.GetKeyUp(KeyCode.RightArrow))
-            TurnRight();
+            TurnRight();*/
     }
 
     public void TurnRight()

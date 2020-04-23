@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 // Inherits from ArithmeticOperationBase because it's easier to program the UI this way. 
-// Be careful about order of types with regards to inheritance in ProgramController.CheckNodeTypes() though.
+// Be careful about order of types with regards to inheritance in ProgramController.CheckNodeTypes() though - this needs to appear before the parent class.
 public class AssignValue : ArithmeticOperationBase
 {
     public override void InitialiseNode()

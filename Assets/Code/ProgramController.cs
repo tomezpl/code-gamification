@@ -10,14 +10,29 @@ public class ProgramController : Interactable
 {
     public Transform editorUi;
 
+    // Time it takes to move from one command to the next.
     public double tickTime = 1.0;
+    // Time taken processing the current node. Can be ignored in child implementations if they require an irregular tick time for some functions.
     protected double timeSinceTick = 0.0;
+
+    // Reference to EditorProgram held by the editorUi
     protected EditorProgram program;
+
+    // Currently executed node
     public NodeBase currentNode;
+
+    // For special cases like if-else statements or while loops, the program flow can be overriden by setting specialNextNode.
+    // Set to null if execution model should follow regular flow (currentNode to currentNode.nextNode)
     public NodeBase specialNextNode;
 
+    // For puzzles that require the player's program to match a specific text output, it can be set with this variable.
     public string expectedOutput = "";
 
+    // Actual output
+    public string outputBuffer = "";
+
+    // Is the program running?
+    // ie. was it started by the user, has it reached the end/crashed yet
     public bool programRunning = false;
 
     // This is a sort of a "locking mechanism". If a tick needs more than tickTime to perform its actions (e.g. lerping 3D positions), 
@@ -32,15 +47,21 @@ public class ProgramController : Interactable
     // Is set to true when processingDone != processingDoneLastFrame
     protected bool waitForNextTick = false;
 
+    // Is this the first command node being executed?
     protected bool firstTick = true;
 
     // Variables, constants etc. that are present in this program
     public Dictionary<string, FunctionParameter> symbolTable;
 
+    // For debugging: names and values taken from the symbol table. Shows up in the Unity Inspector.
     public List<string> SymbolNames;
     public List<string> SymbolValues;
 
+    // Function names and their callbacks
     public Dictionary<string, System.Delegate> functions;
+
+    // Add a function name here to hide it from the user. 
+    // E.g. "create list" is written as a function in the game's backend, but shouldn't be presented to the user as a function call.
     public List<string> hiddenFunctions = new List<string> { "create list" };
 
     // Prepend symbol names with this if the symbol is only used internally by the game.
@@ -49,8 +70,7 @@ public class ProgramController : Interactable
     // This is used by CheckNodeType
     public enum NodeType { Unknown, FunctionCallBase, ProgramStart, ArithmeticOperationBase, CodeBlock, AssignValue, ProgramEnd, LogicalBlock, WhileLoop, AllocateArray, Continue, Break, ElseBlock };
 
-    public string outputBuffer = "";
-
+    // HUD script to update on-screen hints
     private ClueHUD clueHud;
 
     // Returns true if there are any nodes other than Start and End present in the program editor
@@ -63,6 +83,7 @@ public class ProgramController : Interactable
     // Initialises a symbol table
     public void InitSymTable()
     {
+        // To make things easier, keywords are added as symbols.
         symbolTable = new Dictionary<string, FunctionParameter> {
             { "True", new FunctionParameter { Value = "True", Type = "Boolean" } },
             { "False", new FunctionParameter { Value = "False", Type = "Boolean" } },
@@ -70,11 +91,15 @@ public class ProgramController : Interactable
         };
     }
 
+    // printNewline
     protected void OutPrintNewline()
     {
         outputBuffer += "\n";
     }
 
+    // Dummy implementation.
+    // This is just so the AllocateArray node can use the FunctionCallBase UI script.
+    // The reason for that is to allow users to initialise elements of the list, which requires dynamic node sizing, which only the FunctionCallBase does.
     public void CreateList(string size, string name)
     {
         int nSize = -1;
@@ -90,6 +115,7 @@ public class ProgramController : Interactable
         }
     }
 
+    //
     public void OutPrint(string text)
     {
         if (text.StartsWith("\"") && text.EndsWith("\""))

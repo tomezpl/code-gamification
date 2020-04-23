@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
+// On-screen help prompts, dynamically adapting to the situation
 public class ClueHUD : MonoBehaviour
 {
     public GameObject FPPTerminalPrompts;

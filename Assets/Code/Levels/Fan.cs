@@ -4,13 +4,19 @@ using UnityEngine;
 
 public class Fan : Programmable
 {
+    // Current angular velocity
     public double speed = 0.0;
 
+    // Is the fan deadly? (ie. does contact cause respawn?)
     public bool isDeadly = false;
+
+    // Is the fan sentient? (ie. does it spin on its own)
     public bool isSentient = false;
 
+    // Respawn point used if fan is deadly
     public Transform respawnPoint;
 
+    // The fan is made out of multiple meshes, but only features one box collider for checking if player hits it.
     BoxCollider col;
 
     public float speedMult = 1.0f;

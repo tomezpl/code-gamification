@@ -11,25 +11,34 @@ public class EditorDraggableNode : MonoBehaviour
     protected RectTransform rectTransform;
     protected Selectable container;
 
+    // Is the node being dragged right now?
     protected bool isDragged = false;
+    // Location of the cursor on the node's surface when dragging started
     protected Vector2 anchorPoint;
 
     protected Vector2 lastFramePointer;
 
+    // Editor UI this node is located in
     public EditorProgram owner;
 
+    // should we allow dragging this node? set to false for START/END nodes
     public bool allowDrag = true;
-    // is this clickable the arithmetic operator in the UI? if so, mark as true in prefab inspector
+
+    // is this clickable the arithmetic operator in the UI? if so, mark as true in prefab inspector.
     public bool isArithmeticOperator = false;
 
+    // Tracking double-clicks: two left-clicks need to be detected within 1 second.
     protected int clickCounter;
     protected float timeSinceClick;
     protected const float doubleClickAllowedTime = 1.0f;
 
+    // Is some node already being dragged? Prevents nodes on top of each other being dragged together at the same time.
     public static bool nodeAlreadyDragged = false;
 
+    // On-screen help prompts
     private ClueHUD clueHud;
 
+    // Default background colour of the node. The editor highlights an erroneous node as red, so this is just stored to revert to the original colour.
     public float[] color = null;
 
     // Start is called before the first frame update
@@ -46,6 +55,7 @@ public class EditorDraggableNode : MonoBehaviour
 
         clueHud = GameObject.Find("ClueHUD").GetComponent<ClueHUD>();
 
+        // Find original colour
         Image image = GetComponent<Image>();
         if (image)
         {
@@ -78,20 +88,23 @@ public class EditorDraggableNode : MonoBehaviour
         return !isArithmeticOperator && transform.childCount == 1 && GetComponentInChildren<Text>().name == "Text";
     }
 
+    // Handle a double-click
     public void DoubleClick()
     {
-        // Check if conditional
+        // Check if clicked a conditional
         if(transform.name == "Comparison")
         {
             DispatchEditingProperty(new Action<string>(LogicalOpEditingFinished), transform.parent.GetComponentInParent<LogicalBlock>().condition.comparison);
         }
+        // Check if clicked an arithmetic operator 
         else if (isArithmeticOperator)
         {
             DispatchEditingProperty(new Action<string>(ArithmeticOpEditingFinished), GetComponentInParent<ArithmeticOperationBase>().operatorStr);
         }
-        // Check if function name
+        // Check if clicked a function name
         else if (transform.name == "FuncName")
         {
+            // Removed: editing function names was causing issues
             //DispatchEditingProperty(new Action<string>(FunctionNameEditingFinished), GetComponentInParent<FunctionCallBase>().functionName);
         }
         else if (IsReference() || (transform.name.Contains("Parameter") && name != "Parameter"))
@@ -193,10 +206,6 @@ public class EditorDraggableNode : MonoBehaviour
         if (transform.name.Contains("Parameter") && name != "Parameter")
         {
             paramIndex = System.Convert.ToInt32(transform.name.Substring("Parameter".Length)) - 1;
-            /*if(GetComponentInParent<FunctionCallBase>())
-            {
-                paramIndex = (GetComponentInParent<FunctionCallBase>().parameters.Count-1) - paramIndex;
-            }*/
         }
         if (paramIndex >= 0)
         {
@@ -243,9 +252,6 @@ public class EditorDraggableNode : MonoBehaviour
 
         UpdateHUD(pointer, nodeRect);
 
-        //Logger.Log("Pointer: " + pointer);
-        //Logger.Log("Node: " + nodeRect);
-
         // Drag if LMB held down and inside the node rectangle
         if (Input.GetKeyDown(KeyCode.Mouse0) && nodeRect.Contains(pointer) || isDragged)
         {
@@ -258,6 +264,7 @@ public class EditorDraggableNode : MonoBehaviour
         }
 
         // Have previewNode follow the mouse
+        // This is used to show a preview of the node connection as the user is moving the mouse to the next/firstBody node
         if(name == "previewNode")
         {
             rectTransform.SetPositionAndRotation(pointer, Quaternion.identity);

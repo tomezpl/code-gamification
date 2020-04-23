@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+// Code for the generated code line showing above the computer terminal. It's meant to appear at the same orientation as the player's viewing frustum.
 public class TerminalLookAtCamera : MonoBehaviour
 {
     // Start is called before the first frame update

@@ -5,27 +5,40 @@ using UnityEngine;
 
 public class CarProgramController : ProgramController
 {
+    // Controlled car/robot
     public Car car;
+
+    // The grid object
     public GameObject grid;
+
+    // The cells on the grid
     public GridCell[] cells;
+
+    // Controlled door
     public UnlockableDoorWithLock doorToUnlock;
+
+    // Destination cell (which unlocks the door)
     GridCell endCell = null;
 
+    // Puzzle-specific functions for the user program
     protected override Dictionary<string, Delegate> ControllerFunctions()
     {
         return new Dictionary<string, Delegate> { { "moveForward", new Action(MoveForward) }, { "turnLeft", new Action(TurnLeft) }, { "turnRight", new Action(TurnRight) } };
     }
 
+    // Rotate clockwise
     private void TurnRight()
     {
         car.TurnRight();
     }
 
+    // Rotate counter-clockwise
     private void TurnLeft()
     {
         car.TurnLeft();
     }
 
+    // Move the car in the current direction, if that cell isn't blocked
     private void MoveForward()
     {
         bool reachedEnd = false;
@@ -72,6 +85,7 @@ public class CarProgramController : ProgramController
         cells = grid.GetComponentsInChildren<GridCell>();
     }
 
+    // Handle puzzle-specific function calls if ProgramController.ExecuteNode set the handover flag
     public override ExecutionStatus ExecuteNode(NodeBase node)
     {
         ExecutionStatus baseStatus = base.ExecuteNode(node);

@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
+// This class used to be for the arithmetic chain concept, which is now deleted.
+// However, it provides the GetResult method, which is still used for arithmetic and symbol table lookups.
 public class ArithmeticOperationBase : FunctionCallBase
 {
     public FunctionParameter leftHand, rightHand;
@@ -82,6 +84,7 @@ public class ArithmeticOperationBase : FunctionCallBase
         return $"{(wrap ? "(" : "")}{(prevArithmetic ? prevArithmetic.Serialize() : leftHand.Value)} {operatorStr} {rightHand.Value}{(wrap ? ")" : "")}";
     }
 
+    // Evaluate a mathematical expression (or just replace the symbols with their current values)
     public static string GetResult(string expr, ref Dictionary<string, FunctionParameter> symbolTable)
     {
         Logger.Log($"Arithmetic.GetResult evaluating {expr}");

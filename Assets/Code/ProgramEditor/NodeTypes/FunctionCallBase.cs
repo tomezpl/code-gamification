@@ -13,12 +13,11 @@ public class FunctionCallBase : NodeBase
 
     // UI stuff:
     public GameObject functionNameText;
-
     protected Vector2 firstParamOrigin;
     protected Rect firstParamRect;
     protected float firstParamWidth, firstParamHeight;
 
-    // Used to instantiate parameters
+    // Used to instantiate parameters in function call UI on runtime
     static GameObject ParameterTemplate;
 
     // Used for arithmetic operation chain, to feed arithmetic expressions & evaluated results into assignValue righthands/functionCall params
@@ -35,6 +34,7 @@ public class FunctionCallBase : NodeBase
         bool wasInitialised = isInitialised;
         base.InitialiseNode();
 
+        // Create a ParameterTemplate, which can then be instantiated for each parameter added to the function call in the UI.
         // TODO: performance fixes, this can be optimised by storing Parameter in a variable
         if (transform.Find("Parameter"))
         {
@@ -75,8 +75,6 @@ public class FunctionCallBase : NodeBase
     {
         base.Start();
 
-        //if (!isInitialised)
-            //InitialiseNode();
         UpdateFunctionProperties();
     }
 
@@ -93,23 +91,6 @@ public class FunctionCallBase : NodeBase
 
     public virtual void UpdateFunctionProperties()
     {
-        // TODO: maybe enable a prompt that asks the user if they want to use the arithmetic chain as a default value for param0 or type their own?
-        /*if(paramCount == 1 && prevArithmetic != null)
-        {
-            if(parameters.Count < 1)
-            {
-                parameters.Capacity = 1;
-            }
-            if(parameters[0] == null)
-            {
-                parameters[0] = new FunctionParameter();
-            }
-            ArithmeticOperationBase arithmetic = prevArithmetic;
-            parameters[0].Value = result.ToString();
-            parameters[0].Expression = arithmetic.Serialize();
-            parameters[0].Type = "Int";
-            parameters[0].IsReference = false;
-        }*/
 
         if (functionNameText == null)
         {
@@ -129,22 +110,15 @@ public class FunctionCallBase : NodeBase
             }
         }
 
-        //if (parameters.Count < paramsToDestroy.Count)
-        //{
-            foreach (Transform param in paramsToDestroy)
+        foreach (Transform param in paramsToDestroy)
+        {
+            if (Convert.ToInt32(param.name.Replace("Parameter", "")) > parameters.Count)
             {
-                if (Convert.ToInt32(param.name.Replace("Parameter", "")) > parameters.Count)
-                {
-                    Destroy(param.gameObject);
-                    GetComponent<RectTransform>().SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, (initHeight == 0.0f ? GetComponent<RectTransform>().rect.height : initHeight) - firstParamHeight * (parameters.Count > 2 ? (float)parameters.Count : 1.5f) - margin);
-                }
+                Destroy(param.gameObject);
+                GetComponent<RectTransform>().SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, (initHeight == 0.0f ? GetComponent<RectTransform>().rect.height : initHeight) - firstParamHeight * (parameters.Count > 2 ? (float)parameters.Count : 1.5f) - margin);
             }
-        //}
-        /*if (needResize)
-        {*/
-            GetComponent<RectTransform>().SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, (initHeight == 0.0f ? GetComponent<RectTransform>().rect.height : initHeight) + firstParamHeight * (parameters.Count > 2 ? (float)parameters.Count : 1.5f) + margin);
-            //needResize = false;
-        //}
+        }
+        GetComponent<RectTransform>().SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, (initHeight == 0.0f ? GetComponent<RectTransform>().rect.height : initHeight) + firstParamHeight * (parameters.Count > 2 ? (float)parameters.Count : 1.5f) + margin);
 
         for (ushort i = 0; i < paramCount && parameters != null && i < parameters.Count; i++)
         {
@@ -158,8 +132,7 @@ public class FunctionCallBase : NodeBase
                 GameObject paramObject = Instantiate(ParameterTemplate, transform);
                 paramObject.SetActive(true);
 
-                //paramObject.transform.localPosition = new Vector3(0.0f, (functionNameText.GetComponentInParent<RectTransform>().rect.yMin * -i + margin));
-                // some really weird maths?
+                // some really weird maths? it works for arranging the parameter objects in the UI though...
                 float height = paramObject.GetComponent<RectTransform>().rect.height;
                 float origin = parameters.Count > 0 ? ((parameters.Count / 2.0f - parameters.Count) + i) * height : 0.0f;
                 paramObject.transform.localPosition = new Vector3(0.0f, origin);

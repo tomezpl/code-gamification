@@ -8,10 +8,14 @@ public class DoorProgramController : ProgramController
     // Controlled door
     public GameObject doorObject;
 
+    // Timer for processing the setLock function node - this is based on the doorOpenDuration of the controlled door
     float timer = 0.0f;
     bool timerActive = false;
 
+    // Lock type used for this door (BasicLock, FizzBuzz)
     public UnlockableDoorWithLock.LockType lockType;
+
+    // For FizzBuzz puzzle: for how many numbers should the fizzbuzz game be played?
     public int fizzBuzzN = 30;
 
     protected virtual void SetLock(string state)
@@ -28,6 +32,7 @@ public class DoorProgramController : ProgramController
         timerActive = true;
     }
 
+    // Check the FizzBuzz output when ProgramEnd is reached
     protected override void ProgramEndCallback()
     {
         base.ProgramEndCallback();

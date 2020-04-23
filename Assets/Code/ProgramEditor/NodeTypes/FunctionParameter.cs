@@ -11,7 +11,7 @@ public class FunctionParameter : IProgramNode
 
     // Literal value or result of evaluating an arithmetic expression
     public string Value;
-    // Used for carrying over arithmetic expressions
+    // Used for carrying over arithmetic expressions with the arithmetic chain
     public string Expression;
 
     public string Type;

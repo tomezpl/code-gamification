@@ -4,33 +4,47 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
+// The code editor UI
 public class EditorProgram : MonoBehaviour
 {
+    // Canvas and material for rendering the node links
     public Canvas lineCanvas;
     public static Material lineMaterial = null;
 
+    // Object containing command nodes
     public GameObject elementContainer;
 
+    // START/END nodes
     public ProgramStart programStart;
     public ProgramEnd programEnd;
+
+    // Computer Terminal for this editor
     public ProgramController programController;
 
+    // For displaying the generated Python code
     public GameObject generatedCodeContainer;
     public Text generatedCodeText;
 
+    // Since many objects associated with the editor are triggered on startup, 
+    // the game will disable all editors for 2 frames on startup to ensure that they are by default not active.
     public int framesToDisable = 2;
-
     int frameCounter = 0;
+
+    // Prefabs to instantiate for each command node type in the UI
     protected static Dictionary<string, KeyValuePair<string, GameObject>> nodePrefabs = null;
 
+    // GUI skin used for IMGUI elements (text entry, adding nodes, etc.)
     public GUISkin guiSkin;
 
     // initial pose for the newly added node
     // will be set to the mouse cursor's last position before pressing TAB
     public Vector2 newNodeInitPos;
 
+    // On-screen help prompts
     private ClueHUD clueHud;
 
+    // For scaling text to different window sizes
+    // Scaling is based on window width
     public const double referenceFontSize = 14.0;
     public Vector2 referenceScreenSize = new Vector2(1000, 1);
     
@@ -58,6 +72,7 @@ public class EditorProgram : MonoBehaviour
 
     private bool editorActive = false;
 
+    // Should this editor be enabled on startup?
     public bool enableEditorOnStartup = false;
 
     // Editor state
@@ -78,8 +93,10 @@ public class EditorProgram : MonoBehaviour
     public System.Action<string> editingNodeFinishedClb = null;
     bool editedNodeFocused = false;
 
+    // Node that caused an error. The editor will change its background colour to red.
     public GameObject errorNode;
 
+    // Node currently stored in the clipboard
     public GameObject nodeClipboard;
 
     // FlowChart: the default node editor
@@ -87,6 +104,7 @@ public class EditorProgram : MonoBehaviour
     public enum EditorMode { FlowChart, CodeViewer };
     public EditorMode editorMode = EditorMode.FlowChart;
 
+    // Toggle between the flowchart editor and the Python code viewer.
     void SwitchMode(EditorMode mode)
     {
 
@@ -124,6 +142,7 @@ public class EditorProgram : MonoBehaviour
         }
     }
 
+    // Enables/disables line rendering with LineRenderer. Used to avoid issues with lines being seen in editors they don't belong to.
     void ToggleLineRendering(bool state)
     {
         lineCanvas.worldCamera.enabled = state;
@@ -180,11 +199,13 @@ public class EditorProgram : MonoBehaviour
         editorActive = true;
     }
 
+    // Adds node based on type name
     public GameObject AddNode(string type = "NodeBase", float x = 0.0f, float y = 0.0f)
     {
         return AddNode(nodePrefabs[type].Value, x, y);
     }
 
+    // Adds node based on copy
     public GameObject AddNode(GameObject copy, float x = 0.0f, float y = 0.0f)
     {
         GameObject nodeObject = Instantiate(copy, elementContainer.transform);
@@ -194,6 +215,7 @@ public class EditorProgram : MonoBehaviour
         return nodeObject;
     }
 
+    // Links the first right-clicked node with the second-right clicked node, taking the connector type (next/firstBody) into consideration.
     public void LinkCurrentlySelectedObjects()
     {
         linkingNodes = false;
@@ -364,9 +386,6 @@ public class EditorProgram : MonoBehaviour
             nodePrefabs.Add("CreateList", new KeyValuePair<string, GameObject>("Create List: Initialises a named list with a specific size.", Resources.Load("Prefabs/ProgramEditor/Nodes/Operations/CreateList") as GameObject));
             nodePrefabs.Add("FunctionCallBase", new KeyValuePair<string, GameObject>("Function call: Triggers the specified function. Can pass parameters.", Resources.Load("Prefabs/ProgramEditor/Nodes/Operations/FunctionCall") as GameObject));
 
-            // ArithmeticOperationBase uses ArithmeticAdd as a default.
-            //nodePrefabs.Add("ArithmeticOperationBase", new KeyValuePair<string, GameObject>("Arithmetic: Performs arithmetic math operations.", Resources.Load("Prefabs/ProgramEditor/Nodes/Operations/ArithmeticAdd") as GameObject));
-
             nodePrefabs.Add("LogicalBlock", new KeyValuePair<string, GameObject>("If Statement: Runs a block of code if a condition is met.", Resources.Load("Prefabs/ProgramEditor/Nodes/IfStatement") as GameObject));
             nodePrefabs.Add("ElseBlock", new KeyValuePair<string, GameObject>("Else: Runs a block of code if its linked If Statement condition is not met. Must appear after an If Statement.", Resources.Load("Prefabs/ProgramEditor/Nodes/ElseBlock") as GameObject));
 
@@ -388,6 +407,7 @@ public class EditorProgram : MonoBehaviour
         if (!programEnd)
             programEnd = elementContainer.GetComponentInChildren<ProgramEnd>();
 
+        // linkingPreviewNode is used to visualise the node connections when the user is still selecting the second node to link to
         linkingPreviewNode = new GameObject("previewNode", new Type[] { typeof(RectTransform), typeof(EditorDraggableNode) });
         linkingPreviewNode.transform.parent = elementContainer.transform;
         linkingPreviewNode.GetComponent<EditorDraggableNode>().allowDrag = false;
@@ -409,6 +429,8 @@ public class EditorProgram : MonoBehaviour
         }
 
         DrawNodeLinks();
+
+        // Only show links if the editor is active and in flow chart mode.
         ToggleLineRendering(editorActive && editorMode == EditorMode.FlowChart);
 
         // Editor creation occurs at startup so we may need a couple of frames to disable it for good measure?
@@ -488,11 +510,13 @@ public class EditorProgram : MonoBehaviour
         }
     }
 
+    // Converts from normalised device coordinates to screen-space
     private Vector2 ndcToScreen(Vector2 ndc)
     {
         return new Vector2(ndc.x * Screen.width, ndc.y * Screen.height);
     }
 
+    // Converts from normalised device coordinates to screen-space
     private Vector2 ndcToScreen(float x, float y)
     {
         return ndcToScreen(new Vector2(x, y));
@@ -642,23 +666,6 @@ public class EditorProgram : MonoBehaviour
         {
             elements.Add(transform.Find("Canvas").Find("Elements").GetChild(childIndex).gameObject);
         }
-        /*LineRenderer renderer = lineCanvas.transform.Find("NextNodeLines").GetComponent<LineRenderer>();
-        renderer.SetPositions(new List<Vector3>().ToArray());
-        renderer.positionCount = 0;
-        if (elements.Count > 2)
-        {
-            GameObject currentObject = elements[0];
-            {
-                while (currentObject.GetComponent<NodeBase>() != null && currentObject.GetComponent<NodeBase>().NextNodeObject != null)
-                {
-                    renderer.positionCount += 2;
-                    renderer.SetPosition(renderer.positionCount - 2, currentObject.GetComponent<RectTransform>().localPosition);
-                    renderer.SetPosition(renderer.positionCount - 1, currentObject.GetComponent<NodeBase>().NextNodeObject.GetComponent<RectTransform>().localPosition);
-
-                    currentObject = currentObject.GetComponent<NodeBase>().NextNodeObject;
-                }
-            }
-        }*/
 
         // Names of valid link GameObjects
         List<string> validLinks = new List<string>();
@@ -771,18 +778,6 @@ public class EditorProgram : MonoBehaviour
                 // This is to prevent culling from other 3D elements in the scene
                 currentRenderer.gameObject.layer = LayerMask.NameToLayer("CodeEditor");
                 validLinks.Add(currentLink.name);
-
-                /*GameObject currentObject = potentialCodeBlock.FirstBodyNodeObject;
-                {
-                    while (currentObject.GetComponent<NodeBase>() != null && currentObject.GetComponent<NodeBase>().NextNodeObject != null)
-                    {
-                        currentRenderer.positionCount += 2;
-                        currentRenderer.SetPosition(renderer.positionCount - 2, currentObject.GetComponent<RectTransform>().localPosition);
-                        currentRenderer.SetPosition(renderer.positionCount - 1, currentObject.GetComponent<NodeBase>().NextNodeObject.GetComponent<RectTransform>().localPosition);
-
-                        currentObject = currentObject.GetComponent<NodeBase>().NextNodeObject;
-                    }
-                }*/
             }
         }
 

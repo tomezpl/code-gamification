@@ -13,6 +13,7 @@ public class UnlockableDoor : Unlockable
 
     private Transform playerTransform;
 
+    // time before door locks
     private float timeToLock = 0.0f;
 
     // Start is called before the first frame update

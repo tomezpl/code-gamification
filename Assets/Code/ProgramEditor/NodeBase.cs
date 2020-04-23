@@ -33,6 +33,7 @@ public abstract class NodeBase : MonoBehaviour, IProgramNode
     // a conditional statement, like an if statement or a loop, inside which this Node is nested
     public LogicalBlock ownerLoop;
 
+    // Finds previous nodes for all nodes in the program this node belongs to
     void FindPrevNode()
     {
         NodeBase[] nodes = computer.editorUi.GetComponent<EditorProgram>().elementContainer.GetComponentsInChildren<NodeBase>();
@@ -101,26 +102,9 @@ public abstract class NodeBase : MonoBehaviour, IProgramNode
         // TODO: only initialise if !isInitialised?
         InitialiseNode();
 
-        // Add the NodeLinker arrowhead (or render node link, if already pre-connected: TODO)
-        /*if(transform.Find("NodeLinker") == null && nodeLinker == null)
-        {
-            // Load necessary resources and "cache" them using static fields
-            if(nodeLinkerPrefab == null)
-            {
-                nodeLinkerPrefab = Resources.Load("Prefabs/ProgramEditor/NodeLinker", typeof(GameObject)) as GameObject;
-            }
-            if(lineMaterial == null)
-            {
-                lineMaterial = Resources.Load("Materials/LineMaterial") as Material;
-            }
-
-            nodeLinker = Instantiate(nodeLinkerPrefab) as GameObject;
-            nodeLinker.name = "NodeLinker"; // prevent (Clone) from appearing in the name
-
-            //RenderNodeLinker();
-        }*/
     }
 
+    // Not used anymore
     public virtual void RenderNodeLinker()
     {
         nodeLinker.transform.SetParent(null, false);
@@ -196,6 +180,7 @@ public abstract class NodeBase : MonoBehaviour, IProgramNode
         return elements;
     }
 
+    // Delete this node from the program
     public void DeleteNode()
     {
         NodeBase[] nodes = FindElementContainer().GetComponentsInChildren<NodeBase>();
@@ -218,6 +203,7 @@ public abstract class NodeBase : MonoBehaviour, IProgramNode
         Destroy(gameObject);
     }
 
+    // If the node is inside an if-statement/loop, set all its nextNodes to belong to the same code block (ownerLoop)
     public void PropagateOwnershipChanges()
     {
         NodeBase currentNode = (NodeBase)nextNode;

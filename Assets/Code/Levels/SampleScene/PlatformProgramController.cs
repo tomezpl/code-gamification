@@ -5,11 +5,13 @@ using UnityEngine;
 
 public class PlatformProgramController : ProgramController
 {
+    // Object in scene that contains Platforms
     public GameObject PlatformContainer;
 
+    // Amount to raise/lower the platform by
     public float stepHeight = 0.25f;
 
-    // Original local positions of the platforms (at the time of calling raisePlatform/lowerPlatform, used to track progress in V3.Lerp)
+    // Original local positions of the platforms (at the time of calling raisePlatform/lowerPlatform, used to track progress in Vector3.Lerp)
     public List<Vector3> originalPositions = new List<Vector3>();
 
     // Initial local positions of the platforms (at the time of starting the level, used to cap their elevation)
@@ -21,6 +23,7 @@ public class PlatformProgramController : ProgramController
     // Time taken already to raise/lower current platform (each PlatformProgram can only raise/lower one platform at a tick!)
     protected float currentRaiseTime = 0.0f;
 
+    // Declare puzzle-specific functions
     protected override Dictionary<string, Delegate> ControllerFunctions()
     {
         return new Dictionary<string, Delegate> { { "raisePlatform", new Action<string>(RaisePlatform) }, { "lowerPlatform", new Action<string>(LowerPlatform) } };
@@ -29,17 +32,22 @@ public class PlatformProgramController : ProgramController
     protected override void Start()
     {
         base.Start();
+
+        // Combine base functions and puzzle functions
         CombineControllerFunctions(base.ControllerFunctions());
         CombineControllerFunctions(ControllerFunctions());
 
+        // Store the initial platform positions as a reference point for interpolation
         GetPlatformPositions();
 
+        // Set each platform's Computer reference to this terminal
         foreach(Platform platform in PlatformContainer.GetComponentsInChildren<Platform>())
         {
             platform.Computer = gameObject;
         }
     }
 
+    // Store positions of each platform
     protected void GetPlatformPositions()
     {
         Programmable[] platforms = PlatformContainer.GetComponentsInChildren<Programmable>();
@@ -61,8 +69,11 @@ public class PlatformProgramController : ProgramController
         }
     }
 
+    // Puzzle-specific ExecuteNode implementation. This should only execute if ProgramController.ExecuteNode set the handover flag.
     public override ExecutionStatus ExecuteNode(NodeBase node)
     {
+        // Check if node can be handled by ProgramController first.
+        // If not, it will return .handover as true
         ExecutionStatus baseStatus = base.ExecuteNode(node);
         if (!baseStatus.handover)
             return baseStatus;
@@ -87,20 +98,19 @@ public class PlatformProgramController : ProgramController
                 {
                     Platform platform = GetChildProgrammable(PlatformContainer, int.Parse((string)functionCall.GetRawParameters(symbolTable)[0])).GetComponent<Platform>();
 
-                    // Check elevation boundaries
+                    // Check elevation boundaries (e.g. to prevent platforms going under ground)
                     bool allowElevation = functionCall.functionName == "raisePlatform" && initPositions[platform.index].y + platform.MaxElevation < platform.transform.localPosition.y + stepHeight;
                     bool allowDown = functionCall.functionName == "lowerPlatform" && initPositions[platform.index].y + platform.MinElevation > platform.transform.localPosition.y - stepHeight;
                     bool allowMove = allowElevation || allowDown;
 
                     if (allowMove)
                     {
-                        // Ignore this call if outside limits
+                        // If outside limits, prevent moving
                         processingDone = true;
                         return new ExecutionStatus { success = true, handover = false };
                     }
 
                     // Otherwise continue with raising/lowering the platform
-
                     GetPlatformPositions();
                     currentRaiseTime = 0.0f;
                     processingDone = false;
@@ -115,22 +125,30 @@ public class PlatformProgramController : ProgramController
         return new ExecutionStatus { success = true, handover = false };
     }
 
+
     public override bool ExecuteFrame()
     {
+        // Check if ProgramController.ExecuteFrame moved to next node already, in which case this child implementation does not need to be called.
         if (!base.ExecuteFrame())
             return false;
 
+        // Is the node still being processed?
         if(!processingDone)
         {
+            // Is it a function?
             if(CheckNodeType(currentNode) == NodeType.FunctionCallBase)
             {
                 FunctionCallBase functionCall = currentNode.GetComponent<FunctionCallBase>();
+                // Is it not a base function?
                 if (ControllerFunctions().ContainsKey(functionCall.functionName))
                 {
+                    // Platform index
                     int index = -1;
                     string val = (string)functionCall.GetRawParameters(symbolTable)[0];
+                    // Get the platform index from command node in the user program
                     if (int.TryParse(val, out index) || int.TryParse(symbolTable[val].Value, out index))
                     {
+                        // If the index value is valid, call raisePlatform/lowerPlatform with the platform index as a parameter.
                         if (index >= 0)
                         {
                             //Logger.Log($"Calling {functionCall.functionName}({index})");
@@ -155,6 +173,7 @@ public class PlatformProgramController : ProgramController
             }
 
             // Finally, check if the timer overran raisingTime - if yes, mark processingDone as true.
+            // Then, the execution can move to next node.
             if(currentRaiseTime >= raisingTime)
             {
                 Logger.Log("Platform raised!");
@@ -165,6 +184,7 @@ public class PlatformProgramController : ProgramController
         return true;
     }
 
+    // Raise the platform marked by index by one step.
     protected void RaisePlatform(string index)
     {
         int nIndex = -1;
@@ -176,6 +196,8 @@ public class PlatformProgramController : ProgramController
         Programmable platform = GetChildProgrammable(PlatformContainer, nIndex).GetComponent<Programmable>();
         platform.transform.localPosition = Vector3.Lerp(platform.transform.localPosition, originalPositions[nIndex] + new Vector3(0.0f, stepHeight, 0.0f), currentRaiseTime / raisingTime);
     }
+
+    // Lower the platform marked by index by one step.
     protected void LowerPlatform(string index)
     {
         int nIndex = -1;

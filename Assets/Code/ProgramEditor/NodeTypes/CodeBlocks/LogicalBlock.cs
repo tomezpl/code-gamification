@@ -3,13 +3,18 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
+// A CodeBlock that only triggers if a condition is met.
+// In other terms: an if-statement.
 public class LogicalBlock : CodeBlock
 {
+    // The logical condition (leftHand, comparison, rightHand) of this if-statement/loop
     [SerializeField]
     public BoolCondition condition;
 
+    // UI object holding the conditional parameters
     public GameObject ConditionalObject;
 
+    // Most recent outcome of evaluating the logical condition
     public bool evaluatedResult = false;
 
     public override void InitialiseNode()
@@ -61,6 +66,7 @@ public class LogicalBlock : CodeBlock
     }
 
     // Similar to FunctionCallBase.UpdateFunctionParameters
+    // Updates the elements inside the command node UI with their respective values
     public virtual void UpdateUI()
     {
         if (ConditionalObject == null)

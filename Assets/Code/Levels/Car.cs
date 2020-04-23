@@ -4,9 +4,11 @@ using UnityEngine;
 
 public class Car : Programmable
 {
+    // Direction to move in on the grid
     public int XDir = 0;
     public int YDir = 1;
 
+    // Starting coordinate and current position on the grid
     public Vector2 StartingCoord = new Vector2(2, 1);
     public Vector2 CurrentCoord = new Vector2(2, 1);
 
